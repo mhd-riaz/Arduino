@@ -210,6 +210,10 @@ std::map<String, std::vector<ScheduleEntry>> applianceSchedules;
 // Global POST body storage (single reusable buffer for memory optimization)
 String postBody = "";
 
+// Global debug timing
+unsigned long lastDebugPrintMillis = 0;
+const unsigned long DEBUG_PRINT_INTERVAL_MS = 10000;  // Print debug info every 10 seconds
+
 // OLED Display System
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 unsigned long lastOLEDUpdateMillis = 0;
@@ -424,6 +428,21 @@ void loop() {
     }
   }
 
+  // Periodic debug output
+  if (millis() - lastDebugPrintMillis >= DEBUG_PRINT_INTERVAL_MS) {
+    Serial.printf("[DEBUG] Time: %02d:%02d (%d min), Temp: %.1f°C, Emergency: %s\n", 
+                  now.hour(), now.minute(), currentMinutes, currentTemperatureC, 
+                  emergencyShutdown ? "YES" : "NO");
+    for (int i = 0; i < NUM_APPLIANCES; i++) {
+      Serial.printf("[DEBUG] %s: %s (%s)\n", 
+                    appliances[i].name.c_str(),
+                    (appliances[i].currentState == ON ? "ON" : "OFF"),
+                    (appliances[i].currentMode == SCHEDULED ? "SCHEDULED" : 
+                     appliances[i].currentMode == OVERRIDDEN ? "OVERRIDDEN" : "TEMP_CONTROLLED"));
+    }
+    lastDebugPrintMillis = millis();
+  }
+
   // Update OLED display periodically (reduced frequency)
   if (millis() - lastOLEDUpdateMillis >= OLED_UPDATE_INTERVAL_MS) {
     updateOLED(now);
@@ -576,6 +595,12 @@ void loadSchedules() {
     applianceSchedules["Filter"].push_back({ "off_interval", 810, 930 });     
 
     saveSchedules();
+    Serial.println("[NVS] Default schedules loaded and saved:");
+    Serial.println("  CO2: 8:30-13:30 (510-810), 15:30-20:30 (930-1230)");
+    Serial.println("  Light: 9:30-13:30 (570-810), 16:30-20:30 (990-1230)");
+    Serial.println("  Heater: 0:00-4:30 (0-270), 20:30-23:59 (1230-1439)");
+    Serial.println("  HangOnFilter: 6:30-8:30 (390-510), 20:30-22:30 (1230-1350)");
+    Serial.println("  Filter: OFF 13:30-15:30 (810-930), otherwise ON");
     return;
   }
 
@@ -660,6 +685,10 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
 
   // 2. Apply Scheduled Logic (only if not overridden)
   if (app.overrideEndTime == 0) {
+    // Default behavior: Filter is ON by default, others are OFF by default
+    bool defaultState = (app.name == "Filter");
+    targetState = defaultState ? ON : OFF;
+    
     if (applianceSchedules.count(app.name)) {
       std::vector<ScheduleEntry> &schedules = applianceSchedules[app.name];
       bool isScheduledOn = false;
@@ -675,7 +704,14 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
         }
       }
 
-      targetState = (app.name == "Filter") ? (isScheduledOff ? OFF : ON) : (isScheduledOn ? ON : OFF);
+      // Apply schedule logic based on appliance type
+      if (app.name == "Filter") {
+        // Filter: ON by default, turn OFF only during off_interval
+        targetState = isScheduledOff ? OFF : ON;
+      } else {
+        // Other appliances: OFF by default, turn ON only during on_interval  
+        targetState = isScheduledOn ? ON : OFF;
+      }
     }
     app.scheduledState = targetState;
   }
@@ -713,6 +749,12 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
   if (app.currentState != targetState) {
     app.currentState = targetState;
     digitalWrite(app.pin, (app.currentState == ON ? LOW : HIGH));  // Active LOW relay
+    Serial.printf("[CONTROL] %s changed to %s (Mode: %s, Time: %d minutes)\n", 
+                  app.name.c_str(), 
+                  (app.currentState == ON ? "ON" : "OFF"),
+                  (app.currentMode == SCHEDULED ? "SCHEDULED" : 
+                   app.currentMode == OVERRIDDEN ? "OVERRIDDEN" : "TEMP_CONTROLLED"),
+                  currentMinutes);
   }
 }
 
@@ -746,7 +788,8 @@ void updateOLED(DateTime now) {
   if (emergencyShutdown) {
     display.print("EMERGENCY!");
   } else if (WiFi.status() == WL_CONNECTED) {
-    display.print("WiFi: OK");
+    // Display IP address instead of "WiFi: OK" for easier API access
+    display.print(WiFi.localIP());
   } else if (apModeActive) {
     display.print("AP Mode");
   } else {
