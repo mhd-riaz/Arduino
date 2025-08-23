@@ -1,27 +1,30 @@
 // ============================================================================
 // ESP32 Fish Tank Automation System (Arduino Sketch)
-// Version: 1.5 - LEDC API Fix (Based on official Espressif documentation)
+// Version: 2.0 - Optimized & Customized (5-Device System)
 // Author: mhd-riaz
-// Date: June 2, 2025
+// Date: August 23, 2025
 //
 // Description:
 // This program automates a fishtank environment using an ESP32 Dev Module.
-// It controls four appliances (Motor, CO2, Light, Heater) based on predefined
-// schedules, real-time temperature, and user-initiated overrides via a REST API.
+// It controls five appliances (Filter, CO2, Light, Heater, HangOnFilter) based on 
+// custom schedules, real-time temperature control, and user-initiated overrides via a REST API.
 //
 // Features:
-// - Control of 4 appliances (Motor, CO2, Light, Heater).
+// - Control of 5 appliances (Filter, CO2, Light, Heater, HangOnFilter).
+// - Custom optimized schedules with minute-based timing for efficiency.
 // - DS1307 RTC for accurate timekeeping, synchronized with NTP.
-// - DS18B20 temperature sensor for heater control.
-// - 0.96" Blue OLED Display for status (time, appliance states).
+// - DS18B20 temperature sensor for intelligent heater control (25-29°C range).
+// - 0.96" Blue OLED Display for real-time status (time, temperature, appliance states).
 // - 12V 8-channel optocoupler relay for appliance control.
-// - ESP32 WiFi for network connectivity and NTP.
-// - REST API server with JSON input/output for schedule overrides,
+// - ESP32 WiFi for network connectivity with automatic fallback to AP mode.
+// - REST API server with JSON input/output for schedule management,
 //   temporary appliance control, and WiFi configuration.
 // - Non-Volatile Storage (NVS) for WiFi credentials and appliance schedules.
-// - Temperature-controlled heater logic (25-29°C with 30 min min-run).
+// - Temperature-controlled heater logic with 30-minute minimum runtime.
+// - Emergency safety system for extreme temperature conditions.
+// - Memory optimized with reduced OLED update frequency and efficient scheduling.
 // - Fault tolerance for WiFi network issues (RTC fallback, non-blocking ops).
-// - Buzzer feedback for WiFi connection setup issues.
+// - Audio feedback system with buzzer for connection and emergency alerts.
 // - Default REST API key: "Automate@123".
 //
 // Components Used:
@@ -37,10 +40,11 @@
 // - OLED Display: SDA (GPIO 21), SCL (GPIO 22)
 // - DS18B20 Temp Sensor: DQ (GPIO 14) - Requires 4.7KΩ pull-up to 3.3V
 // - Relay Module:
-//   - IN1 (Motor): GPIO 16 (example pin)
-//   - IN2 (CO2): GPIO 17 (example pin)
-//   - IN3 (Light): GPIO 18 (example pin)
-//   - IN4 (Heater): GPIO 19 (example pin)
+//   - IN1 (Filter): GPIO 16 - Main filtration system
+//   - IN2 (CO2): GPIO 17 - CO2 injection system  
+//   - IN3 (Light): GPIO 18 - Aquarium lighting
+//   - IN4 (Heater): GPIO 19 - Water heater
+//   - IN5 (HangOnFilter): GPIO 20 - Secondary hang-on filter
 //   - Note: Relays are typically Active LOW.
 // - Buzzer: GPIO 13 (PWM capable)
 //
@@ -63,12 +67,15 @@
 // Important Notes:
 // - Ensure `Preferences.h` is used for NVS.
 // - All timing operations use `millis()` for non-blocking behavior.
+// - Schedules optimized to use minute-based timing (0-1439) for efficiency.
 // - Relays are assumed to be Active LOW (LOW = ON, HIGH = OFF).
-// - Heater control prioritizes temperature over schedule/override.
-// - `ArduinoJson` buffer size must be sufficient for schedules.
-// - Default schedules are loaded if NVS is empty.
+// - Heater control prioritizes temperature over schedule/override with 30-min minimum runtime.
+// - `ArduinoJson` v6 using JsonDocument for dynamic memory management.
+// - Default custom schedules are loaded if NVS is empty.
+// - Emergency safety system activates on extreme temperatures (>35°C or <10°C).
+// - Memory optimized with reduced OLED update frequency (2-second intervals).
 // - The system attempts to connect to saved WiFi. If unsuccessful, it
-//   starts an Access Point (AP) for configuration and buzzes.
+//   starts an Access Point (AP) "Fishtank_Setup" for configuration and provides audio alerts.
 // - I2C pins (SDA, SCL) are shared between RTC and OLED.
 // - A 4.7KΩ pull-up resistor is required for the DS18B20 data line to 3.3V.
 // - For the relay module, use a separate 12V power supply for JD-VCC and
@@ -104,28 +111,28 @@
 // ============================================================================
 // 2. Pin Definitions
 // ============================================================================
-// Appliance Relay Pins (Adjust these based on your wiring)
+// Appliance Relay Pins (Final GPIO assignments for 5-device system)
 // Relays are assumed to be Active LOW: LOW = ON, HIGH = OFF
-#define MOTOR_RELAY_PIN 16      // Main Filter
-#define CO2_RELAY_PIN 17        // CO2 System
-#define LIGHT_RELAY_PIN 18      // Aquarium Lights
-#define HEATER_RELAY_PIN 19     // Water Heater
-#define HANGON_FILTER_PIN 20    // Hang-on Filter
+#define MOTOR_RELAY_PIN 16      // Main Filter (Primary filtration system)
+#define CO2_RELAY_PIN 17        // CO2 System (CO2 injection for plants)
+#define LIGHT_RELAY_PIN 18      // Aquarium Lights (LED lighting system)
+#define HEATER_RELAY_PIN 19     // Water Heater (Temperature control)
+#define HANGON_FILTER_PIN 20    // Hang-on Filter (Secondary filtration)
 
 // DS18B20 Temperature Sensor Pin
-#define ONE_WIRE_BUS 14  // DS18B20 data pin
+#define ONE_WIRE_BUS 14  // DS18B20 data pin (requires 4.7KΩ pull-up to 3.3V)
 
-// Buzzer Pin (PWM capable)
+// Buzzer Pin (PWM capable for audio feedback)
 #define BUZZER_PIN 13
-#define BUZZER_CHANNEL 0  // LEDC channel for buzzer PWM
+#define BUZZER_CHANNEL 0  // LEDC channel for buzzer PWM control
 
-// OLED Display (I2C)
+// OLED Display (I2C - Shared with RTC on same bus)
 #define OLED_SDA 21
 #define OLED_SCL 22
 #define SCREEN_WIDTH 128  // OLED display width, in pixels
 #define SCREEN_HEIGHT 64  // OLED display height, in pixels
 #define OLED_RESET -1     // Reset pin # (or -1 if sharing Arduino reset pin)
-#define I2C_ADDRESS 0x3C  // Or 0x3D for some 128x64 displays
+#define I2C_ADDRESS 0x3C  // Standard address for 128x64 SSD1306 displays
 
 // ============================================================================
 // 3. Global Constants and Variables
@@ -143,96 +150,101 @@ const char *NVS_KEY_SSID = "ssid";
 const char *NVS_KEY_PASS = "password";
 const char *NVS_KEY_SCHEDULES = "schedules_json";
 
-// Time Management
+// Time Management (NTP + RTC System)
 RTC_DS1307 rtc;
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", 5.5 * 3600, 60000);  // IST offset (5.5 hours), update interval 60s
+NTPClient timeClient(ntpUDP, "pool.ntp.org", 5.5 * 3600, 60000);  // IST offset (5.5 hours), update every 60s
 unsigned long lastNtpSyncMillis = 0;
-const unsigned long NTP_SYNC_INTERVAL_MS = 3 * 3600 * 1000;  // Sync every 3 hours
+const unsigned long NTP_SYNC_INTERVAL_MS = 3 * 3600 * 1000;  // Sync every 3 hours when WiFi available
 
-// Temperature Sensor
+// Temperature Sensor & Control System
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 float currentTemperatureC = 0.0;
 unsigned long lastTempReadMillis = 0;
 const unsigned long TEMP_READ_INTERVAL_MS = 5000;  // Read temperature every 5 seconds
 
-// Heater Control Logic
-const float TEMP_THRESHOLD_ON = 25.0;                         // Turn heater on if temp drops below this
-const float TEMP_THRESHOLD_OFF = 29.0;                        // Turn heater off if temp reaches/exceeds this
-const unsigned long HEATER_MIN_RUN_TIME_MS = 30 * 60 * 1000;  // 30 minutes minimum run time
-unsigned long heaterOnTimeMillis = 0;                         // Tracks when heater was turned on for min run time
-bool heaterForcedOn = false;                                  // Flag to indicate if heater is forced on by temperature logic
+// Intelligent Heater Control Logic
+const float TEMP_THRESHOLD_ON = 25.0;                         // Turn heater ON if temp drops below 25°C
+const float TEMP_THRESHOLD_OFF = 29.0;                        // Turn heater OFF if temp reaches/exceeds 29°C
+const unsigned long HEATER_MIN_RUN_TIME_MS = 30 * 60 * 1000;  // 30 minutes minimum continuous runtime
+unsigned long heaterOnTimeMillis = 0;                         // Tracks when heater was turned ON for minimum runtime
+bool heaterForcedOn = false;                                  // Flag indicating temperature-controlled heater state
 
-// Appliance Management
+// Appliance Management System
 enum ApplianceState { OFF,
                       ON };
-enum ApplianceMode { SCHEDULED,
-                     OVERRIDDEN,
-                     TEMP_CONTROLLED };  // For heater, TEMP_CONTROLLED takes precedence
+enum ApplianceMode { SCHEDULED,      // Following programmed schedule
+                     OVERRIDDEN,     // Manual override active  
+                     TEMP_CONTROLLED };  // Temperature-controlled (heater only)
 
 struct ScheduleEntry {
-  String type;  // "on_interval" or "off_interval"
-  int start_min;  // Start time in minutes from midnight (0-1439)
-  int end_min;    // End time in minutes from midnight (0-1439)
+  String type;    // "on_interval" or "off_interval"
+  int start_min;  // Start time in minutes from midnight (0-1439) - Optimized format
+  int end_min;    // End time in minutes from midnight (0-1439) - Optimized format
 };
 
 struct Appliance {
-  String name;
-  int pin;
-  ApplianceState currentState;
-  ApplianceState scheduledState;  // State dictated by schedule
-  ApplianceState overrideState;   // State dictated by manual override
-  unsigned long overrideEndTime;  // millis() when override expires (0 if no override)
-  ApplianceMode currentMode;      // How the appliance is currently controlled
+  String name;                        // Device name (Filter, CO2, Light, Heater, HangOnFilter)
+  int pin;                           // GPIO pin for relay control
+  ApplianceState currentState;       // Current physical state (ON/OFF)
+  ApplianceState scheduledState;     // State according to schedule
+  ApplianceState overrideState;      // State from manual override
+  unsigned long overrideEndTime;     // millis() when override expires (0 = no override)
+  ApplianceMode currentMode;         // Current control mode (SCHEDULED/OVERRIDDEN/TEMP_CONTROLLED)
 };
 
-// Array to hold appliance objects
+// Array of 5 appliance objects with custom configurations
 Appliance appliances[] = {
-  { "Filter", MOTOR_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },
-  { "CO2", CO2_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },
-  { "Light", LIGHT_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },
-  { "Heater", HEATER_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },
-  { "HangOnFilter", HANGON_FILTER_PIN, OFF, OFF, OFF, 0, SCHEDULED }
+  { "Filter", MOTOR_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },           // Primary filtration (GPIO 16)
+  { "CO2", CO2_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },                // CO2 injection system (GPIO 17)
+  { "Light", LIGHT_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },            // LED lighting system (GPIO 18)
+  { "Heater", HEATER_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },          // Water heater with temp control (GPIO 19)
+  { "HangOnFilter", HANGON_FILTER_PIN, OFF, OFF, OFF, 0, SCHEDULED }    // Secondary hang-on filter (GPIO 20)
 };
 const int NUM_APPLIANCES = sizeof(appliances) / sizeof(appliances[0]);
 
-// Map to store schedules for each appliance
+// Map to store custom schedules for each appliance (minute-based for efficiency)
 std::map<String, std::vector<ScheduleEntry>> applianceSchedules;
 
-// Global POST body storage (single reusable buffer)
+// Global POST body storage (single reusable buffer for memory optimization)
 String postBody = "";
 
-// OLED Display
+// OLED Display System
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 unsigned long lastOLEDUpdateMillis = 0;
-const unsigned long OLED_UPDATE_INTERVAL_MS = 2000;  // Update OLED every 2 seconds (reduced frequency)
+const unsigned long OLED_UPDATE_INTERVAL_MS = 2000;  // Update OLED every 2 seconds (memory optimized)
 
 // WiFi Connection Management
-const unsigned long WIFI_CONNECT_TIMEOUT_MS = 30000;
+const unsigned long WIFI_CONNECT_TIMEOUT_MS = 30000;  // 30 second timeout for WiFi connection
 bool wifiConnected = false;
 bool apModeActive = false;
 
-// Emergency Safety Features
+// Emergency Safety System  
 bool emergencyShutdown = false;
-const float EMERGENCY_TEMP_HIGH = 35.0;  // Emergency shutdown temperature
-const float EMERGENCY_TEMP_LOW = 10.0;   // Emergency low temperature
+const float EMERGENCY_TEMP_HIGH = 35.0;  // Emergency shutdown if temperature exceeds 35°C
+const float EMERGENCY_TEMP_LOW = 10.0;   // Emergency shutdown if temperature below 10°C
 
 // ============================================================================
 // 4. Function Prototypes
 // ============================================================================
+// Core System Functions
 void connectWiFi();
 void startAPMode();
 void buzz(int count, int delayMs);
 void syncTimeNTP();
+
+// Schedule Management
 void loadSchedules();
 void saveSchedules();
 void applyApplianceLogic(Appliance &app, int currentMinutes);
+
+// Display & Utility Functions  
 void updateOLED(DateTime now);
 bool isTimeInInterval(int currentMinutes, int startMin, int endMin);
 bool authenticateRequest(AsyncWebServerRequest *request);
 
-// Emergency safety
+// Emergency & Safety System
 void emergencyShutdownAll();
 
 // REST API Handlers
@@ -509,14 +521,21 @@ void syncTimeNTP() {
 
 /**
  * @brief Loads appliance schedules from NVS. If no schedules are found,
- * default schedules are used and saved to NVS.
+ * custom default schedules optimized for fish tank automation are loaded and saved to NVS.
+ * 
+ * Default Schedule Summary:
+ * - CO2: 8:30 AM - 1:30 PM (510-810), 3:30 PM - 8:30 PM (930-1230)
+ * - Light: 9:30 AM - 1:30 PM (570-810), 4:30 PM - 8:30 PM (990-1230)  
+ * - Heater: 12:00 AM - 4:30 AM (0-270), 8:30 PM - 11:59 PM (1230-1439)
+ * - HangOnFilter: 6:30 AM - 8:30 AM (390-510), 8:30 PM - 10:30 PM (1230-1350)
+ * - Filter: Continuous except 1:30 PM - 3:30 PM (810-930) for maintenance
  */
 void loadSchedules() {
   String schedulesJson = preferences.getString(NVS_KEY_SCHEDULES, "");
 
   if (schedulesJson.length() == 0) {
-    Serial.println("[NVS] No schedules found in NVS. Loading default schedules.");
-    // Define default schedules (converted to minutes)
+    Serial.println("[NVS] No schedules found in NVS. Loading custom default schedules...");
+    // Define custom default schedules (all times converted to minutes for efficiency)
     // CO2: 8:30 AM - 1:30 PM (510-810), 3:30 PM - 8:30 PM (930-1230)
     applianceSchedules["CO2"].push_back({ "on_interval", 510, 810 });         
     applianceSchedules["CO2"].push_back({ "on_interval", 930, 1230 });        
@@ -599,10 +618,11 @@ void saveSchedules() {
 }
 
 /**
- * @brief Applies the control logic for a single appliance, considering schedules,
- * overrides, and temperature (for heater).
+ * @brief Applies the intelligent control logic for a single appliance, considering custom schedules,
+ * manual overrides, and temperature-based control (for heater).
+ * Priority order: Temperature Control > Manual Override > Scheduled Control
  * @param app Reference to the Appliance object.
- * @param now Current DateTime from RTC.
+ * @param currentMinutes Current time in minutes from midnight (0-1439).
  */
 void applyApplianceLogic(Appliance &app, int currentMinutes) {
   ApplianceState targetState = OFF;
@@ -640,9 +660,10 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
     app.scheduledState = targetState;
   }
 
-  // 3. Heater Temperature Logic (highest priority)
+  // 3. Intelligent Heater Temperature Logic (highest priority - overrides everything)
   if (app.name == "Heater" && currentTemperatureC > 0) {
     if (currentTemperatureC < TEMP_THRESHOLD_ON) {
+      // Temperature too low - force heater ON
       if (app.currentState == OFF && !heaterForcedOn) {
         heaterOnTimeMillis = millis();
         heaterForcedOn = true;
@@ -650,8 +671,9 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
       targetState = ON;
       app.currentMode = TEMP_CONTROLLED;
     } else if (currentTemperatureC >= TEMP_THRESHOLD_OFF) {
+      // Temperature reached target - check minimum runtime
       if (heaterForcedOn && (millis() - heaterOnTimeMillis < HEATER_MIN_RUN_TIME_MS)) {
-        targetState = ON;  // Keep ON for minimum run time
+        targetState = ON;  // Keep ON for minimum 30-minute runtime
         app.currentMode = TEMP_CONTROLLED;
       } else {
         heaterForcedOn = false;
@@ -660,6 +682,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
         app.currentMode = (app.overrideEndTime > 0) ? OVERRIDDEN : SCHEDULED;
       }
     }
+    // Ensure minimum runtime is respected
     if (heaterForcedOn && targetState == OFF) {
       targetState = ON;
       app.currentMode = TEMP_CONTROLLED;
@@ -674,7 +697,9 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
 }
 
 /**
- * @brief Updates the OLED display with current time and appliance states.
+ * @brief Updates the OLED display with current system status including time, 
+ * temperature, appliance states, and connection status.
+ * Display optimized for 128x64 SSD1306 with 2-second update intervals for memory efficiency.
  * @param now Current DateTime from RTC.
  */
 void updateOLED(DateTime now) {
@@ -686,14 +711,14 @@ void updateOLED(DateTime now) {
   display.setCursor(0, 0);
   display.printf("%02d:%02d:%02d %02d/%02d", now.hour(), now.minute(), now.second(), now.day(), now.month());
 
-  // Row 2 onwards: Appliance States (simplified)
+  // Row 2 onwards: Appliance States with compact formatting
   int y = 10;
   for (int i = 0; i < NUM_APPLIANCES; i++) {
     display.setCursor(0, y + (i * 8));
     display.printf("%s: %s", appliances[i].name.c_str(), (appliances[i].currentState == ON ? "ON" : "OFF"));
   }
 
-  // Temperature and Status
+  // Temperature and System Status (bottom row)
   display.setCursor(0, y + (NUM_APPLIANCES * 8));
   display.printf("%.1fC", currentTemperatureC);
   
@@ -712,15 +737,12 @@ void updateOLED(DateTime now) {
 }
 
 /**
- * @brief Checks if a given time (currentH, currentM) falls within a specified
- * interval (startH:startM to endH:endM). Handles overnight intervals.
- * @param currentH Current hour.
- * @param currentM Current minute.
- * @param startH Start hour of interval.
- * @param startM Start minute of interval.
- * @param endH End hour of interval.
- * @param endM End minute of interval.
- * @return True if time is in interval, false otherwise.
+ * @brief Checks if a given time falls within a specified interval using minute-based comparison.
+ * Efficiently handles both normal intervals (7:00-14:00) and overnight intervals (22:00-06:00).
+ * @param currentMinutes Current time in minutes from midnight (0-1439).
+ * @param startMin Start of interval in minutes from midnight (0-1439).
+ * @param endMin End of interval in minutes from midnight (0-1439).
+ * @return True if current time falls within the interval, false otherwise.
  */
 bool isTimeInInterval(int currentMinutes, int startMin, int endMin) {
   if (startMin <= endMin) {
