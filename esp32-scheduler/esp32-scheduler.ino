@@ -922,10 +922,8 @@ void handleGetSchedules(AsyncWebServerRequest *request) {
     for (const auto &entry : schedulesVec) {
       JsonObject scheduleObj = schedulesArray.add<JsonObject>();
       scheduleObj["type"] = entry.type;
-      scheduleObj["start_h"] = entry.start_h;
-      scheduleObj["start_m"] = entry.start_m;
-      scheduleObj["end_h"] = entry.end_h;
-      scheduleObj["end_m"] = entry.end_m;
+      scheduleObj["start_min"] = entry.start_min;
+      scheduleObj["end_min"] = entry.end_min;
     }
   }
 
@@ -978,7 +976,7 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
       Serial.print(F("[API] deserializeJson() failed for /schedules: "));
       Serial.println(error.f_str());
       Serial.print(F("[API] Received body: "));
-      Serial.println(schedulesPostBody);
+      Serial.println(postBody);
       request->send(400, "application/json", "{\"error\": \"Invalid JSON\"}\n");
       return;
     }
@@ -1052,7 +1050,7 @@ void handleWifiConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len,
       Serial.print(F("[API] deserializeJson() failed for /wifi: "));
       Serial.println(error.f_str());
       Serial.print(F("[API] Received body: "));
-      Serial.println(wifiPostBody);
+      Serial.println(postBody);
       request->send(400, "application/json", "{\"error\": \"Invalid JSON\"}\n");
       return;
     }
