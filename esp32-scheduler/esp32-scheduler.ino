@@ -337,6 +337,16 @@ void setup() {
   // Load schedules from NVS
   loadSchedules();
 
+  // Apply initial appliance states based on current time and schedules
+  DateTime now = rtc.now();
+  int currentMinutes = now.hour() * 60 + now.minute();
+  Serial.printf("[SETUP] Applying initial appliance states for time %02d:%02d (%d minutes)\n", now.hour(), now.minute(), currentMinutes);
+  
+  for (int i = 0; i < NUM_APPLIANCES; i++) {
+    applyApplianceLogic(appliances[i], currentMinutes);
+    Serial.printf("[SETUP] %s initial state: %s\n", appliances[i].name.c_str(), (appliances[i].currentState == ON ? "ON" : "OFF"));
+  }
+
   // Configure REST API Endpoints
   server.on("/", HTTP_GET, handleRoot);
   server.on("/status", HTTP_GET, handleStatus);
