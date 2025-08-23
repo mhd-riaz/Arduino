@@ -364,9 +364,16 @@ void setup() {
 // 6. Loop Function
 // ============================================================================
 void loop() {
-  // Check emergency conditions (lightweight)
-  if (currentTemperatureC > EMERGENCY_TEMP_HIGH || currentTemperatureC < EMERGENCY_TEMP_LOW) {
+  // Check emergency conditions (lightweight) - exclude zero values to prevent false alarms
+  if (currentTemperatureC > 0.0 && (currentTemperatureC > EMERGENCY_TEMP_HIGH || currentTemperatureC < EMERGENCY_TEMP_LOW)) {
     if (!emergencyShutdown) emergencyShutdownAll();
+  } else {
+    // Auto-reset emergency if temperature returns to safe range and system was in emergency
+    if (emergencyShutdown && currentTemperatureC > EMERGENCY_TEMP_LOW && currentTemperatureC < EMERGENCY_TEMP_HIGH && currentTemperatureC > 0.0) {
+      emergencyShutdown = false;
+      Serial.println("[EMERGENCY] Auto-reset: Temperature returned to safe range");
+      buzz(2, 300);  // Confirmation buzzes
+    }
   }
 
   // Handle WiFi reconnection if disconnected
@@ -390,10 +397,13 @@ void loop() {
   // Read temperature periodically
   if (millis() - lastTempReadMillis >= TEMP_READ_INTERVAL_MS) {
     sensors.requestTemperatures();
-    currentTemperatureC = sensors.getTempCByIndex(0);
-    if (currentTemperatureC == DEVICE_DISCONNECTED_C) {
-      currentTemperatureC = 0.0;
+    float tempReading = sensors.getTempCByIndex(0);
+    if (tempReading != DEVICE_DISCONNECTED_C && tempReading > -50.0 && tempReading < 100.0) {
+      // Valid temperature reading - update current temperature
+      currentTemperatureC = tempReading;
     }
+    // If sensor disconnected or invalid reading, keep previous temperature value
+    // This prevents false emergency triggers from sensor disconnection
     lastTempReadMillis = millis();
   }
 
