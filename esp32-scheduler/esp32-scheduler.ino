@@ -121,7 +121,7 @@
 // Relay Configuration
 // Set to true for Active LOW relays (LOW = ON, HIGH = OFF) - Most common
 // Set to false for Active HIGH relays (HIGH = ON, LOW = OFF)
-#define RELAY_ACTIVE_LOW true   // Change this based on your relay module type
+#define RELAY_ACTIVE_LOW false   // Change this based on your relay module type
 
 // DS18B20 Temperature Sensor Pin
 #define ONE_WIRE_BUS 14  // DS18B20 data pin (requires 4.7KΩ pull-up to 3.3V)
@@ -283,6 +283,7 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
 void handleWifiConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
 void handleNotFound(AsyncWebServerRequest *request);
 void handleEmergencyReset(AsyncWebServerRequest *request);
+void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
 
 // ============================================================================
 // 4.5. Relay Control Helper Functions
@@ -341,12 +342,9 @@ void setup() {
   Serial.println("[SETUP] System startup beep completed.");
   #endif
 
-  // Initialize NVS
+  // Initialize NVS (WiFi namespace will be used initially)
   if (!preferences.begin(NVS_NAMESPACE_WIFI, false)) {
     Serial.println("[NVS] Failed to initialize WiFi preferences.");
-  }
-  if (!preferences.begin(NVS_NAMESPACE_SCHEDULES, false)) {
-    Serial.println("[NVS] Failed to initialize schedule preferences.");
   }
 
   // Initialize I2C bus
@@ -449,6 +447,9 @@ void setup() {
     // Response will be sent by the body handler
   }, NULL, handleWifiConfig);
   server.on("/emergency/reset", HTTP_POST, handleEmergencyReset);
+  server.on("/reset", HTTP_POST, [](AsyncWebServerRequest *request){
+    // Response will be sent by the body handler
+  }, NULL, handleResetToSchedule);
   server.onNotFound(handleNotFound);
 
   // Start the server
@@ -539,6 +540,14 @@ void loop() {
  * If no credentials are saved, it will not connect.
  */
 void connectWiFi() {
+  // Switch to WiFi namespace to read credentials
+  preferences.end();  // End current namespace
+  if (!preferences.begin(NVS_NAMESPACE_WIFI, false)) {
+    Serial.println("[NVS] Failed to open WiFi namespace.");
+    wifiConnected = false;
+    return;
+  }
+  
   String ssid = preferences.getString(NVS_KEY_SSID, "");
   String password = preferences.getString(NVS_KEY_PASS, "");
 
@@ -674,6 +683,13 @@ void syncTimeNTP() {
  * - Filter: Continuous except 1:30 PM - 3:30 PM (810-930) for maintenance
  */
 void loadSchedules() {
+  // Switch to schedules namespace
+  preferences.end();  // End current namespace
+  if (!preferences.begin(NVS_NAMESPACE_SCHEDULES, false)) {
+    Serial.println("[NVS] Failed to open schedules namespace.");
+    return;
+  }
+  
   String schedulesJson = preferences.getString(NVS_KEY_SCHEDULES, "");
 
   if (schedulesJson.length() == 0) {
@@ -756,6 +772,13 @@ void loadSchedules() {
  * @brief Saves current appliance schedules to NVS.
  */
 void saveSchedules() {
+  // Switch to schedules namespace
+  preferences.end();  // End current namespace
+  if (!preferences.begin(NVS_NAMESPACE_SCHEDULES, false)) {
+    Serial.println("[NVS] Failed to open schedules namespace for saving.");
+    return;
+  }
+  
   JsonDocument doc;  // Changed from StaticJsonDocument to JsonDocument
 
   for (auto const &[applianceName, schedulesVec] : applianceSchedules) {
@@ -791,7 +814,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
 
   // 1. Check for active override
   if (app.overrideEndTime > 0) {
-    if (millis() < app.overrideEndTime) {
+    if ((long)(millis() - app.overrideEndTime) < 0) {  // Handle millis() overflow properly
       targetState = app.overrideState;
       app.currentMode = OVERRIDDEN;
     } else {
@@ -844,7 +867,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
       app.currentMode = TEMP_CONTROLLED;
     } else if (currentTemperatureC >= TEMP_THRESHOLD_OFF) {
       // Temperature reached target - check minimum runtime
-      if (heaterForcedOn && (millis() - heaterOnTimeMillis < HEATER_MIN_RUN_TIME_MS)) {
+      if (heaterForcedOn && ((long)(millis() - heaterOnTimeMillis) < HEATER_MIN_RUN_TIME_MS)) {  // Fix overflow
         targetState = ON;  // Keep ON for minimum 30-minute runtime
         app.currentMode = TEMP_CONTROLLED;
       } else {
@@ -995,19 +1018,19 @@ void handleStatus(AsyncWebServerRequest *request) {
 
 /**
  * @brief Handles the "/control" POST endpoint. Allows overriding appliance states.
- * JSON Input:
+ * JSON Input (Consistent Array Format):
  * {
- * "api_key": "Automate@123", // Provided in header, but can also be in body for testing
- * "appliance": "Motor",
- * "action": "ON", // or "OFF"
- * "timeout_minutes": 60 // Optional
- * }
- * OR
- * {
- * "api_key": "Automate@123",
  * "appliances": [
  * {"name": "CO2", "action": "OFF", "timeout_minutes": 30},
- * {"name": "Light", "action": "ON"}
+ * {"name": "Light", "action": "ON"},
+ * {"name": "Filter", "action": "ON", "timeout_minutes": 60}
+ * ]
+ * }
+ * 
+ * Single appliance example:
+ * {
+ * "appliances": [
+ * {"name": "Heater", "action": "ON", "timeout_minutes": 120}
  * ]
  * }
  */
@@ -1043,39 +1066,31 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
 
     JsonArray appliancesArray = doc["appliances"].as<JsonArray>();
 
-    if (appliancesArray.isNull()) {  // Single appliance control
-      String appName = doc["appliance"].as<String>();
-      String action = doc["action"].as<String>();
-      int timeoutMinutes = doc["timeout_minutes"] | 0;  // Default to 0 (no timeout)
+    if (appliancesArray.isNull()) {
+      request->send(400, "application/json", "{\"error\": \"Missing 'appliances' array in JSON body\"}\n");
+      return;
+    }
+
+    // Process appliances array
+    for (JsonObject appObj : appliancesArray) {
+      String appName = appObj["name"].as<String>();
+      String action = appObj["action"].as<String>();
+      int timeoutMinutes = appObj["timeout_minutes"] | 0;
 
       bool found = false;
       for (int i = 0; i < NUM_APPLIANCES; i++) {
         if (appliances[i].name == appName) {
           found = true;
           appliances[i].overrideState = (action == "ON" ? ON : OFF);
-          appliances[i].overrideEndTime = (timeoutMinutes > 0) ? (millis() + (unsigned long)timeoutMinutes * 60 * 1000) : 0;
+          // Prevent overflow: limit timeout to ~35 days (50000 minutes)
+          if (timeoutMinutes > 50000) timeoutMinutes = 50000;
+          appliances[i].overrideEndTime = (timeoutMinutes > 0) ? (millis() + (unsigned long)timeoutMinutes * 60UL * 1000UL) : 0;
           break;
         }
       }
       if (!found) {
-        request->send(404, "application/json", "{\"error\": \"Appliance not found\"}\n");
+        request->send(404, "application/json", "{\"error\": \"Appliance not found: " + appName + "\"}\n");
         return;
-      }
-    } else {  // Multiple appliances control
-      for (JsonObject appObj : appliancesArray) {
-        String appName = appObj["name"].as<String>();
-        String action = appObj["action"].as<String>();
-        int timeoutMinutes = appObj["timeout_minutes"] | 0;
-
-        bool found = false;
-        for (int i = 0; i < NUM_APPLIANCES; i++) {
-          if (appliances[i].name == appName) {
-            found = true;
-            appliances[i].overrideState = (action == "ON" ? ON : OFF);
-            appliances[i].overrideEndTime = (timeoutMinutes > 0) ? (millis() + (unsigned long)timeoutMinutes * 60 * 1000) : 0;
-            break;
-          }
-        }
       }
     }
     request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"Appliance control updated\"}\n");
@@ -1235,12 +1250,19 @@ void handleWifiConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len,
     String newPassword = doc["password"].as<String>();
 
     if (newSsid.length() > 0) {
-      preferences.putString(NVS_KEY_SSID, newSsid);
-      preferences.putString(NVS_KEY_PASS, newPassword);
-      Serial.printf("[NVS] New WiFi credentials saved: SSID=%s\n", newSsid.c_str());
-      request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"WiFi credentials saved. Rebooting to connect...\"}\n");
-      delay(1000);    // Give time for response to send
-      ESP.restart();  // Soft reboot to connect to new WiFi
+      // Switch to WiFi namespace for saving credentials
+      preferences.end();  // End current namespace
+      if (preferences.begin(NVS_NAMESPACE_WIFI, false)) {
+        preferences.putString(NVS_KEY_SSID, newSsid);
+        preferences.putString(NVS_KEY_PASS, newPassword);
+        preferences.end();  // Close namespace before reboot
+        Serial.printf("[NVS] New WiFi credentials saved: SSID=%s\n", newSsid.c_str());
+        request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"WiFi credentials saved. Rebooting to connect...\"}\n");
+        delay(1000);    // Give time for response to send
+        ESP.restart();  // Soft reboot to connect to new WiFi
+      } else {
+        request->send(500, "application/json", "{\"error\": \"Failed to save WiFi credentials\"}\n");
+      }
     } else {
       request->send(400, "application/json", "{\"error\": \"SSID cannot be empty\"}\n");
     }
@@ -1299,5 +1321,90 @@ void handleEmergencyReset(AsyncWebServerRequest *request) {
     buzz(1, 500);  // Confirmation buzz
   } else {
     request->send(400, "application/json", "{\"error\": \"Unsafe conditions persist\"}\n");
+  }
+}
+
+/**
+ * @brief Handles the "/reset" POST endpoint. Resets appliance overrides back to scheduled behavior.
+ * JSON Input:
+ * {
+ * "appliances": ["Light", "CO2"]  // Optional: specific appliances to reset
+ * }
+ * 
+ * Or reset all appliances:
+ * {
+ * "reset_all": true
+ * }
+ */
+void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+  if (!authenticateRequest(request)) return;
+
+  // Check total size limit
+  if (total > MAX_POST_BODY_SIZE) {
+    request->send(413, "application/json", "{\"error\": \"Request body too large\"}\n");
+    return;
+  }
+
+  // Store the POST body data
+  if (index == 0) {
+    postBody = "";
+    postBody.reserve(total + 1);  // Reserve memory
+  }
+  for (size_t i = 0; i < len; i++) {
+    postBody += (char)data[i];
+  }
+
+  // Only process when we have received all the data
+  if (index + len == total) {
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, postBody);
+
+    if (error) {
+      Serial.print(F("[API] JSON parse failed for /reset: "));
+      Serial.println(error.f_str());
+      request->send(400, "application/json", "{\"error\": \"Invalid JSON\"}\n");
+      return;
+    }
+
+    bool resetAll = doc["reset_all"] | false;
+    JsonArray appliancesToReset = doc["appliances"].as<JsonArray>();
+
+    int resetCount = 0;
+
+    if (resetAll) {
+      // Reset all appliances
+      for (int i = 0; i < NUM_APPLIANCES; i++) {
+        appliances[i].overrideEndTime = 0;  // Clear override
+        appliances[i].overrideState = OFF;   // Reset override state
+        resetCount++;
+      }
+      Serial.println("[API] All appliance overrides reset to schedule");
+    } else if (!appliancesToReset.isNull()) {
+      // Reset specific appliances
+      for (JsonVariant applianceName : appliancesToReset) {
+        String appName = applianceName.as<String>();
+        
+        bool found = false;
+        for (int i = 0; i < NUM_APPLIANCES; i++) {
+          if (appliances[i].name == appName) {
+            appliances[i].overrideEndTime = 0;  // Clear override
+            appliances[i].overrideState = OFF;   // Reset override state
+            found = true;
+            resetCount++;
+            break;
+          }
+        }
+        if (!found) {
+          request->send(404, "application/json", "{\"error\": \"Appliance not found: " + appName + "\"}\n");
+          return;
+        }
+      }
+      Serial.printf("[API] %d appliance overrides reset to schedule\n", resetCount);
+    } else {
+      request->send(400, "application/json", "{\"error\": \"Must specify either 'reset_all': true or 'appliances' array\"}\n");
+      return;
+    }
+
+    request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"" + String(resetCount) + " appliances reset to schedule\"}\n");
   }
 }
