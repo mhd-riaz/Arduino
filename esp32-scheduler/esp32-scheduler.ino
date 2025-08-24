@@ -44,7 +44,7 @@
 //   - IN2 (CO2): GPIO 17 - CO2 injection system  
 //   - IN3 (Light): GPIO 18 - Aquarium lighting
 //   - IN4 (Heater): GPIO 19 - Water heater
-//   - IN5 (HangOnFilter): GPIO 20 - Secondary hang-on filter
+//   - IN5 (HangOnFilter): GPIO 5 - Secondary hang-on filter (changed from GPIO 20)
 //   - Note: Relays are typically Active LOW.
 // - Buzzer: GPIO 13 (PWM capable)
 //
@@ -117,7 +117,7 @@
 #define CO2_RELAY_PIN 17        // CO2 System (CO2 injection for plants)
 #define LIGHT_RELAY_PIN 18      // Aquarium Lights (LED lighting system)
 #define HEATER_RELAY_PIN 19     // Water Heater (Temperature control)
-#define HANGON_FILTER_PIN 20    // Hang-on Filter (Secondary filtration)
+#define HANGON_FILTER_PIN 5     // Hang-on Filter (Secondary filtration) - Changed from GPIO 20 (not available)
 
 // DS18B20 Temperature Sensor Pin
 #define ONE_WIRE_BUS 14  // DS18B20 data pin (requires 4.7KΩ pull-up to 3.3V)
@@ -210,9 +210,10 @@ std::map<String, std::vector<ScheduleEntry>> applianceSchedules;
 // Global POST body storage (single reusable buffer for memory optimization)
 String postBody = "";
 
-// Global debug timing
+// Debug and logging configuration
+#define DEBUG_MODE false  // Set to true for development, false for production to save memory
 unsigned long lastDebugPrintMillis = 0;
-const unsigned long DEBUG_PRINT_INTERVAL_MS = 10000;  // Print debug info every 10 seconds
+const unsigned long DEBUG_PRINT_INTERVAL_MS = 30000;  // Print debug info every 30 seconds (reduced frequency)
 
 // OLED Display System
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -229,6 +230,14 @@ bool emergencyShutdown = false;
 const float EMERGENCY_TEMP_HIGH = 35.0;  // Emergency shutdown if temperature exceeds 35°C
 const float EMERGENCY_TEMP_LOW = 10.0;   // Emergency shutdown if temperature below 10°C
 
+// System Health Monitoring & Alert System
+unsigned long lastSystemHeartbeat = 0;
+unsigned long lastLoopTime = 0;
+const unsigned long SYSTEM_WATCHDOG_TIMEOUT_MS = 60000;  // Alert if system doesn't respond for 60 seconds
+const unsigned long LOOP_HANG_TIMEOUT_MS = 30000;       // Alert if main loop hangs for 30 seconds
+bool systemHealthOK = true;
+bool alertSounded = false;
+
 // ============================================================================
 // 4. Function Prototypes
 // ============================================================================
@@ -236,7 +245,13 @@ const float EMERGENCY_TEMP_LOW = 10.0;   // Emergency shutdown if temperature be
 void connectWiFi();
 void startAPMode();
 void buzz(int count, int delayMs);
+void buzzPattern(int pattern);
 void syncTimeNTP();
+
+// System Health Monitoring
+void updateSystemHeartbeat();
+void checkSystemHealth();
+void alertSystemFailure(const char* reason);
 
 // Schedule Management
 void loadSchedules();
@@ -265,8 +280,26 @@ void handleEmergencyReset(AsyncWebServerRequest *request);
 // 5. Setup Function
 // ============================================================================
 void setup() {
+  // Add small delay for power stabilization
+  delay(500);
+  
   Serial.begin(115200);
   Serial.println("\n[SETUP] Starting ESP32 Fish Tank Automation System...");
+  
+  // Add 2-second startup delay with beep indicator
+  delay(2000);
+  
+  // Configure Buzzer Pin early for startup beep
+  ledcAttachChannel(BUZZER_PIN, 1000, 8, BUZZER_CHANNEL);  // pin, frequency, resolution, channel
+  ledcWrite(BUZZER_CHANNEL, 0);                            // Ensure buzzer is off initially
+  
+  // Startup beep to indicate system is ready
+  ledcWriteTone(BUZZER_CHANNEL, 1500);  // 1.5kHz startup tone
+  delay(300);                           // Beep duration
+  ledcWriteTone(BUZZER_CHANNEL, 0);     // Turn off
+  #if DEBUG_MODE
+  Serial.println("[SETUP] System startup beep completed.");
+  #endif
 
   // Initialize NVS
   if (!preferences.begin(NVS_NAMESPACE_WIFI, false)) {
@@ -278,26 +311,40 @@ void setup() {
 
   // Initialize I2C bus
   Wire.begin(OLED_SDA, OLED_SCL);
+  #if DEBUG_MODE
   Serial.println("[I2C] I2C bus initialized.");
+  #endif
 
   // Initialize RTC
   if (!rtc.begin()) {
-    Serial.println("[RTC] Couldn't find RTC! Check wiring.");
-    while (1)
-      ;  // Halt if RTC is not found, it's critical
+    Serial.println("[ERROR] RTC not found!");
+    // Sound continuous error buzzer to alert user
+    while (1) {
+      ledcWriteTone(BUZZER_CHANNEL, 2000);  // 2kHz error tone
+      delay(500);                           // Buzz for 500ms
+      ledcWriteTone(BUZZER_CHANNEL, 0);     // Turn off
+      delay(1000);                          // Wait 1 second before next buzz
+    }
   }
   if (!rtc.isrunning()) {
+    #if DEBUG_MODE
     Serial.println("[RTC] RTC is NOT running, setting time from build time.");
+    #endif
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  // Set to compile time as fallback
   }
+  #if DEBUG_MODE
   Serial.println("[RTC] RTC initialized.");
+  #endif
 
   // Initialize OLED Display
   if (!display.begin(SSD1306_SWITCHCAPVCC, I2C_ADDRESS)) {
-    Serial.println("[OLED] SSD1306 allocation failed. Check wiring/address.");
-    // Continue without display if failed, but log error
+    #if DEBUG_MODE
+    Serial.println("[ERROR] OLED init failed");
+    #endif
   } else {
+    #if DEBUG_MODE
     Serial.println("[OLED] Display initialized.");
+    #endif
     display.display();  // Show initial Adafruit logo
     delay(2000);
     display.clearDisplay();
@@ -310,7 +357,9 @@ void setup() {
 
   // Initialize DS18B20 Temperature Sensor
   sensors.begin();
+  #if DEBUG_MODE
   Serial.println("[DS18B20] Temperature sensor initialized.");
+  #endif
 
   // Configure Relay Pins and ensure they are OFF initially (Active HIGH for safety)
   for (int i = 0; i < NUM_APPLIANCES; i++) {
@@ -319,21 +368,14 @@ void setup() {
     Serial.printf("[RELAY] Pin %d (%s) set to OFF.\n", appliances[i].pin, appliances[i].name.c_str());
   }
 
-  // Configure Buzzer Pin using corrected LEDC API
-  ledcAttachChannel(BUZZER_PIN, 1000, 8, BUZZER_CHANNEL);  // pin, frequency, resolution, channel
-  ledcWrite(BUZZER_CHANNEL, 0);                            // Ensure buzzer is off (0% duty cycle)
-  Serial.println("[BUZZER] Buzzer configured.");
-
   // Attempt WiFi Connection
   connectWiFi();
 
   // If WiFi connection failed, start AP mode and buzz
   if (!wifiConnected) {
-    Serial.println("[WiFi] Failed to connect to saved WiFi. Starting AP mode...");
     buzz(3, 1000);  // Buzz thrice with 1000ms delay
     startAPMode();
   } else {
-    Serial.println("[WiFi] Connected to WiFi.");
     // Sync RTC with NTP immediately after successful WiFi connection
     syncTimeNTP();
   }
@@ -344,11 +386,9 @@ void setup() {
   // Apply initial appliance states based on current time and schedules
   DateTime now = rtc.now();
   int currentMinutes = now.hour() * 60 + now.minute();
-  Serial.printf("[SETUP] Applying initial appliance states for time %02d:%02d (%d minutes)\n", now.hour(), now.minute(), currentMinutes);
   
   for (int i = 0; i < NUM_APPLIANCES; i++) {
     applyApplianceLogic(appliances[i], currentMinutes);
-    Serial.printf("[SETUP] %s initial state: %s\n", appliances[i].name.c_str(), (appliances[i].currentState == ON ? "ON" : "OFF"));
   }
 
   // Configure REST API Endpoints
@@ -369,9 +409,10 @@ void setup() {
 
   // Start the server
   server.begin();
+  #if DEBUG_MODE
   Serial.println("[API] REST API server started.");
-
-  Serial.println("[SETUP] System setup complete.");
+  #endif
+  Serial.println("[SETUP] System ready!");
 }
 
 // ============================================================================
@@ -428,20 +469,15 @@ void loop() {
     }
   }
 
-  // Periodic debug output
+  // Conditional debug output (only if DEBUG_MODE enabled and reduced frequency)
+  #if DEBUG_MODE
   if (millis() - lastDebugPrintMillis >= DEBUG_PRINT_INTERVAL_MS) {
-    Serial.printf("[DEBUG] Time: %02d:%02d (%d min), Temp: %.1f°C, Emergency: %s\n", 
-                  now.hour(), now.minute(), currentMinutes, currentTemperatureC, 
-                  emergencyShutdown ? "YES" : "NO");
-    for (int i = 0; i < NUM_APPLIANCES; i++) {
-      Serial.printf("[DEBUG] %s: %s (%s)\n", 
-                    appliances[i].name.c_str(),
-                    (appliances[i].currentState == ON ? "ON" : "OFF"),
-                    (appliances[i].currentMode == SCHEDULED ? "SCHEDULED" : 
-                     appliances[i].currentMode == OVERRIDDEN ? "OVERRIDDEN" : "TEMP_CONTROLLED"));
-    }
+    Serial.printf("[DEBUG] %02d:%02d T:%.1f°C Heap:%u Emergency:%s\n", 
+                  now.hour(), now.minute(), currentTemperatureC, ESP.getFreeHeap(),
+                  emergencyShutdown ? "Y" : "N");
     lastDebugPrintMillis = millis();
   }
+  #endif
 
   // Update OLED display periodically (reduced frequency)
   if (millis() - lastOLEDUpdateMillis >= OLED_UPDATE_INTERVAL_MS) {
@@ -463,19 +499,25 @@ void connectWiFi() {
   String password = preferences.getString(NVS_KEY_PASS, "");
 
   if (ssid.length() == 0) {
+    #if DEBUG_MODE
     Serial.println("[WiFi] No saved WiFi credentials. Cannot connect to STA mode.");
+    #endif
     wifiConnected = false;
     return;
   }
 
+  #if DEBUG_MODE
   Serial.printf("[WiFi] Attempting to connect to SSID: %s\n", ssid.c_str());
+  #endif
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), password.c_str());
 
   unsigned long startTime = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - startTime < WIFI_CONNECT_TIMEOUT_MS) {
     delay(500);
+    #if DEBUG_MODE
     Serial.print(".");
+    #endif
     display.clearDisplay();
     display.setCursor(0, 0);
     display.println("Connecting WiFi...");
@@ -485,13 +527,17 @@ void connectWiFi() {
   }
 
   if (WiFi.status() == WL_CONNECTED) {
+    #if DEBUG_MODE
     Serial.println("\n[WiFi] Connected to WiFi!");
     Serial.print("[WiFi] IP Address: ");
     Serial.println(WiFi.localIP());
+    #endif
     wifiConnected = true;
     apModeActive = false;  // Ensure AP mode is off if STA connected
   } else {
+    #if DEBUG_MODE
     Serial.println("\n[WiFi] Failed to connect to WiFi.");
+    #endif
     wifiConnected = false;
   }
 }
@@ -500,12 +546,16 @@ void connectWiFi() {
  * @brief Starts the ESP32 in Access Point (AP) mode for configuration.
  */
 void startAPMode() {
+  #if DEBUG_MODE
   Serial.println("[AP] Starting Access Point mode...");
+  #endif
   WiFi.mode(WIFI_AP);
   WiFi.softAP("Fishtank_Setup", "password123");  // Default AP name and password
   IPAddress apIP = WiFi.softAPIP();
+  #if DEBUG_MODE
   Serial.print("[AP] AP IP address: ");
   Serial.println(apIP);
+  #endif
   apModeActive = true;
 
   display.clearDisplay();
@@ -527,7 +577,9 @@ void startAPMode() {
  * @param delayMs Delay between buzzes in milliseconds.
  */
 void buzz(int count, int delayMs) {
+  #if DEBUG_MODE
   Serial.printf("[BUZZER] Buzzing %d times...\n", count);
+  #endif
   for (int i = 0; i < count; i++) {
     ledcWriteTone(BUZZER_CHANNEL, 1000);  // 1kHz tone (using original LEDC API)
     delay(200);                           // Buzz duration
@@ -543,18 +595,26 @@ void buzz(int count, int delayMs) {
  */
 void syncTimeNTP() {
   if (WiFi.status() == WL_CONNECTED) {
+    #if DEBUG_MODE
     Serial.println("[NTP] Syncing time with NTP server...");
+    #endif
     timeClient.begin();
     if (timeClient.forceUpdate()) {
       unsigned long epochTime = timeClient.getEpochTime();
       rtc.adjust(DateTime(epochTime));
+      #if DEBUG_MODE
       Serial.printf("[NTP] RTC adjusted to: %s\n", rtc.now().timestamp().c_str());
+      #endif
       timeClient.end();  // End NTP client to free resources
     } else {
+      #if DEBUG_MODE
       Serial.println("[NTP] Failed to get time from NTP server.");
+      #endif
     }
   } else {
+    #if DEBUG_MODE
     Serial.println("[NTP] WiFi not connected, skipping NTP sync.");
+    #endif
   }
 }
 
@@ -573,7 +633,9 @@ void loadSchedules() {
   String schedulesJson = preferences.getString(NVS_KEY_SCHEDULES, "");
 
   if (schedulesJson.length() == 0) {
+    #if DEBUG_MODE
     Serial.println("[NVS] No schedules found in NVS. Loading custom default schedules...");
+    #endif
     // Define custom default schedules (all times converted to minutes for efficiency)
     // CO2: 8:30 AM - 1:30 PM (510-810), 3:30 PM - 8:30 PM (930-1230)
     applianceSchedules["CO2"].push_back({ "on_interval", 510, 810 });         
@@ -595,22 +657,28 @@ void loadSchedules() {
     applianceSchedules["Filter"].push_back({ "off_interval", 810, 930 });     
 
     saveSchedules();
+    #if DEBUG_MODE
     Serial.println("[NVS] Default schedules loaded and saved:");
     Serial.println("  CO2: 8:30-13:30 (510-810), 15:30-20:30 (930-1230)");
     Serial.println("  Light: 9:30-13:30 (570-810), 16:30-20:30 (990-1230)");
     Serial.println("  Heater: 0:00-4:30 (0-270), 20:30-23:59 (1230-1439)");
     Serial.println("  HangOnFilter: 6:30-8:30 (390-510), 20:30-22:30 (1230-1350)");
     Serial.println("  Filter: OFF 13:30-15:30 (810-930), otherwise ON");
+    #endif
     return;
   }
 
+  #if DEBUG_MODE
   Serial.println("[NVS] Loading schedules from NVS...");
+  #endif
   JsonDocument doc;  // Changed from StaticJsonDocument to JsonDocument
   DeserializationError error = deserializeJson(doc, schedulesJson);
 
   if (error) {
+    #if DEBUG_MODE
     Serial.print(F("[NVS] deserializeJson() failed: "));
     Serial.println(error.f_str());
+    #endif
     return;
   }
 
@@ -635,7 +703,9 @@ void loadSchedules() {
       applianceSchedules[applianceName].push_back(entry);
     }
   }
+  #if DEBUG_MODE
   Serial.println("[NVS] Schedules loaded successfully.");
+  #endif
 }
 
 /**
@@ -658,8 +728,10 @@ void saveSchedules() {
   String output;
   serializeJson(doc, output);
   preferences.putString(NVS_KEY_SCHEDULES, output);
+  #if DEBUG_MODE
   Serial.println("[NVS] Schedules saved to NVS.");
   Serial.println(output);  // For debugging
+  #endif
 }
 
 /**
@@ -749,12 +821,14 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
   if (app.currentState != targetState) {
     app.currentState = targetState;
     digitalWrite(app.pin, (app.currentState == ON ? LOW : HIGH));  // Active LOW relay
-    Serial.printf("[CONTROL] %s changed to %s (Mode: %s, Time: %d minutes)\n", 
-                  app.name.c_str(), 
-                  (app.currentState == ON ? "ON" : "OFF"),
-                  (app.currentMode == SCHEDULED ? "SCHEDULED" : 
-                   app.currentMode == OVERRIDDEN ? "OVERRIDDEN" : "TEMP_CONTROLLED"),
-                  currentMinutes);
+    // Only log state changes for critical events (temperature control) or if debug mode
+    #if DEBUG_MODE
+    Serial.printf("[CONTROL] %s: %s\n", app.name.c_str(), (app.currentState == ON ? "ON" : "OFF"));
+    #else
+    if (app.name == "Heater" && app.currentMode == TEMP_CONTROLLED) {
+      Serial.printf("[TEMP] Heater: %s\n", (app.currentState == ON ? "ON" : "OFF"));
+    }
+    #endif
   }
 }
 
@@ -936,7 +1010,6 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
           found = true;
           appliances[i].overrideState = (action == "ON" ? ON : OFF);
           appliances[i].overrideEndTime = (timeoutMinutes > 0) ? (millis() + (unsigned long)timeoutMinutes * 60 * 1000) : 0;
-          Serial.printf("[API] Appliance %s override to %s for %d mins.\n", appName.c_str(), action.c_str(), timeoutMinutes);
           break;
         }
       }
@@ -956,12 +1029,8 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
             found = true;
             appliances[i].overrideState = (action == "ON" ? ON : OFF);
             appliances[i].overrideEndTime = (timeoutMinutes > 0) ? (millis() + (unsigned long)timeoutMinutes * 60 * 1000) : 0;
-            Serial.printf("[API] Appliance %s override to %s for %d mins.\n", appName.c_str(), action.c_str(), timeoutMinutes);
             break;
           }
-        }
-        if (!found) {
-          Serial.printf("[API] Appliance %s not found in request.\n", appName.c_str());
         }
       }
     }
