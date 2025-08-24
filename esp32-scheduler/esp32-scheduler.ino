@@ -107,6 +107,9 @@
 #define MAX_POST_BODY_SIZE 2048  // Maximum size for POST request body
 #define MAX_JSON_DOC_SIZE 4096   // Maximum size for JSON documents
 
+// Override Constants
+#define PERMANENT_OVERRIDE_VALUE ULONG_MAX  // Value used to indicate permanent override
+
 
 // ============================================================================
 // 2. Pin Definitions
@@ -814,7 +817,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
 
   // 1. Check for active override
   if (app.overrideEndTime > 0) {
-    if ((long)(millis() - app.overrideEndTime) < 0) {  // Handle millis() overflow properly
+    if (app.overrideEndTime == PERMANENT_OVERRIDE_VALUE || (long)(millis() - app.overrideEndTime) < 0) {  // Permanent or active temporary override
       targetState = app.overrideState;
       app.currentMode = OVERRIDDEN;
     } else {
@@ -1007,7 +1010,12 @@ void handleStatus(AsyncWebServerRequest *request) {
     }
     app_status["mode"] = modeStr;
     if (appliances[i].overrideEndTime > 0 && appliances[i].currentMode == OVERRIDDEN) {
-      app_status["timeout_seconds"] = (appliances[i].overrideEndTime - millis()) / 1000;
+      if (appliances[i].overrideEndTime == PERMANENT_OVERRIDE_VALUE) {
+        app_status["override_type"] = "permanent";
+      } else {
+        app_status["override_type"] = "temporary";
+        app_status["timeout_seconds"] = (appliances[i].overrideEndTime - millis()) / 1000;
+      }
     }
   }
 
@@ -1084,7 +1092,8 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
           appliances[i].overrideState = (action == "ON" ? ON : OFF);
           // Prevent overflow: limit timeout to ~35 days (50000 minutes)
           if (timeoutMinutes > 50000) timeoutMinutes = 50000;
-          appliances[i].overrideEndTime = (timeoutMinutes > 0) ? (millis() + (unsigned long)timeoutMinutes * 60UL * 1000UL) : 0;
+          // Use PERMANENT_OVERRIDE_VALUE for permanent override, calculated time for temporary override
+          appliances[i].overrideEndTime = (timeoutMinutes > 0) ? (millis() + (unsigned long)timeoutMinutes * 60UL * 1000UL) : PERMANENT_OVERRIDE_VALUE;
           break;
         }
       }
