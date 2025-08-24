@@ -111,6 +111,9 @@
 // Override Constants
 #define PERMANENT_OVERRIDE_VALUE ULONG_MAX  // Value used to indicate permanent override
 
+// Temperature Sensor Constants  
+#define DEVICE_DISCONNECTED_C -127.0  // DallasTemperature library constant for sensor error
+
 // ============================================================================
 // 1.6. PROGMEM String Literals (Memory Optimization)
 // ============================================================================
@@ -675,7 +678,6 @@ void connectWiFi() {
   #endif
   WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
-  WiFi.setPowerSave(false);
   WiFi.begin(ssid.c_str(), password.c_str());
 
   unsigned long startTime = millis();
@@ -857,7 +859,7 @@ void loadSchedules() {
   #if DEBUG_MODE
   Serial.println("[NVS] Loading schedules from NVS...");
   #endif
-  JsonDocument doc;  // Changed from StaticJsonDocument to JsonDocument
+  StaticJsonDocument<2048> doc;  // Use StaticJsonDocument with adequate size
   DeserializationError error = deserializeJson(doc, schedulesJson);
 
   if (error) {
@@ -908,7 +910,7 @@ void saveSchedules() {
     return;
   }
   
-  JsonDocument doc;
+  StaticJsonDocument<2048> doc;  // Use StaticJsonDocument with adequate size
 
   for (auto const &[applianceName, schedulesVec] : applianceSchedules) {
     JsonArray schedulesArray = doc[applianceName].to<JsonArray>();
@@ -948,18 +950,6 @@ void handleDelayedScheduleSave() {
   if (schedulesDirty && (long)(millis() - lastScheduleSaveMillis) >= SCHEDULE_SAVE_DELAY_MS) {
     saveSchedules();
   }
-}
-
-  String output;
-  serializeJson(doc, output);
-  preferences.putString(NVS_KEY_SCHEDULES, output);
-  #if DEBUG_MODE
-  Serial.println("[NVS] Schedules saved to NVS.");
-  Serial.println(output);  // For debugging
-  #endif
-  
-  // Close schedules namespace
-  preferences.end();
 }
 
 /**
@@ -1165,7 +1155,7 @@ void handleRoot(AsyncWebServerRequest *request) {
 void handleStatus(AsyncWebServerRequest *request) {
   if (!authenticateRequest(request)) return;
 
-  JsonDocument doc;  // Changed from StaticJsonDocument to JsonDocument
+  StaticJsonDocument<1024> doc;  // Use StaticJsonDocument with fixed size
   DateTime now = rtc.now();
 
   doc["timestamp"] = now.timestamp();
@@ -1236,7 +1226,7 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
 
   // Only process when we have received all the data
   if (index + len == total) {
-    JsonDocument doc;
+    StaticJsonDocument<1024> doc;  // Control endpoint - moderate size needed
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1286,8 +1276,8 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
 void handleGetSchedules(AsyncWebServerRequest *request) {
   if (!authenticateRequest(request)) return;
 
-  // Use smaller JSON document for better memory efficiency
-  JsonDocument doc;
+  // Use StaticJsonDocument for better memory efficiency
+  StaticJsonDocument<2048> doc;  // Get schedules needs larger size
   JsonObject schedules_json = doc["schedules"].to<JsonObject>();
 
   for (auto const &[applianceName, schedulesVec] : applianceSchedules) {
@@ -1342,7 +1332,7 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
 
   // Only process when we have received all the data
   if (index + len == total) {
-    JsonDocument doc;
+    StaticJsonDocument<2048> doc;  // Schedules endpoint - larger size needed
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1434,7 +1424,7 @@ void handleWifiConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len,
 
   // Only process when we have received all the data
   if (index + len == total) {
-    JsonDocument doc;
+    StaticJsonDocument<512> doc;  // WiFi config - small size needed
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1556,7 +1546,7 @@ void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t
 
   // Only process when we have received all the data
   if (index + len == total) {
-    JsonDocument doc;
+    StaticJsonDocument<512> doc;  // Reset endpoint - small size needed
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1660,7 +1650,7 @@ void handleUpdateSingleSchedule(AsyncWebServerRequest *request, uint8_t *data, s
 
   // Only process when we have received all the data
   if (index + len == total) {
-    JsonDocument doc;
+    StaticJsonDocument<1024> doc;  // Single schedule update - moderate size needed
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
