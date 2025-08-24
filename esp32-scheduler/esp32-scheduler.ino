@@ -198,7 +198,9 @@ unsigned long heaterOnTimeMillis = 0;                         // Tracks when hea
 bool heaterForcedOn = false;                                  // Flag indicating temperature-controlled heater state
 bool lastHeaterState = false;                                 // Cache last heater state to avoid redundant operations
 int temperatureReadFailures = 0;                              // Track consecutive temperature read failures
-const int MAX_TEMP_FAILURES = 3;                              // Max consecutive failures before emergency action
+const int MAX_TEMP_FAILURES = 8;                              // Max consecutive failures before emergency (2+ minutes)
+int temperatureRecoveryCount = 0;                             // Track successful readings after failures
+const int MIN_RECOVERY_READINGS = 3;                          // Require 3 good readings to clear emergency
 
 // Appliance Management System (Optimized)
 enum ApplianceState { OFF,
@@ -446,8 +448,30 @@ void setup() {
 
   // Initialize DS18B20 Temperature Sensor
   sensors.begin();
+  sensors.setResolution(12);  // Set to 12-bit resolution for better accuracy
+  sensors.setWaitForConversion(false);  // Use non-blocking mode
+  
+  // Initialize sensor state variables
+  temperatureReadFailures = 0;
+  temperatureRecoveryCount = 0;
+  
+  // Take an initial temperature reading
+  sensors.requestTemperatures();
+  delay(200);  // Wait for conversion
+  float initialTemp = sensors.getTempCByIndex(0);
+  if (initialTemp != DEVICE_DISCONNECTED_C && initialTemp > -50.0 && initialTemp < 100.0) {
+    currentTemperatureC = initialTemp;
+    #if DEBUG_MODE
+    Serial.printf("[DS18B20] Initial temperature reading: %.1f°C\n", currentTemperatureC);
+    #endif
+  } else {
+    #if DEBUG_MODE
+    Serial.println("[DS18B20] Warning: Initial temperature reading failed, using default 25.0°C");
+    #endif
+  }
+  
   #if DEBUG_MODE
-  Serial.println("[DS18B20] Temperature sensor initialized.");
+  Serial.println("[DS18B20] Temperature sensor initialized and configured.");
   #endif
 
   // Configure Relay Pins and ensure they are OFF initially
@@ -540,15 +564,36 @@ void loop() {
   // Read temperature periodically
   if ((long)(millis() - lastTempReadMillis) >= TEMP_READ_INTERVAL_MS) {
     sensors.requestTemperatures();
+    delay(50);  // Give sensor time to complete conversion
     float tempReading = sensors.getTempCByIndex(0);
     
     if (tempReading != DEVICE_DISCONNECTED_C && tempReading > -50.0 && tempReading < 100.0) {
       // Valid temperature reading
       currentTemperatureC = (currentTemperatureC * 0.9) + (tempReading * 0.1);
-      temperatureReadFailures = 0;  // Reset failure counter
+      
+      // Track recovery after failures
+      if (temperatureReadFailures > 0) {
+        temperatureRecoveryCount++;
+        #if DEBUG_MODE
+        Serial.printf(F("[TEMP] Recovery reading %d/%d (%.1f°C)\n"), 
+                     temperatureRecoveryCount, MIN_RECOVERY_READINGS, tempReading);
+        #endif
+        
+        // Only reset failures after multiple successful readings
+        if (temperatureRecoveryCount >= MIN_RECOVERY_READINGS) {
+          temperatureReadFailures = 0;
+          temperatureRecoveryCount = 0;
+          #if DEBUG_MODE
+          Serial.println(F("[TEMP] Sensor recovery confirmed - failures reset"));
+          #endif
+        }
+      } else {
+        temperatureRecoveryCount = 0;  // Reset recovery counter when sensor is stable
+      }
     } else {
       // Temperature sensor failure detected
       temperatureReadFailures++;
+      temperatureRecoveryCount = 0;  // Reset recovery on new failure
       #if DEBUG_MODE
       Serial.printf(F("[TEMP] Sensor read failure %d/%d (Reading: %.1f)\n"), 
                    temperatureReadFailures, MAX_TEMP_FAILURES, tempReading);
@@ -556,7 +601,9 @@ void loop() {
       
       // Take fail-safe action after consecutive failures
       if (temperatureReadFailures >= MAX_TEMP_FAILURES) {
+        #if DEBUG_MODE
         Serial.println(F("[EMERGENCY] Temperature sensor failed - Activating fail-safe mode"));
+        #endif
         emergencyShutdown = true;
         emergencyActivatedTime = millis();
         // Sound emergency alert
@@ -586,15 +633,19 @@ void loop() {
     bool conditionsSafe = (currentTemperatureC > 0.0 && 
                           currentTemperatureC > EMERGENCY_TEMP_LOW && 
                           currentTemperatureC < EMERGENCY_TEMP_HIGH && 
-                          temperatureReadFailures == 0);
+                          temperatureReadFailures == 0 &&
+                          temperatureRecoveryCount == 0);  // Only reset when sensor is fully stable
     
     if (timeoutReset || conditionsSafe) {
       emergencyShutdown = false;
       emergencyActivatedTime = 0;
       temperatureReadFailures = 0;  // Reset failure counter
+      temperatureRecoveryCount = 0;  // Reset recovery counter
+      #if DEBUG_MODE
       Serial.println(timeoutReset ? 
         F("[EMERGENCY] Auto-reset after timeout - System resumed") :
         F("[EMERGENCY] Auto-reset: Conditions safe - System resumed"));
+      #endif
       buzz(2, 300);  // Confirmation buzzes
     }
   }
