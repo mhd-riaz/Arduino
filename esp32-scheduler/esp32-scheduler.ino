@@ -240,7 +240,7 @@ std::map<String, std::vector<ScheduleEntry>> applianceSchedules;
 String postBody = "";
 
 // Debug and logging configuration
-#define DEBUG_MODE false  // Set to true for development, false for production to save memory
+#define DEBUG_MODE true   // Set to true for development, false for production to save memory
 unsigned long lastDebugPrintMillis = 0;
 const unsigned long DEBUG_PRINT_INTERVAL_MS = 30000;  // Print debug info every 30 seconds (reduced frequency)
 
@@ -800,6 +800,46 @@ void syncTimeNTP() {
 }
 
 /**
+ * @brief Loads the default factory schedules and saves them to NVS.
+ * This function is used for initial setup and factory reset.
+ */
+void loadDefaultSchedules() {
+  // Clear existing schedules
+  applianceSchedules.clear();
+  
+  // Define custom default schedules (all times converted to minutes for efficiency)
+  // CO2: 8:30 AM - 1:30 PM (510-810), 3:30 PM - 8:30 PM (930-1230)
+  applianceSchedules["CO2"].push_back({ "on_interval", 510, 810 });         
+  applianceSchedules["CO2"].push_back({ "on_interval", 930, 1230 });        
+  
+  // Light: 9:30 AM - 1:30 PM (570-810), 4:30 PM - 8:30 PM (990-1230)
+  applianceSchedules["Light"].push_back({ "on_interval", 570, 810 });       
+  applianceSchedules["Light"].push_back({ "on_interval", 990, 1230 });      
+  
+  // Heater: 12:00 AM - 4:30 AM (0-270), 8:30 PM - 11:59 PM (1230-1439)
+  applianceSchedules["Heater"].push_back({ "on_interval", 0, 270 });        
+  applianceSchedules["Heater"].push_back({ "on_interval", 1230, 1439 });    
+  
+  // Hang-on Filter: 6:30 AM - 8:30 AM (390-510), 8:30 PM - 10:30 PM (1230-1350)
+  applianceSchedules["HangOnFilter"].push_back({ "on_interval", 390, 510 }); 
+  applianceSchedules["HangOnFilter"].push_back({ "on_interval", 1230, 1350 });
+  
+  // Filter: 1:30 PM - 3:30 PM (810-930) - OFF during this time for maintenance
+  applianceSchedules["Filter"].push_back({ "off_interval", 810, 930 });     
+
+  markSchedulesDirty();  // Schedule delayed save
+  
+  #if DEBUG_MODE
+  Serial.println(F("[Factory Reset] Default schedules loaded:"));
+  Serial.println(F("  CO2: 8:30-13:30 (510-810), 15:30-20:30 (930-1230)"));
+  Serial.println(F("  Light: 9:30-13:30 (570-810), 16:30-20:30 (990-1230)"));
+  Serial.println("  Heater: 0:00-4:30 (0-270), 20:30-23:59 (1230-1439)");
+  Serial.println("  HangOnFilter: 6:30-8:30 (390-510), 20:30-22:30 (1230-1350)");
+  Serial.println("  Filter: OFF 13:30-15:30 (810-930), otherwise ON");
+  #endif
+}
+
+/**
  * @brief Loads appliance schedules from NVS. If no schedules are found,
  * custom default schedules optimized for fish tank automation are loaded and saved to NVS.
  * 
@@ -824,35 +864,7 @@ void loadSchedules() {
     #if DEBUG_MODE
     Serial.println("[NVS] No schedules found in NVS. Loading custom default schedules...");
     #endif
-    // Define custom default schedules (all times converted to minutes for efficiency)
-    // CO2: 8:30 AM - 1:30 PM (510-810), 3:30 PM - 8:30 PM (930-1230)
-    applianceSchedules["CO2"].push_back({ "on_interval", 510, 810 });         
-    applianceSchedules["CO2"].push_back({ "on_interval", 930, 1230 });        
-    
-    // Light: 9:30 AM - 1:30 PM (570-810), 4:30 PM - 8:30 PM (990-1230)
-    applianceSchedules["Light"].push_back({ "on_interval", 570, 810 });       
-    applianceSchedules["Light"].push_back({ "on_interval", 990, 1230 });      
-    
-    // Heater: 12:00 AM - 4:30 AM (0-270), 8:30 PM - 11:59 PM (1230-1439)
-    applianceSchedules["Heater"].push_back({ "on_interval", 0, 270 });        
-    applianceSchedules["Heater"].push_back({ "on_interval", 1230, 1439 });    
-    
-    // Hang-on Filter: 6:30 AM - 8:30 AM (390-510), 8:30 PM - 10:30 PM (1230-1350)
-    applianceSchedules["HangOnFilter"].push_back({ "on_interval", 390, 510 }); 
-    applianceSchedules["HangOnFilter"].push_back({ "on_interval", 1230, 1350 });
-    
-    // Filter: 1:30 PM - 3:30 PM (810-930) - OFF during this time for maintenance
-    applianceSchedules["Filter"].push_back({ "off_interval", 810, 930 });     
-
-    markSchedulesDirty();  // Schedule delayed save
-    #if DEBUG_MODE
-    Serial.println(F("[NVS] Default schedules loaded and saved:"));
-    Serial.println(F("  CO2: 8:30-13:30 (510-810), 15:30-20:30 (930-1230)"));
-    Serial.println(F("  Light: 9:30-13:30 (570-810), 16:30-20:30 (990-1230)"));
-    Serial.println("  Heater: 0:00-4:30 (0-270), 20:30-23:59 (1230-1439)");
-    Serial.println("  HangOnFilter: 6:30-8:30 (390-510), 20:30-22:30 (1230-1350)");
-    Serial.println("  Filter: OFF 13:30-15:30 (810-930), otherwise ON");
-    #endif
+    loadDefaultSchedules();
     return;
   }
 
@@ -1076,10 +1088,15 @@ void updateOLED(DateTime now) {
   int y = 10;
   for (int i = 0; i < NUM_APPLIANCES; i++) {
     display.setCursor(0, y + (i * 8));
-    // Use shorter appliance names for better display
-    char shortName[6];
-    strncpy(shortName, appliances[i].name.c_str(), 5);
-    shortName[5] = '\0';
+    // Use custom short names for better readability
+    const char* shortName;
+    if (appliances[i].name == "Filter") shortName = "Filter";
+    else if (appliances[i].name == "HangOnFilter") shortName = "HOF";
+    else if (appliances[i].name == "CO2") shortName = "CO2";
+    else if (appliances[i].name == "Light") shortName = "Light";
+    else if (appliances[i].name == "Heater") shortName = "Heater";
+    else shortName = appliances[i].name.c_str();
+    
     snprintf(oledBuffer, sizeof(oledBuffer), "%s: %s", shortName, 
              (appliances[i].currentState == ON ? "ON" : "OFF"));
     display.print(oledBuffer);
@@ -1094,9 +1111,9 @@ void updateOLED(DateTime now) {
   if (emergencyShutdown) {
     display.print(F("EMRG!"));
   } else if (WiFi.status() == WL_CONNECTED) {
-    // Show last octet of IP for space efficiency
+    // Show more meaningful IP info - last two octets
     IPAddress ip = WiFi.localIP();
-    snprintf(oledBuffer, sizeof(oledBuffer), "IP:%d", ip[3]);
+    snprintf(oledBuffer, sizeof(oledBuffer), "%d.%d", ip[2], ip[3]);
     display.print(oledBuffer);
   } else if (apModeActive) {
     display.print(F("AP"));
@@ -1515,15 +1532,18 @@ void handleEmergencyReset(AsyncWebServerRequest *request) {
 }
 
 /**
- * @brief Handles the "/reset" POST endpoint. Resets appliance overrides back to scheduled behavior.
- * JSON Input:
+ * @brief Handles the "/reset" POST endpoint. 
+ * - Resets specific appliance overrides back to scheduled behavior, OR
+ * - Performs factory reset: clears all overrides and restores default schedules
+ * 
+ * JSON Input for specific appliances:
  * {
  * "appliances": ["Light", "CO2"]  // Optional: specific appliances to reset
  * }
  * 
- * Or reset all appliances:
+ * JSON Input for factory reset:
  * {
- * "reset_all": true
+ * "reset_all": true  // Clears all overrides and restores default schedules
  * }
  */
 void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
@@ -1562,13 +1582,19 @@ void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t
     int resetCount = 0;
 
     if (resetAll) {
-      // Reset all appliances
+      // Factory Reset: Reset all appliances and restore default schedules
       for (int i = 0; i < NUM_APPLIANCES; i++) {
         appliances[i].overrideEndTime = 0;  // Clear override
         appliances[i].overrideState = OFF;   // Reset override state
         resetCount++;
       }
-      Serial.println("[API] All appliance overrides reset to schedule");
+      
+      // Load default factory schedules
+      loadDefaultSchedules();
+      
+      #if DEBUG_MODE
+      Serial.println("[API] Factory reset completed: All appliance overrides cleared and default schedules restored");
+      #endif
     } else if (!appliancesToReset.isNull()) {
       // Reset specific appliances
       for (JsonVariant applianceName : appliancesToReset) {
@@ -1595,7 +1621,14 @@ void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t
       return;
     }
 
-    request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"" + String(resetCount) + " appliances reset to schedule\"}\n");
+    String responseMessage;
+    if (resetAll) {
+      responseMessage = "Factory reset completed: " + String(resetCount) + " appliances reset and default schedules restored";
+    } else {
+      responseMessage = String(resetCount) + " appliances reset to schedule";
+    }
+
+    request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"" + responseMessage + "\"}\n");
   }
 }
 
