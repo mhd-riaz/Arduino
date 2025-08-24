@@ -44,8 +44,8 @@
 //   - IN2 (CO2): GPIO 17 - CO2 injection system  
 //   - IN3 (Light): GPIO 18 - Aquarium lighting
 //   - IN4 (Heater): GPIO 19 - Water heater
-//   - IN5 (HangOnFilter): GPIO 5 - Secondary hang-on filter (changed from GPIO 20)
-//   - Note: Relays are typically Active LOW.
+//   - IN5 (HangOnFilter): GPIO 5 - Secondary hang-on filter
+//   - Note: Relay type is configurable via RELAY_ACTIVE_LOW define.
 // - Buzzer: GPIO 13 (PWM capable)
 //
 // Libraries Required:
@@ -62,13 +62,13 @@
 // - ArduinoJson (https://github.com/bblanchon/ArduinoJson) - Version 6 recommended
 // - NTPClient (https://github.com/arduino-libraries/NTPClient)
 // - map (for std::map)
-// - driver/ledc.h (for ledcSetup, ledcAttachPin, ledcWrite, ledcWriteTone)
+// - driver/ledc.h (for ledcAttach, ledcWriteTone) - ESP32 Arduino 3.0+ API
 //
 // Important Notes:
 // - Ensure `Preferences.h` is used for NVS.
 // - All timing operations use `millis()` for non-blocking behavior.
 // - Schedules optimized to use minute-based timing (0-1439) for efficiency.
-// - Relays are assumed to be Active LOW (LOW = ON, HIGH = OFF).
+// - Relays are configurable via RELAY_ACTIVE_LOW define (true = Active LOW, false = Active HIGH).
 // - Heater control prioritizes temperature over schedule/override with 30-min minimum runtime.
 // - `ArduinoJson` v6 using JsonDocument for dynamic memory management.
 // - Default custom schedules are loaded if NVS is empty.
@@ -112,19 +112,22 @@
 // 2. Pin Definitions
 // ============================================================================
 // Appliance Relay Pins (Final GPIO assignments for 5-device system)
-// Relays are assumed to be Active LOW: LOW = ON, HIGH = OFF
 #define MOTOR_RELAY_PIN 16      // Main Filter (Primary filtration system)
 #define CO2_RELAY_PIN 17        // CO2 System (CO2 injection for plants)
 #define LIGHT_RELAY_PIN 18      // Aquarium Lights (LED lighting system)
 #define HEATER_RELAY_PIN 19     // Water Heater (Temperature control)
-#define HANGON_FILTER_PIN 5     // Hang-on Filter (Secondary filtration) - Changed from GPIO 20 (not available)
+#define HANGON_FILTER_PIN 5     // Hang-on Filter (Secondary filtration)
+
+// Relay Configuration
+// Set to true for Active LOW relays (LOW = ON, HIGH = OFF) - Most common
+// Set to false for Active HIGH relays (HIGH = ON, LOW = OFF)
+#define RELAY_ACTIVE_LOW true   // Change this based on your relay module type
 
 // DS18B20 Temperature Sensor Pin
 #define ONE_WIRE_BUS 14  // DS18B20 data pin (requires 4.7KΩ pull-up to 3.3V)
 
 // Buzzer Pin (PWM capable for audio feedback)
 #define BUZZER_PIN 13
-#define BUZZER_CHANNEL 0  // LEDC channel for buzzer PWM control
 
 // OLED Display (I2C - Shared with RTC on same bus)
 #define OLED_SDA 21
@@ -227,8 +230,8 @@ bool apModeActive = false;
 
 // Emergency Safety System  
 bool emergencyShutdown = false;
-const float EMERGENCY_TEMP_HIGH = 35.0;  // Emergency shutdown if temperature exceeds 35°C
-const float EMERGENCY_TEMP_LOW = 10.0;   // Emergency shutdown if temperature below 10°C
+const float EMERGENCY_TEMP_HIGH = 32.0;  // Emergency shutdown if temperature exceeds 32°C
+const float EMERGENCY_TEMP_LOW = 20.0;   // Emergency shutdown if temperature below 20°C
 
 // System Health Monitoring & Alert System
 unsigned long lastSystemHeartbeat = 0;
@@ -258,6 +261,11 @@ void loadSchedules();
 void saveSchedules();
 void applyApplianceLogic(Appliance &app, int currentMinutes);
 
+// Relay Control Functions
+void setRelayState(int pin, ApplianceState state);
+int getRelayOffState();
+int getRelayOnState();
+
 // Display & Utility Functions  
 void updateOLED(DateTime now);
 bool isTimeInInterval(int currentMinutes, int startMin, int endMin);
@@ -277,6 +285,39 @@ void handleNotFound(AsyncWebServerRequest *request);
 void handleEmergencyReset(AsyncWebServerRequest *request);
 
 // ============================================================================
+// 4.5. Relay Control Helper Functions
+// ============================================================================
+
+/**
+ * @brief Returns the digital state for relay OFF based on relay type
+ * @return HIGH for active LOW relays, LOW for active HIGH relays
+ */
+int getRelayOffState() {
+  return RELAY_ACTIVE_LOW ? HIGH : LOW;
+}
+
+/**
+ * @brief Returns the digital state for relay ON based on relay type
+ * @return LOW for active LOW relays, HIGH for active HIGH relays
+ */
+int getRelayOnState() {
+  return RELAY_ACTIVE_LOW ? LOW : HIGH;
+}
+
+/**
+ * @brief Sets relay state properly based on relay type configuration
+ * @param pin GPIO pin connected to relay
+ * @param state ApplianceState (ON or OFF)
+ */
+void setRelayState(int pin, ApplianceState state) {
+  if (state == ON) {
+    digitalWrite(pin, getRelayOnState());
+  } else {
+    digitalWrite(pin, getRelayOffState());
+  }
+}
+
+// ============================================================================
 // 5. Setup Function
 // ============================================================================
 void setup() {
@@ -290,13 +331,12 @@ void setup() {
   delay(2000);
   
   // Configure Buzzer Pin early for startup beep
-  ledcAttachChannel(BUZZER_PIN, 1000, 8, BUZZER_CHANNEL);  // pin, frequency, resolution, channel
-  ledcWrite(BUZZER_CHANNEL, 0);                            // Ensure buzzer is off initially
+  ledcAttach(BUZZER_PIN, 1000, 8);  // pin, frequency, resolution
   
   // Startup beep to indicate system is ready
-  ledcWriteTone(BUZZER_CHANNEL, 1500);  // 1.5kHz startup tone
-  delay(300);                           // Beep duration
-  ledcWriteTone(BUZZER_CHANNEL, 0);     // Turn off
+  ledcWriteTone(BUZZER_PIN, 1500);  // 1.5kHz startup tone
+  delay(300);                       // Beep duration
+  ledcWriteTone(BUZZER_PIN, 0);     // Turn off
   #if DEBUG_MODE
   Serial.println("[SETUP] System startup beep completed.");
   #endif
@@ -320,10 +360,10 @@ void setup() {
     Serial.println("[ERROR] RTC not found!");
     // Sound continuous error buzzer to alert user
     while (1) {
-      ledcWriteTone(BUZZER_CHANNEL, 2000);  // 2kHz error tone
-      delay(500);                           // Buzz for 500ms
-      ledcWriteTone(BUZZER_CHANNEL, 0);     // Turn off
-      delay(1000);                          // Wait 1 second before next buzz
+      ledcWriteTone(BUZZER_PIN, 2000);  // 2kHz error tone
+      delay(500);                       // Buzz for 500ms
+      ledcWriteTone(BUZZER_PIN, 0);     // Turn off
+      delay(1000);                      // Wait 1 second before next buzz
     }
   }
   if (!rtc.isrunning()) {
@@ -361,11 +401,15 @@ void setup() {
   Serial.println("[DS18B20] Temperature sensor initialized.");
   #endif
 
-  // Configure Relay Pins and ensure they are OFF initially (Active HIGH for safety)
+  // Configure Relay Pins and ensure they are OFF initially
   for (int i = 0; i < NUM_APPLIANCES; i++) {
     pinMode(appliances[i].pin, OUTPUT);
-    digitalWrite(appliances[i].pin, HIGH);  // Set HIGH to ensure relays are OFF (Active LOW)
-    Serial.printf("[RELAY] Pin %d (%s) set to OFF.\n", appliances[i].pin, appliances[i].name.c_str());
+    setRelayState(appliances[i].pin, OFF);  // Set to OFF using proper relay type
+    #if DEBUG_MODE
+    Serial.printf("[RELAY] Pin %d (%s) set to OFF (Relay Type: %s).\n", 
+                  appliances[i].pin, appliances[i].name.c_str(), 
+                  RELAY_ACTIVE_LOW ? "Active LOW" : "Active HIGH");
+    #endif
   }
 
   // Attempt WiFi Connection
@@ -581,9 +625,9 @@ void buzz(int count, int delayMs) {
   Serial.printf("[BUZZER] Buzzing %d times...\n", count);
   #endif
   for (int i = 0; i < count; i++) {
-    ledcWriteTone(BUZZER_CHANNEL, 1000);  // 1kHz tone (using original LEDC API)
-    delay(200);                           // Buzz duration
-    ledcWriteTone(BUZZER_CHANNEL, 0);     // Turn off (using original LEDC API)
+    ledcWriteTone(BUZZER_PIN, 1000);  // 1kHz tone
+    delay(200);                       // Buzz duration
+    ledcWriteTone(BUZZER_PIN, 0);     // Turn off
     if (i < count - 1) {
       delay(delayMs);
     }
@@ -820,7 +864,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
   // Update appliance state if changed
   if (app.currentState != targetState) {
     app.currentState = targetState;
-    digitalWrite(app.pin, (app.currentState == ON ? LOW : HIGH));  // Active LOW relay
+    setRelayState(app.pin, app.currentState);  // Use configurable relay control
     // Only log state changes for critical events (temperature control) or if debug mode
     #if DEBUG_MODE
     Serial.printf("[CONTROL] %s: %s\n", app.name.c_str(), (app.currentState == ON ? "ON" : "OFF"));
@@ -1221,17 +1265,17 @@ void emergencyShutdownAll() {
   Serial.println("[EMERGENCY] Emergency shutdown!");
   emergencyShutdown = true;
   
-  // Turn off all appliances immediately
+  // Turn off all appliances immediately using proper relay control
   for (int i = 0; i < NUM_APPLIANCES; i++) {
     appliances[i].currentState = OFF;
-    digitalWrite(appliances[i].pin, HIGH);  // Active LOW relays
+    setRelayState(appliances[i].pin, OFF);  // Use configurable relay control
   }
   
   // Sound emergency alert
   for (int i = 0; i < 5; i++) {
-    ledcWriteTone(BUZZER_CHANNEL, 2000);
+    ledcWriteTone(BUZZER_PIN, 2000);
     delay(200);
-    ledcWriteTone(BUZZER_CHANNEL, 0);
+    ledcWriteTone(BUZZER_PIN, 0);
     delay(200);
   }
 }
