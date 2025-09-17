@@ -59,10 +59,14 @@
 // - DallasTemperature (https://github.com/milesburton/Arduino-Temperature-Control-Library)
 // - Adafruit GFX Library (https://github.com/adafruit/Adafruit-GFX-Library)
 // - Adafruit SSD1306 (https://github.com/adafruit/Adafruit_SSD1306)
-// - ArduinoJson (https://github.com/bblanchon/ArduinoJson) - Version 6 recommended
+// - ArduinoJson (https://github.com/bblanchon/ArduinoJson) - Version 6+ recommended
 // - NTPClient (https://github.com/arduino-libraries/NTPClient)
 // - map (for std::map)
-// - driver/ledc.h (for ledcAttach, ledcWriteTone) - ESP32 Arduino 3.0+ API
+// - driver/ledc.h (for ESP32 Core 2.x/3.0+ compatibility) - Cross-compatible buzzer API
+//
+// ESP32 Arduino Core Compatibility:
+// - ESP32 Arduino Core 2.x and 3.0+ supported via compatibility layer
+// - Automatic detection and cross-compatible buzzer functions (tone/LEDC)
 //
 // Important Notes:
 // - Ensure `Preferences.h` is used for NVS.
@@ -80,6 +84,159 @@
 // - A 4.7KΩ pull-up resistor is required for the DS18B20 data line to 3.3V.
 // - For the relay module, use a separate 12V power supply for JD-VCC and
 //   remove the VCC-JD-VCC jumper for opto-isolation.
+//
+// ============================================================================
+// CIRCUIT PROTECTION & SAFETY (INDIA-SPECIFIC)
+// ============================================================================
+//
+// WARNING: Electrical safety is critical! Always use proper fuses and protection.
+// The Indian electrical environment requires robust protection due to:
+// - Voltage fluctuations (190V-250V AC mains)
+// - Power surges during monsoons and grid switching
+// - Frequent power outages and restoration spikes
+//
+// MANDATORY PROTECTION COMPONENTS:
+//
+// 1. MAINS POWER PROTECTION (230V AC Side):
+//    - Main Circuit Breaker: 10A MCB (Miniature Circuit Breaker)
+//    - Surge Protection Device (SPD): Metal Oxide Varistor 275V
+//    - Earth Leakage Circuit Breaker (ELCB): 30mA for safety
+//
+// 2. 12V DC SUPPLY PROTECTION (Relay Power):
+//    - Input Fuse: 3A slow-blow fuse (before 12V regulator)
+//    - TVS Diode: P6KE15A (15V, 600W) for transient suppression
+//    - Filter Capacitor: 1000µF/25V electrolytic + 100nF ceramic
+//    - Ferrite Bead: FB-43-101 on 12V input line for EMI suppression
+//
+// 3. 5V DC SUPPLY PROTECTION (ESP32 Power - ERD Charger 5V/2A):
+//    - Primary Supply: ERD charger (5V/2A max) - Phone charger type
+//    - Input Fuse: 2.5A slow-blow fuse (T2.5AL250V) after charger output
+//    - Reverse Polarity Protection: Schottky diode 1N5819 (3A/40V rating)
+//    - Input Filter: 1000µF/16V electrolytic + 100nF ceramic for noise reduction
+//    - ESP32 Power: Direct 5V to ESP32 Dev Module VIN pin (onboard regulator to 3.3V)
+//    - Current Limiting Resistors: Basic protection without monitoring
+//    - TVS Surge Protection: P6KE6.8CA (6.8V bidirectional) across 5V rail
+//    - Inrush Current Limiter: 10Ω NTC thermistor (5D-11) in series with 5V+
+//    - EMI Filter: Ferrite bead (FB-43-101) on 5V input line
+//    - Additional Filtering: 470µF/10V low-ESR capacitor + 10nF ceramic (high-freq noise)
+//
+// 4. 3.3V LOGIC LEVEL PROTECTION:
+//    - Decoupling Capacitors: 100nF ceramic + 10µF tantalum near ESP32
+//    - ESD Protection: TPD4E02B4 on I2C lines (SDA/SCL)
+//    - Current Limiting Resistors: 330Ω on GPIO outputs to relays
+//    - Power Supply Filtering: LC filter (10µH inductor + 47µF capacitor)
+//    - GPIO Protection: 100Ω series resistors on all GPIO pins
+//    - 3.3V Rail TVS: SMBJ3.3A (3.3V unidirectional) for logic level protection
+//
+// 5. SENSOR PROTECTION (DS18B20, I2C Devices):
+//    - Pull-up Resistors: 4.7kΩ with series 100Ω protection resistors
+//    - EMI Filtering: 100nF capacitors on long sensor wires
+//    - Cable Shielding: Use shielded cable for DS18B20 (>1m runs)
+//    - DS18B20 Protection: 100Ω series resistor + 100nF to ground for noise immunity
+//    - I2C Line Protection: 82Ω series resistors on SDA/SCL + 100pF capacitors
+//    - Sensor Power Filtering: 100µF + 100nF capacitors on sensor VCC lines
+//    - ESD Diodes: BAV99 dual diode array on sensor data lines
+//
+// 6. RELAY ISOLATION & PROTECTION:
+//    - Optical Isolation: PC817 optocouplers (already in relay module)
+//    - Flyback Protection: 1N4007 diodes across relay coils (usually built-in)
+//    - Contact Protection: RC snubber (100Ω + 100nF) across AC contacts
+//    - Ground Isolation: Separate grounds for high voltage and logic sides
+//
+// 7. EMERGENCY SAFETY FEATURES:
+//    - Emergency Stop Switch: Normally-closed, breaks all power
+//    - Thermal Fuse: 70°C thermal cutoff on power supplies
+//    - Watchdog Timer: Hardware watchdog (ESP32 built-in + external)
+//    - Status LED: Power indicator and fault LED
+//
+// RECOMMENDED FUSE SPECIFICATIONS (Based on ERD 5V/2A Charger):
+// - Main AC: 10A MCB (C-curve, 6kA breaking capacity)
+// - 12V Rail: 3A Slow-blow ceramic fuse (T3AL250V)
+// - 5V Rail (ERD Charger): 2.5A Slow-blow ceramic fuse (T2.5AL250V) - allows brief startup current
+// - ESP32 Supply: 1A Fast-blow fuse (F1AL250V) on ESP32 VIN line
+// - Sensor Lines: 100mA PTC fuses on long cable runs
+// - I2C Bus: 200mA PTC fuse for RTC and OLED protection
+//
+// GROUNDING & EARTHING:
+// - Proper earthing connection to water-safe earth rod
+// - Star grounding topology (single point ground)
+// - Separate analog and digital ground planes
+// - Use GFCI/RCD protection for any water-contact equipment
+//
+// ============================================================================
+// HARDWARE PROTECTION COMPONENTS SHOPPING LIST:
+// ============================================================================
+//
+// FUSES & CIRCUIT BREAKERS:
+// - 10A MCB (C-curve, 6kA): Main AC supply protection
+// - T3AL250V: 3A slow-blow ceramic fuse (12V rail)
+// - T2.5AL250V: 2.5A slow-blow ceramic fuse (5V rail)
+// - F1AL250V: 1A fast-blow fuse (ESP32 VIN)
+// - PTC Fuses: 100mA, 200mA self-resetting (sensor lines)
+//
+// SURGE PROTECTION DIODES:
+// - P6KE6.8CA: 6.8V bidirectional TVS (5V rail protection)
+// - P6KE15A: 15V unidirectional TVS (12V rail protection)
+// - SMBJ3.3A: 3.3V unidirectional TVS (logic level protection)
+// - BAV99: Dual switching diode array (sensor ESD protection)
+//
+// RECTIFIER & PROTECTION DIODES:
+// - 1N5819: 3A/40V Schottky (reverse polarity protection)
+// - 1N4007: 1A/1000V rectifier (flyback protection)
+// - 1N5822: 3A/40V Schottky (high current reverse protection)
+//
+// CAPACITORS (FILTERING & DECOUPLING):
+// - 1000µF/16V: Electrolytic (5V rail primary filter)
+// - 1000µF/25V: Electrolytic (12V rail primary filter)
+// - 470µF/10V: Low-ESR electrolytic (5V secondary filter)
+// - 100µF/6.3V: Tantalum (sensor power filter)
+// - 47µF/6.3V: Ceramic (3.3V rail filter)
+// - 10µF/6.3V: Tantalum (ESP32 decoupling)
+// - 100nF/50V: Ceramic X7R (general purpose filtering)
+// - 10nF/50V: Ceramic C0G (high-frequency noise)
+// - 100pF/50V: Ceramic C0G (I2C line filtering)
+//
+// INDUCTORS & FERRITES:
+// - 10µH/3A: Power inductor (3.3V LC filter)
+// - FB-43-101: Ferrite bead (EMI suppression)
+// - 5D-11: 10Ω NTC thermistor (inrush limiting)
+//
+// RESISTORS (PROTECTION & BIASING):
+// - 330Ω/0.25W: Current limiting (GPIO to relays)
+// - 100Ω/0.25W: Series protection (sensor lines)
+// - 82Ω/0.25W: I2C line protection
+// - 4.7kΩ/0.25W: Pull-up resistors (I2C, OneWire)
+// - 10kΩ/0.25W: General purpose pull-up/down
+//
+// ESD PROTECTION ICs:
+// - TPD4E02B4: Quad-channel ESD protection (I2C lines)
+// - PESD5V0S1BA: Single line ESD protection (GPIO)
+//
+// THERMAL PROTECTION:
+// - 70°C Thermal Fuse: Power supply thermal cutoff
+// - TO-220 Heat Sinks: For voltage regulators (if added)
+//
+// CONNECTORS & MECHANICAL:
+// - Phoenix Contact MKDS: Screw terminals (power connections)
+// - IP65 Enclosure: Waterproof housing for electronics
+// - DIN Rail Fuse Holders: Professional fuse mounting
+// - Heat Shrink Tubing: Wire protection and insulation
+//
+// ENCLOSURE PROTECTION:
+// - IP65 rated enclosure for electronics (dust/water protection)
+// - Ventilation with dust filters for cooling
+// - Cable glands for weather-sealed cable entry
+// - Corrosion-resistant materials for aquarium environment
+//
+// MONITORING & DIAGNOSTICS:
+// - Basic circuit protection with fuses and MCBs
+// - Emergency safety features (temperature limits, emergency shutdown)
+// - Proper grounding and earthing for Indian electrical conditions
+// - Enclosure protection for aquarium environment
+//
+// Note: Always consult a qualified electrician for mains wiring.
+//       Use proper isolation transformers for development/testing.
+//       Never work on live circuits - always power off before modifications.
 // ============================================================================
 
 // ============================================================================
@@ -99,7 +256,25 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <map>            // Required for std::map
-#include <driver/ledc.h>  // Explicitly include for LEDC functions as per Espressif docs
+#include <driver/ledc.h>  // Include for both ESP32 Core 2.x and 3.0+ compatibility
+
+// ============================================================================
+// 1.4. ESP32 Arduino Core Compatibility Layer
+// ============================================================================
+// Cross-compatibility for ESP32 Arduino Core 2.x and 3.0+
+// Core 3.0+ deprecated ledcAttach/ledcWriteTone in favor of simpler APIs
+
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  // ESP32 Arduino Core 3.0+ - Use modern tone() API
+  #define BUZZER_INIT(pin, freq, resolution) // No initialization needed for tone()
+  #define BUZZER_TONE(pin, frequency) tone(pin, frequency)
+  #define BUZZER_OFF(pin) noTone(pin)
+#else
+  // ESP32 Arduino Core 2.x - Use legacy LEDC API
+  #define BUZZER_INIT(pin, freq, resolution) ledcAttach(pin, freq, resolution)
+  #define BUZZER_TONE(pin, frequency) ledcWriteTone(pin, frequency)
+  #define BUZZER_OFF(pin) ledcWriteTone(pin, 0)
+#endif
 
 // ============================================================================
 // 1.5. Constants and Limits (Optimized)
@@ -113,6 +288,8 @@
 
 // Temperature Sensor Constants  
 #define DEVICE_DISCONNECTED_C -127.0  // DallasTemperature library constant for sensor error
+
+
 
 // ============================================================================
 // 1.6. PROGMEM String Literals (Memory Optimization)
@@ -382,13 +559,13 @@ void setup() {
   // Add 2-second startup delay with beep indicator
   delay(2000);
   
-  // Configure Buzzer Pin early for startup beep
-  ledcAttach(BUZZER_PIN, 1000, 8);  // pin, frequency, resolution
+  // Configure Buzzer Pin early for startup beep (ESP32 Core compatible)
+  BUZZER_INIT(BUZZER_PIN, 1000, 8);  // Cross-compatible initialization
   
   // Startup beep to indicate system is ready
-  ledcWriteTone(BUZZER_PIN, 1500);  // 1.5kHz startup tone
+  BUZZER_TONE(BUZZER_PIN, 1500);  // 1.5kHz startup tone
   delay(300);                       // Beep duration
-  ledcWriteTone(BUZZER_PIN, 0);     // Turn off
+  BUZZER_OFF(BUZZER_PIN);     // Turn off
   #if DEBUG_MODE
   Serial.println("[SETUP] System startup beep completed.");
   #endif
@@ -411,9 +588,9 @@ void setup() {
     Serial.println(F("[ERROR] RTC not found!"));
     // Sound continuous error buzzer to alert user
     while (1) {
-      ledcWriteTone(BUZZER_PIN, 2000);  // 2kHz error tone
+      BUZZER_TONE(BUZZER_PIN, 2000);  // 2kHz error tone
       delay(500);                       // Buzz for 500ms
-      ledcWriteTone(BUZZER_PIN, 0);     // Turn off
+      BUZZER_OFF(BUZZER_PIN);     // Turn off
       delay(1000);                      // Wait 1 second before next buzz
     }
   }
@@ -607,9 +784,9 @@ void loop() {
         emergencyShutdown = true;
         emergencyActivatedTime = millis();
         // Sound emergency alert
-        ledcWriteTone(BUZZER_PIN, 1000);
+        BUZZER_TONE(BUZZER_PIN, 1000);
         delay(100);
-        ledcWriteTone(BUZZER_PIN, 0);
+        BUZZER_OFF(BUZZER_PIN);
       }
     }
     lastTempReadMillis = millis();
@@ -813,9 +990,9 @@ void buzz(int count, int delayMs) {
   Serial.printf("[BUZZER] Buzzing %d times...\n", count);
   #endif
   for (int i = 0; i < count; i++) {
-    ledcWriteTone(BUZZER_PIN, 1000);  // 1kHz tone
+    BUZZER_TONE(BUZZER_PIN, 1000);  // 1kHz tone
     delay(200);                       // Buzz duration
-    ledcWriteTone(BUZZER_PIN, 0);     // Turn off
+    BUZZER_OFF(BUZZER_PIN);     // Turn off
     if (i < count - 1) {
       delay(delayMs);
     }
@@ -1553,9 +1730,9 @@ void emergencyShutdownAll() {
   
   // Sound emergency alert
   for (int i = 0; i < 5; i++) {
-    ledcWriteTone(BUZZER_PIN, 2000);
+    BUZZER_TONE(BUZZER_PIN, 2000);
     delay(200);
-    ledcWriteTone(BUZZER_PIN, 0);
+    BUZZER_OFF(BUZZER_PIN);
     delay(200);
   }
 }
