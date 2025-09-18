@@ -123,55 +123,38 @@
 // 3. CONTROL PCB DC PROTECTION (Built into Product):
 //    - 12V Rail Fuse: 3A slow-blow fuse (T3AL250V) - Built into PCB
 //    - TVS Diode: 1N4744A (15V Zener, THT) - Built into PCB  
-//    - Filter Capacitor: 470µF/25V electrolytic + 100nF ceramic - Built into PCB
-//    - Ferrite Bead: FB-43-101 on 12V input line for EMI - Built into PCB
+//    - Filter Capacitor: 470µF/25V electrolytic - Built into PCB
+//    - Ferrite Bead: BLM18PG221SN1D (220Ω@100MHz) on 12V input line for EMI - Built into PCB
 //
 // 4. ESP32 5V SUPPLY PROTECTION (Built into Product):
 //    - Primary Supply: ERD charger (5V/2A max) - Customer provides
 //    - Input Fuse: 2.5A slow-blow fuse (T2.5AL250V) - Built into PCB
 //    - Reverse Polarity Protection: Schottky diode 1N5819 (3A/40V) - Built into PCB
-//    - Input Filter: 470µF/25V electrolytic + 100nF ceramic - Built into PCB
+//    - Input Filter: 470µF/25V electrolytic (C1, C5) - Built into PCB
 //    - ESP32 Power: Direct 5V to ESP32 Dev Module VIN pin - Built into PCB
 //    - TVS Surge Protection: 1N4744A (15V Zener) across 5V rail - Built into PCB
-//    - Inrush Current Limiter: 10Ω NTC thermistor (5D-11) - Built into PCB
-//    - EMI Filter: Ferrite bead (FB-43-101) on 5V input line - Built into PCB
+//    - EMI Filter: Ferrite bead (BLM18PG221SN1D) on 5V input line - Built into PCB
 //
-// 5. 3.3V LOGIC LEVEL PROTECTION (Built into Product):
-//    - Decoupling Capacitors: 100nF ceramic + 10µF tantalum near ESP32 - Built into PCB
-//    - ESD Protection: TPD4E02B4 on I2C lines (SDA/SCL) - Built into PCB
-//    - Current Limiting Resistors: 330Ω on GPIO outputs to relays - Built into PCB
-//    - Power Supply Filtering: LC filter (10µH inductor + 47µF capacitor) - Built into PCB
-//    - GPIO Protection: 100Ω series resistors on all GPIO pins - Built into PCB
-//    - 3.3V Rail TVS: 1N4744A (15V Zener) for logic level protection - Built into PCB
+// 5. GPIO & SIGNAL PROTECTION (Built into Product):
+//    - Current Limiting Resistors: 330Ω on GPIO outputs to relays (R4-R8) - Built into PCB
+//    - Pull-up Resistors: 4.7kΩ for I2C buses (R2, R3) and OneWire (R1) - Built into PCB
+//    - Ferrite beads for EMI suppression on power lines - Built into PCB
 //
-// 6. SENSOR PROTECTION (Built into Product):
-//    - Pull-up Resistors: 4.7kΩ with series 100Ω protection resistors - Built into PCB
-//    - EMI Filtering: 100nF capacitors on long sensor wires - Built into PCB
-//    - Cable Shielding: Use shielded cable for DS18B20 (>1m runs) - Installation requirement
-//    - DS18B20 Protection: 100Ω series resistor + 100nF to ground - Built into PCB
-//    - I2C Line Protection: 82Ω series resistors on SDA/SCL + 100pF capacitors - Built into PCB
-//    - Sensor Power Filtering: 100µF + 100nF capacitors on sensor VCC lines - Built into PCB
-//    - ESD Diodes: BAV99 dual diode array on sensor data lines - Built into PCB
+// 6. RELAY ISOLATION & PROTECTION (Relay Module Features):
+//    - Optical Isolation: PC817 optocouplers (relay module feature)
+//    - Flyback Protection: 1N4007 diodes across relay coils (relay module feature)
+//    - Separate power domains: 12V relay power isolated from 5V logic power
 //
-// 7. RELAY ISOLATION & PROTECTION (Built into Product):
-//    - Optical Isolation: PC817 optocouplers (relay module feature) - Built into PCB
-//    - Flyback Protection: 1N4007 diodes across relay coils (relay module feature) - Built into PCB
-//    - Contact Protection: RC snubber (100Ω + 100nF) across AC contacts - Customer installation
-//    - Ground Isolation: Separate grounds for high voltage and logic sides - Built into PCB
-//
-// 8. COMMERCIAL PRODUCT SAFETY FEATURES (Built into Product):
-//    - Emergency Stop Input: Normally-closed contact provision - Built into PCB
-//    - Thermal Monitoring: Software temperature monitoring via DS18B20 - Built into PCB
-//    - Watchdog Timer: Hardware watchdog (ESP32 built-in + software) - Built into PCB
-//    - Status LEDs: Power indicator and fault indication - Built into PCB
+// 7. SYSTEM SAFETY FEATURES (Built into Product):
+//    - Software temperature monitoring via DS18B20
+//    - Emergency shutdown on extreme temperatures (>32°C or <20°C)
+//    - Watchdog timer (ESP32 built-in software watchdog)
+//    - Safe relay defaults (all OFF on startup)
 //
 // COMMERCIAL PRODUCT FUSE SPECIFICATIONS:
 // - Customer AC Protection: 6A MCB (C-curve, 6kA breaking capacity) - Customer provides
 // - 12V Rail Protection: 3A Slow-blow ceramic fuse (T3AL250V) - Built into PCB
 // - 5V Rail Protection: 2.5A Slow-blow ceramic fuse (T2.5AL250V) - Built into PCB
-// - ESP32 Supply Protection: 1A Fast-blow fuse (F1AL250V) - Built into PCB
-// - Sensor Lines: 100mA PTC fuses on long cable runs - Built into PCB
-// - I2C Bus: 200mA PTC fuse for RTC and OLED protection - Built into PCB
 //
 // CUSTOMER INSTALLATION REQUIREMENTS:
 // - Proper earthing connection to water-safe earth rod - Customer responsibility
@@ -191,64 +174,37 @@
 // - F1AL250V: 1A fast-blow fuse (ESP32 VIN)
 // - PTC Fuses: 100mA, 200mA self-resetting (sensor lines)
 //
+// FUSES & CIRCUIT BREAKERS:
+// - 6A MCB (C-curve, 6kA): Main AC supply protection - Customer provides
+// - T3AL250V: 3A slow-blow ceramic fuse (12V rail) - Built into PCB  
+// - T2.5AL250V: 2.5A slow-blow ceramic fuse (5V rail) - Built into PCB
+//
 // SURGE PROTECTION DIODES:
-// - 1N4744A: 15V Zener diode (5V and 12V rail protection)
-// - 1N4744A: 15V Zener diode (3.3V logic level protection)
-// - BAV99: Dual switching diode array (sensor ESD protection)
+// - 1N4744A: 15V Zener diode (5V and 12V rail protection) - Built into PCB
+// - 1N5819: 3A/40V Schottky (reverse polarity protection) - Built into PCB
 //
-// RECTIFIER & PROTECTION DIODES:
-// - 1N5819: 3A/40V Schottky (reverse polarity protection)
-// - 1N4007: 1A/1000V rectifier (flyback protection)
-// - 1N5822: 3A/40V Schottky (high current reverse protection)
+// CAPACITORS (POWER FILTERING):
+// - 470µF/25V: Electrolytic capacitors (C1, C3, C5) - Built into PCB
 //
-// CAPACITORS (FILTERING & DECOUPLING):
-// - 470µF/25V: Electrolytic (5V rail primary filter)
-// - 470µF/25V: Electrolytic (12V rail primary filter)
-// - 100µF/16V: Low-ESR electrolytic (5V secondary filter)
-// - 100µF/6.3V: Tantalum (sensor power filter)
-// - 47µF/6.3V: Ceramic (3.3V rail filter)
-// - 10µF/6.3V: Tantalum (ESP32 decoupling)
-// - 100nF/50V: Ceramic X7R (general purpose filtering)
-// - 10nF/50V: Ceramic C0G (high-frequency noise)
-// - 100pF/50V: Ceramic C0G (I2C line filtering)
+// EMI SUPPRESSION:
+// - BLM18PG221SN1D: Ferrite bead (EMI suppression, 220Ω@100MHz) - Built into PCB
+// - Alternative: BLM21PG221SN1D or MMZ1608Y121BT000 (if unavailable)
 //
-// INDUCTORS & FERRITES:
-// - 10µH/3A: Power inductor (3.3V LC filter)
-// - FB-43-101: Ferrite bead (EMI suppression)
-// - 5D-11: 10Ω NTC thermistor (inrush limiting)
-//
-// RESISTORS (PROTECTION & BIASING):
-// - 330Ω/0.25W: Current limiting (GPIO to relays)
-// - 100Ω/0.25W: Series protection (sensor lines)
-// - 82Ω/0.25W: I2C line protection
-// - 4.7kΩ/0.25W: Pull-up resistors (I2C, OneWire)
-// - 10kΩ/0.25W: General purpose pull-up/down
-//
-// ESD PROTECTION ICs:
-// - TPD4E02B4: Quad-channel ESD protection (I2C lines)
-// - PESD5V0S1BA: Single line ESD protection (GPIO)
-//
-// THERMAL PROTECTION:
-// - 70°C Thermal Fuse: Power supply thermal cutoff
-// - TO-220 Heat Sinks: For voltage regulators (if added)
+// RESISTORS (SIGNAL CONDITIONING):
+// - 330Ω/0.25W: Current limiting resistors (R4-R8, GPIO to relays) - Built into PCB
+// - 4.7kΩ/0.25W: Pull-up resistors (R1-R3, I2C and OneWire) - Built into PCB
 //
 // CONNECTORS & MECHANICAL:
-// - Phoenix Contact MKDS: Screw terminals (power connections)
-// - IP65 Enclosure: Waterproof housing for electronics
-// - DIN Rail Fuse Holders: Professional fuse mounting
-// - Heat Shrink Tubing: Wire protection and insulation
+// - Phoenix Contact screw terminals: Power input connections - Built into PCB
+// - JST XH connectors: Module connections (I2C, sensors) - Built into PCB
+// - IP65 Enclosure: Waterproof housing for electronics - Customer provides
 //
-// ENCLOSURE PROTECTION:
-// - IP65 rated enclosure for electronics (dust/water protection)
-// - Ventilation with dust filters for cooling
-// - Cable glands for weather-sealed cable entry
-// - Corrosion-resistant materials for aquarium environment
-//
-// MONITORING & DIAGNOSTICS:
-// - Basic circuit protection with fuses and MCBs
-// - Emergency safety features (temperature limits, emergency shutdown)
-// - Proper grounding and earthing for Indian electrical conditions
-// - Enclosure protection for aquarium environment
+// CUSTOMER INSTALLATION COMPONENTS:
+// - 6A MCB: Main circuit breaker - Customer electrical panel
+// - 275V MOV/SPD: Surge protection device - Customer electrical panel
+// - SMPS 12V/2A: Relay power supply - Customer provides
+// - ERD Charger 5V/2A: ESP32 power supply - Customer provides
+// - Professional installation by qualified electrician - Customer responsibility
 //
 // Note: Always consult a qualified electrician for mains wiring.
 //       Use proper isolation transformers for development/testing.

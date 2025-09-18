@@ -17,7 +17,6 @@ This document provides professional connection diagrams for the ESP32 Fish Tank 
 | **11** | D14/A16 | GPIO Output | DS18B20 Data | J4 | Temperature sensor |
 | **13** | D13/A14 | GPIO Output | Buzzer Control | J8 | Alert buzzer |
 | **15** | VIN | Power Input | 5V Customer ERD | J1 | Main power input |
-| **19** | D2/A12 | GPIO Output | Status LED | J6 | System status indicator |
 | **21** | D16 | GPIO Output | Filter Relay | J5-1 | Main filter control |
 | **22** | D17 | GPIO Output | CO2 Relay | J5-2 | CO2 system control |
 | **23** | D5 | GPIO Output | HangOn Filter | J5-3 | Backup filter control |
@@ -143,8 +142,8 @@ Note: Remove VCC-JD-VCC jumper for opto-isolation
 
 | Input Type | Voltage | Current | Fuse | Protection | Terminal |
 |------------|---------|---------|------|------------|----------|
-| **Customer ERD Charger** | 5V DC | 2.5A Max | F1 (2.5A) | D1 + D2 + C1,C2,C5,C6 | J1 |
-| **Customer SMPS** | 12V DC | 3A Max | F2 (3A) | D3 + C3,C4 | J2 |
+| **Customer ERD Charger** | 5V DC | 2.5A Max | F1 (2.5A) | D1 + D2 + C1,C5 | J1 |
+| **Customer SMPS** | 12V DC | 3A Max | F2 (3A) | D3 + C3 | J2 |
 
 ### **5V Rail Power Flow Diagram**
 
@@ -155,9 +154,7 @@ Customer GND    ─────────────────────�
                                                                                      │
                                                                                      ├── Filter Caps:
                                                                                      │   C1: 470µF/25V
-                                                                                     │   C2: 100nF/50V
                                                                                      │   C5: 470µF/25V
-                                                                                     │   C6: 10nF/50V
 ```
 
 ### **12V Rail Power Flow Diagram**
@@ -169,7 +166,6 @@ Customer GND ──────────────────────�
                                                                │
                                                                ├── Filter Caps:
                                                                │   C3: 470µF/25V
-                                                               │   C4: 100nF/50V
 ```
 
 ### **3.3V Internal Distribution**
@@ -193,7 +189,6 @@ Customer GND ──────────────────────�
 | **D1** | Schottky Diode | 1N5819 (40V, 1A) | Reverse polarity protection |
 | **D2** | TVS Diode | 1N4744A (15V) | Transient voltage suppression |
 | **C1, C5** | Electrolytic | 470µF/25V | Primary ripple filtering |
-| **C2, C6** | Ceramic | 100nF/50V | High-frequency noise filtering |
 
 ### **12V Rail Protection Components**
 
@@ -202,7 +197,6 @@ Customer GND ──────────────────────�
 | **F2** | Fuse | 3A Fast-Blow | Overcurrent protection |
 | **D3** | TVS Diode | 1N4744A (15V) | Transient voltage suppression |
 | **C3** | Electrolytic | 470µF/25V | Primary ripple filtering |
-| **C4** | Ceramic | 100nF/50V | High-frequency noise filtering |
 
 ### **GPIO Protection Scheme**
 
@@ -215,6 +209,15 @@ ESP32 GPIO Input  ───[100Ω]─── Sensor Signal Input
 |----------------|----------------|---------|
 | **Relay Drive** | 330Ω | Current limiting for relay drivers |
 | **Sensor Input** | 100Ω | Input protection from sensor signals |
+
+### **EMI Suppression Components**
+
+| Component | Type | Rating | Function |
+|-----------|------|--------|----------|
+| **FB1** | Ferrite Bead | BLM18PG221SN1D (220Ω@100MHz, 2A) | Power line EMI filtering |
+| **FB2** | Ferrite Bead | BLM18PG221SN1D (220Ω@100MHz, 2A) | Signal line EMI filtering |
+
+**Note**: Ferrite beads provide EMI suppression at high frequencies while maintaining low DC resistance for power and signal integrity.
 
 ---
 
@@ -285,8 +288,7 @@ ESP32 SCL ───[82Ω]───[4.7kΩ to 3V3]─── I2C SCL Bus
 | 4 | Heater Control | GPIO 19 |
 | 5 | HangOn Control | GPIO 5 |
 | 6 | Buzzer Output | GPIO 13 |
-| 7 | Status LED | GPIO 2 |
-| 8 | GND Reference | - |
+| 7 | GND Reference | - |
 
 ---
 

@@ -51,12 +51,8 @@ The system is designed as a professional control PCB with external customer-prov
 | **Component** | **Value/Rating** | **KiCad Symbol** | **Installation** |
 |---------------|------------------|------------------|------------------|
 | C1 | 470µF/25V (5V Primary Filter) | CP_Large | Built into PCB |
-| C2 | 100nF/50V (5V HF Filter) | C | Built into PCB |
 | C3 | 470µF/25V (12V Primary Filter) | CP_Large | Built into PCB |
-| C4 | 100nF/50V (12V HF Filter) | C | Built into PCB |
 | C5 | 470µF/25V (5V Secondary) | CP_Large | Built into PCB |
-| C6 | 10nF/50V (EMI Filter) | C | Built into PCB |
-| C7-C12 | 100nF/50V (Decoupling) | C | Built into PCB |
 
 ### Professional PCB Resistors & Protection (Built into Product)
 
@@ -65,9 +61,21 @@ The system is designed as a professional control PCB with external customer-prov
 | R1 | 4.7kΩ (DS18B20 Pull-up) | R | Built into PCB |
 | R2 | 4.7kΩ (I2C SDA Pull-up) | R | Built into PCB |
 | R3 | 4.7kΩ (I2C SCL Pull-up) | R | Built into PCB |
-| R4-R8 | 330Ω (GPIO Protection) | R | Built into PCB |
-| R9-R10 | 100Ω (Sensor Protection) | R | Built into PCB |
-| R11-R12 | 82Ω (I2C Line Protection) | R | Built into PCB |
+| R4-R8 | 330Ω (GPIO Relay Protection) | R | Built into PCB |
+
+### Professional PCB Inductors & EMI Suppression (Built into Product)
+
+| **Component** | **Value/Part Number** | **KiCad Symbol** | **Installation** |
+|---------------|----------------------|------------------|------------------|
+| L1 | 10µH/3A (3.3V LC Filter) | L | Built into PCB |
+| FB1 | BLM18PG221SN1D (220Ω@100MHz) | Ferrite_Bead | Built into PCB |
+| FB2 | BLM18PG221SN1D (220Ω@100MHz) | Ferrite_Bead | Built into PCB |
+| NTC1 | 5D-11 (10Ω Inrush Limiter) | Thermistor | Built into PCB |
+
+**Alternative Ferrite Beads (if BLM18PG221SN1D unavailable):**
+- BLM21PG221SN1D (Murata, 3A rating)
+- MMZ1608Y121BT000 (TDK equivalent)
+- 28A0301-0A0-10 (Fair-Rite through-hole)
 
 ### Professional PCB Connection Terminals (Built into Product)
 
@@ -153,14 +161,14 @@ The system is designed as a professional control PCB with external customer-prov
 
 ### 5V Rail (ESP32 Supply)
 ```
-5V Input (J1) → F1 (2.5A Fuse) → D1 (Reverse Protection) → D2 (TVS) → C1||C2 (Filtering) → ESP32 VIN
+5V Input (J1) → F1 (2.5A Fuse) → D1 (Reverse Protection) → D2 (TVS) → C1 (Filtering) → ESP32 VIN
                                                           ↓
-                                                      C5||C6 (Secondary Filter)
+                                                      C5 (Secondary Filter)
 ```
 
 ### 12V Rail (Relay Supply)
 ```
-12V Input (J2) → F2 (3A Fuse) → D3 (TVS) → C3||C4 (Filtering) → Relay Module JD-VCC
+12V Input (J2) → F2 (3A Fuse) → D3 (TVS) → C3 (Filtering) → Relay Module JD-VCC
 ```
 
 ### 3.3V Rail (Logic & Sensors)
@@ -427,11 +435,9 @@ ESP32_FishTank_PCB/
 | D2 | 1N4744A | Zener Diode 15V 1W THT | 1 | ON Semi |
 | D3 | 1N4744A | Zener Diode 15V 1W THT | 1 | ON Semi |
 | C1,C3,C5 | 470µF/25V | Electrolytic Capacitor | 3 | Panasonic |
-| C6 | 10nF/50V | Ceramic Capacitor C0G | 1 | Murata |
 | R1,R2,R3 | 4.7kΩ/0.25W | Resistor 1% | 3 | Yageo |
 | R4-R8 | 330Ω/0.25W | Resistor 1% | 5 | Yageo |
-| R9,R10 | 100Ω/0.25W | Resistor 1% | 2 | Yageo |
-| R11,R12 | 82Ω/0.25W | Resistor 1% | 2 | Yageo |
+| FB1,FB2 | BLM18PG221SN1D | Ferrite Bead 220Ω@100MHz 2A | 2 | Murata |
 
 ### External Modules
 | Component | Description | Interface | Supplier |
