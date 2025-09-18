@@ -16,118 +16,136 @@ The system is designed as a professional control PCB with external customer-prov
 ## 📋 **Commercial Product Component List for KiCad**
 
 ### Main Control PCB Components (Built into Product)
-- **U1**: ESP32 DevKit v1 (38-pin) - ESP32-DEVKITV1 - Built into PCB
-- **U2**: DS3231 RTC Module - RTC_DS3231 - Customer connects via screw terminals
-- **U3**: SSD1306 OLED Module (128x64) - SSD1306_128x64 - Customer connects via screw terminals
-- **U4**: 8-Channel Relay Module - RELAY_8CH_MODULE - Customer connects via screw terminals
-- **U5**: DS18B20 Temperature Sensor - DS18B20 - Customer installs and connects
-- **BZ1**: Buzzer (Active/Passive) - BUZZER - Customer connects
+
+| **Component** | **Part Number/Type** | **KiCad Symbol** | **Installation** |
+|---------------|---------------------|------------------|------------------|
+| U1 | ESP32 DevKit v1 (38-pin) | ESP32-DEVKITV1 | Built into PCB |
+| U2 | DS3231 RTC Module | RTC_DS3231 | Customer connects via screw terminals |
+| U3 | SSD1306 OLED Module (128x64) | SSD1306_128x64 | Customer connects via screw terminals |
+| U4 | 8-Channel Relay Module | RELAY_8CH_MODULE | Customer connects via screw terminals |
+| U5 | DS18B20 Temperature Sensor | DS18B20 | Customer installs and connects |
+| BZ1 | Buzzer (Active/Passive) | BUZZER | Customer connects |
 
 ### Customer-Provided Power & Protection (External to PCB)
-- **External**: 5V ERD Charger (Customer provides) - Phone charger type 5V/2A
-- **External**: 12V SMPS (Customer provides) - 12V/2A power supply
-- **Customer MCB**: 6A C-Curve MCB (Customer installs for AC protection)
-- **J1**: 5V Power Input (from Customer ERD Charger) - CONN_01X02 - PCB Terminal
-- **J2**: 12V Power Input (from Customer SMPS) - CONN_01X02 - PCB Terminal
+
+| **Component** | **Type/Rating** | **KiCad Symbol** | **Installation** |
+|---------------|----------------|------------------|------------------|
+| External Power | 5V ERD Charger | N/A | Customer provides (Phone charger type 5V/2A) |
+| External Power | 12V SMPS | N/A | Customer provides (12V/2A power supply) |
+| Customer MCB | 6A C-Curve MCB | N/A | Customer installs for AC protection |
+| J1 | 5V Power Input | CONN_01X02 | PCB Terminal (from Customer ERD Charger) |
+| J2 | 12V Power Input | CONN_01X02 | PCB Terminal (from Customer SMPS) |
 
 ### Built-in PCB Protection & Power Management
-- **F1**: 2.5A Slow-blow Fuse (5V Rail) - FUSE - Built into PCB
-- **F2**: 3A Slow-blow Fuse (12V Rail) - FUSE - Built into PCB
-- **D1**: Reverse Polarity Protection - 1N5819 (Schottky, THT) - Built into PCB
-- **D2**: TVS Diode (5V Protection) - 1N4744A (15V Zener, THT) - Built into PCB
-- **D3**: TVS Diode (12V Protection) - 1N4744A (15V Zener, THT) - Built into PCB
+
+| **Component** | **Part Number/Type** | **KiCad Symbol** | **Installation** |
+|---------------|---------------------|------------------|------------------|
+| F1 | 2.5A Slow-blow Fuse (5V Rail) | FUSE | Built into PCB |
+| F2 | 3A Slow-blow Fuse (12V Rail) | FUSE | Built into PCB |
+| D1 | Reverse Polarity Protection | 1N5819 (Schottky, THT) | Built into PCB |
+| D2 | TVS Diode (5V Protection) | 1N4744A (15V Zener, THT) | Built into PCB |
+| D3 | TVS Diode (12V Protection) | 1N4744A (15V Zener, THT) | Built into PCB |
 
 ### Professional PCB Capacitors & Filtering (Built into Product)
-- **C1**: 470µF/25V (5V Primary Filter) - CP_Large - Built into PCB
-- **C2**: 100nF/50V (5V HF Filter) - C - Built into PCB
-- **C3**: 470µF/25V (12V Primary Filter) - CP_Large - Built into PCB
-- **C4**: 100nF/50V (12V HF Filter) - C - Built into PCB
-- **C5**: 470µF/25V (5V Secondary) - CP_Large - Built into PCB
-- **C6**: 10nF/50V (EMI Filter) - C - Built into PCB
-- **C7-C12**: 100nF/50V (Decoupling) - C - Built into PCB
+
+| **Component** | **Value/Rating** | **KiCad Symbol** | **Installation** |
+|---------------|------------------|------------------|------------------|
+| C1 | 470µF/25V (5V Primary Filter) | CP_Large | Built into PCB |
+| C2 | 100nF/50V (5V HF Filter) | C | Built into PCB |
+| C3 | 470µF/25V (12V Primary Filter) | CP_Large | Built into PCB |
+| C4 | 100nF/50V (12V HF Filter) | C | Built into PCB |
+| C5 | 470µF/25V (5V Secondary) | CP_Large | Built into PCB |
+| C6 | 10nF/50V (EMI Filter) | C | Built into PCB |
+| C7-C12 | 100nF/50V (Decoupling) | C | Built into PCB |
 
 ### Professional PCB Resistors & Protection (Built into Product)
-- **R1**: 4.7kΩ (DS18B20 Pull-up) - R - Built into PCB
-- **R2**: 4.7kΩ (I2C SDA Pull-up) - R - Built into PCB
-- **R3**: 4.7kΩ (I2C SCL Pull-up) - R - Built into PCB
-- **R4-R8**: 330Ω (GPIO Protection) - R - Built into PCB
-- **R9-R10**: 100Ω (Sensor Protection) - R - Built into PCB
-- **R11-R12**: 82Ω (I2C Line Protection) - R - Built into PCB
+
+| **Component** | **Value/Purpose** | **KiCad Symbol** | **Installation** |
+|---------------|-------------------|------------------|------------------|
+| R1 | 4.7kΩ (DS18B20 Pull-up) | R | Built into PCB |
+| R2 | 4.7kΩ (I2C SDA Pull-up) | R | Built into PCB |
+| R3 | 4.7kΩ (I2C SCL Pull-up) | R | Built into PCB |
+| R4-R8 | 330Ω (GPIO Protection) | R | Built into PCB |
+| R9-R10 | 100Ω (Sensor Protection) | R | Built into PCB |
+| R11-R12 | 82Ω (I2C Line Protection) | R | Built into PCB |
 
 ### Professional PCB Connection Terminals (Built into Product)
-- **J3**: I2C Connector (4-pin for RTC + OLED) - CONN_01X04 - PCB Screw Terminal
-- **J4**: DS18B20 Connector (3-pin) - CONN_01X03 - PCB Screw Terminal
-- **J5**: Relay Control Connector (8-pin) - CONN_01X08 - PCB Screw Terminal
-- **J6**: Status LEDs Connector - CONN_01X03 - PCB Screw Terminal
-- **J7**: Emergency Stop Input - CONN_01X02 - PCB Screw Terminal
-- **J8**: Customer Buzzer Output - CONN_01X02 - PCB Screw Terminal
+
+| **Component** | **Pin Count/Purpose** | **KiCad Symbol** | **Installation** |
+|---------------|----------------------|------------------|------------------|
+| J3 | I2C Connector (4-pin for RTC + OLED) | CONN_01X04 | PCB Screw Terminal |
+| J4 | DS18B20 Connector (3-pin) | CONN_01X03 | PCB Screw Terminal |
+| J5 | Relay Control Connector (8-pin) | CONN_01X08 | PCB Screw Terminal |
+| J6 | Status LEDs Connector | CONN_01X03 | PCB Screw Terminal |
+| J7 | Emergency Stop Input | CONN_01X02 | PCB Screw Terminal |
+| J8 | Customer Buzzer Output | CONN_01X02 | PCB Screw Terminal |
 
 ---
 
 ## 🔌 **Commercial Product Professional Pin Connections**
 
 ### ESP32 DevKit v1 Pinout (38-pin) - Professional Configuration
-```
-Left Side (Top to Bottom):        Right Side (Top to Bottom):
-EN        - Not Connected         D23  - Not Connected
-VP (36)   - Not Connected         D22  - I2C SCL (via R3)
-VN (39)   - Not Connected         TXD  - Not Connected
-D34       - Not Connected         RXD  - Not Connected
-D35       - Not Connected         D21  - I2C SDA (via R2)
-D32       - Not Connected         D19  - Heater Relay (via R7)
-D33       - Not Connected         D18  - Light Relay (via R6)
-D25       - Not Connected         D5   - HangOn Filter Relay (via R8)
-D26       - Not Connected         D17  - CO2 Relay (via R5)
-D27       - Not Connected         D16  - Filter Relay (via R4)
-D14       - DS18B20 Data (via R9) D4   - Not Connected
-D12       - Not Connected         D0   - Not Connected
-D13       - Buzzer (via R10)      D2   - Status LED
-GND       - System Ground         D15  - Not Connected
-VIN       - 5V Power Input        GND  - System Ground
-3V3       - 3.3V Output           3V3  - 3.3V Output
-```
+
+| **Pin** | **Left Side** | **Connection** | **Right Side** | **Connection** |
+|---------|---------------|----------------|----------------|----------------|
+| 1-19 | EN | Not Connected | D23 | Not Connected |
+| 2-18 | VP (36) | Not Connected | D22 | I2C SCL (via R3) |
+| 3-17 | VN (39) | Not Connected | TXD | Not Connected |
+| 4-16 | D34 | Not Connected | RXD | Not Connected |
+| 5-15 | D35 | Not Connected | D21 | I2C SDA (via R2) |
+| 6-14 | D32 | Not Connected | D19 | Heater Relay (via R7) |
+| 7-13 | D33 | Not Connected | D18 | Light Relay (via R6) |
+| 8-12 | D25 | Not Connected | D5 | HangOn Filter Relay (via R8) |
+| 9-11 | D26 | Not Connected | D17 | CO2 Relay (via R5) |
+| 10-10 | D27 | Not Connected | D16 | Filter Relay (via R4) |
+| 11-9 | D14 | DS18B20 Data (via R9) | D4 | Not Connected |
+| 12-8 | D12 | Not Connected | D0 | Not Connected |
+| 13-7 | D13 | Buzzer (via R10) | D2 | Status LED |
+| 14-6 | GND | System Ground | D15 | Not Connected |
+| 15-5 | VIN | 5V Power Input | GND | System Ground |
+| 16-4 | 3V3 | 3.3V Output | 3V3 | 3.3V Output |
 
 ### Module Connections
 
 #### DS3231 RTC Module (U2)
-```
-DS3231 Pin  →  Connection
-VCC         →  ESP32 3V3
-GND         →  System GND
-SDA         →  GPIO 21 (via R11)
-SCL         →  GPIO 22 (via R12)
-```
+
+| **DS3231 Pin** | **Connection** |
+|----------------|----------------|
+| VCC | ESP32 3V3 |
+| GND | System GND |
+| SDA | GPIO 21 (via R11) |
+| SCL | GPIO 22 (via R12) |
 
 #### SSD1306 OLED Module (U3)
-```
-OLED Pin    →  Connection
-VCC         →  ESP32 3V3
-GND         →  System GND
-SDA         →  GPIO 21 (via R11)
-SCL         →  GPIO 22 (via R12)
-```
+
+| **OLED Pin** | **Connection** |
+|--------------|----------------|
+| VCC | ESP32 3V3 |
+| GND | System GND |
+| SDA | GPIO 21 (via R11) |
+| SCL | GPIO 22 (via R12) |
 
 #### 8-Channel Relay Module (U4)
-```
-Relay Pin   →  Connection
-VCC         →  ESP32 5V (VIN)
-GND         →  System GND
-JD-VCC      →  12V External Supply
-IN1         →  GPIO 16 (Filter) via R4
-IN2         →  GPIO 17 (CO2) via R5
-IN3         →  GPIO 18 (Light) via R6
-IN4         →  GPIO 19 (Heater) via R7
-IN5         →  GPIO 5 (HangOn Filter) via R8
-IN6-IN8     →  Not Connected
-```
+
+| **Relay Pin** | **Connection** |
+|---------------|----------------|
+| VCC | ESP32 5V (VIN) |
+| GND | System GND |
+| JD-VCC | 12V External Supply |
+| IN1 | GPIO 16 (Filter) via R4 |
+| IN2 | GPIO 17 (CO2) via R5 |
+| IN3 | GPIO 18 (Light) via R6 |
+| IN4 | GPIO 19 (Heater) via R7 |
+| IN5 | GPIO 5 (HangOn Filter) via R8 |
+| IN6-IN8 | Not Connected |
 
 #### DS18B20 Temperature Sensor (U5)
-```
-DS18B20 Pin →  Connection
-VDD         →  ESP32 3V3
-GND         →  System GND
-DQ          →  GPIO 14 (via R9) + Pull-up R1 to 3V3
-```
+
+| **DS18B20 Pin** | **Connection** |
+|-----------------|----------------|
+| VDD | ESP32 3V3 |
+| GND | System GND |
+| DQ | GPIO 14 (via R9) + Pull-up R1 to 3V3 |
 
 ---
 

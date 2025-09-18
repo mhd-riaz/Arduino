@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="900" height="600" fill="#f8f9fa"/>
+  
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2c3e50">
+    I2C Bus Connection - Shared Communication
+  </text>
+  
+  <!-- ESP32 Module -->
+  <rect x="50" y="150" width="120" height="200" rx="10" fill="#1e3a8a" stroke="#1e40af" stroke-width="2"/>
+  <text x="110" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#fff">ESP32</text>
+  <text x="110" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#d1d5db">DevKit v1</text>
+  
+  <!-- ESP32 I2C Pins -->
+  <!-- Pin 26 (SDA) -->
+  <circle cx="170" cy="240" r="8" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="185" y="245" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">Pin 26 (D21/SDA)</text>
+  
+  <!-- Pin 29 (SCL) -->
+  <circle cx="170" cy="280" r="8" fill="#06b6d4" stroke="#0891b2" stroke-width="2"/>
+  <text x="185" y="285" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">Pin 29 (D22/SCL)</text>
+  
+  <!-- 3V3 Pin -->
+  <circle cx="170" cy="200" r="8" fill="#dc2626" stroke="#991b1b" stroke-width="2"/>
+  <text x="185" y="205" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">Pin 31 (3V3)</text>
+  
+  <!-- GND Pin -->
+  <circle cx="170" cy="320" r="8" fill="#374151" stroke="#1f2937" stroke-width="2"/>
+  <text x="185" y="325" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">Pin 32 (GND)</text>
+  
+  <!-- Series Resistors -->
+  <rect x="350" y="235" width="40" height="10" rx="2" fill="#f59e0b" stroke="#d97706" stroke-width="1"/>
+  <text x="370" y="255" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#92400e">82Ω</text>
+  
+  <rect x="350" y="275" width="40" height="10" rx="2" fill="#f59e0b" stroke="#d97706" stroke-width="1"/>
+  <text x="370" y="295" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#92400e">82Ω</text>
+  
+  <!-- Pull-up Resistors -->
+  <rect x="480" y="120" width="10" height="40" rx="2" fill="#10b981" stroke="#059669" stroke-width="1"/>
+  <text x="495" y="145" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#047857">4.7kΩ</text>
+  
+  <rect x="520" y="120" width="10" height="40" rx="2" fill="#10b981" stroke="#059669" stroke-width="1"/>
+  <text x="535" y="145" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#047857">4.7kΩ</text>
+  
+  <!-- J3 Terminal Block -->
+  <rect x="420" y="350" width="120" height="60" rx="5" fill="#374151" stroke="#1f2937" stroke-width="2"/>
+  <text x="480" y="375" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">J3 Terminal</text>
+  <text x="480" y="395" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#d1d5db">4-Pin Connector</text>
+  
+  <!-- Terminal Pins -->
+  <circle cx="440" cy="425" r="5" fill="#dc2626"/>
+  <text x="450" y="430" font-family="Arial, sans-serif" font-size="10" fill="#1f2937">VCC</text>
+  
+  <circle cx="470" cy="425" r="5" fill="#374151"/>
+  <text x="480" y="430" font-family="Arial, sans-serif" font-size="10" fill="#1f2937">GND</text>
+  
+  <circle cx="500" cy="425" r="5" fill="#3b82f6"/>
+  <text x="510" y="430" font-family="Arial, sans-serif" font-size="10" fill="#1f2937">SDA</text>
+  
+  <circle cx="530" cy="425" r="5" fill="#06b6d4"/>
+  <text x="540" y="430" font-family="Arial, sans-serif" font-size="10" fill="#1f2937">SCL</text>
+  
+  <!-- DS3231 RTC Module -->
+  <rect x="620" y="150" width="100" height="80" rx="5" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="670" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">DS3231</text>
+  <text x="670" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#d1d5db">RTC Module</text>
+  <text x="670" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#d1d5db">I2C Address: 0x68</text>
+  
+  <!-- SSD1306 OLED Module -->
+  <rect x="750" y="150" width="100" height="80" rx="5" fill="#8b5cf6" stroke="#7c3aed" stroke-width="2"/>
+  <text x="800" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">SSD1306</text>
+  <text x="800" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#d1d5db">OLED Display</text>
+  <text x="800" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#d1d5db">I2C Address: 0x3C</text>
+  
+  <!-- Connection Lines -->
+  <!-- SDA Connections -->
+  <line x1="170" y1="240" x2="350" y2="240" stroke="#3b82f6" stroke-width="3"/>
+  <line x1="390" y1="240" x2="500" y2="240" stroke="#3b82f6" stroke-width="3"/>
+  <line x1="500" y1="240" x2="500" y2="425" stroke="#3b82f6" stroke-width="3"/>
+  <line x1="500" y1="240" x2="620" y2="190" stroke="#3b82f6" stroke-width="3"/>
+  <line x1="620" y1="190" x2="750" y2="190" stroke="#3b82f6" stroke-width="3"/>
+  
+  <!-- SCL Connections -->
+  <line x1="170" y1="280" x2="350" y2="280" stroke="#06b6d4" stroke-width="3"/>
+  <line x1="390" y1="280" x2="525" y2="280" stroke="#06b6d4" stroke-width="3"/>
+  <line x1="525" y1="280" x2="525" y2="425" stroke="#06b6d4" stroke-width="3"/>
+  <line x1="525" y1="280" x2="620" y2="210" stroke="#06b6d4" stroke-width="3"/>
+  <line x1="620" y1="210" x2="750" y2="210" stroke="#06b6d4" stroke-width="3"/>
+  
+  <!-- VCC Connections -->
+  <line x1="170" y1="200" x2="440" y2="200" stroke="#dc2626" stroke-width="3"/>
+  <line x1="440" y1="200" x2="440" y2="425" stroke="#dc2626" stroke-width="3"/>
+  <line x1="440" y1="200" x2="620" y2="170" stroke="#dc2626" stroke-width="3"/>
+  <line x1="620" y1="170" x2="750" y2="170" stroke="#dc2626" stroke-width="3"/>
+  
+  <!-- GND Connections -->
+  <line x1="170" y1="320" x2="470" y2="320" stroke="#374151" stroke-width="3"/>
+  <line x1="470" y1="320" x2="470" y2="425" stroke="#374151" stroke-width="3"/>
+  <line x1="470" y1="320" x2="620" y2="230" stroke="#374151" stroke-width="3"/>
+  <line x1="620" y1="230" x2="750" y2="230" stroke="#374151" stroke-width="3"/>
+  
+  <!-- Pull-up to VCC -->
+  <line x1="485" y1="160" x2="485" y2="240" stroke="#10b981" stroke-width="2"/>
+  <line x1="525" y1="160" x2="525" y2="280" stroke="#10b981" stroke-width="2"/>
+  <line x1="440" y1="200" x2="485" y2="200" stroke="#dc2626" stroke-width="2"/>
+  <line x1="485" y1="200" x2="525" y2="200" stroke="#dc2626" stroke-width="2"/>
+  <line x1="485" y1="120" x2="485" y2="200" stroke="#dc2626" stroke-width="2"/>
+  <line x1="525" y1="120" x2="525" y2="200" stroke="#dc2626" stroke-width="2"/>
+  
+  <!-- Connection Junction Points -->
+  <circle cx="500" cy="240" r="4" fill="#3b82f6"/>
+  <circle cx="525" cy="280" r="4" fill="#06b6d4"/>
+  <circle cx="440" cy="200" r="4" fill="#dc2626"/>
+  <circle cx="470" cy="320" r="4" fill="#374151"/>
+  <circle cx="485" cy="200" r="4" fill="#dc2626"/>
+  <circle cx="525" cy="200" r="4" fill="#dc2626"/>
+  
+  <!-- Labels -->
+  <text x="260" y="235" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#3b82f6">SDA Signal</text>
+  <text x="260" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#06b6d4">SCL Signal</text>
+  <text x="305" y="195" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dc2626">3.3V Power</text>
+  <text x="320" y="315" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#374151">Ground</text>
+  <text x="485" y="110" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#10b981">Pull-up to 3V3</text>
+  
+  <!-- Technical Specifications -->
+  <rect x="50" y="480" width="800" height="100" rx="10" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="450" y="505" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#1f2937">I2C Bus Specifications</text>
+  
+  <!-- Specifications Table -->
+  <text x="70" y="530" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">• Clock Speed: 100kHz (Standard Mode)</text>
+  <text x="70" y="545" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">• Pull-up Resistors: 4.7kΩ to 3.3V</text>
+  <text x="70" y="560" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">• Series Protection: 82Ω resistors</text>
+  
+  <text x="450" y="530" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">• DS3231 RTC: ~20mA @ 3.3V</text>
+  <text x="450" y="545" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">• SSD1306 OLED: ~30mA @ 3.3V</text>
+  <text x="450" y="560" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">• Total Bus Current: ~50mA</text>
+</svg>

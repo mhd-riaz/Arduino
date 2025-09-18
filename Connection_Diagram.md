@@ -8,76 +8,65 @@ This document provides professional connection diagrams for the ESP32 Fish Tank 
 
 ## 🔌 **ESP32 DevKit v1 (38-pin) - Commercial Product Configuration**
 
-```
-                           ESP32 DevKit v1 (38-pin) - Commercial PCB
-                     ┌─────────────────────────────────┐
-              EN  1  ├○                               ○┤ 38  5V (VIN out)
-          VP/A0   2  ├○                               ○┤ 37  CMD  
-          VN/A3   3  ├○                               ○┤ 36  D3
-         D34/A6   4  ├○                               ○┤ 35  D1
-         D35/A7   5  ├○                               ○┤ 34  D2 ──→ Status LED (J6)
-         D32/A4   6  ├○    ┌─────────────────┐       ○┤ 33  D0
-         D33/A5   7  ├○    │                 │       ○┤ 32  GND
-        D25/A18   8  ├○    │     ESP32       │       ○┤ 31  3V3
-        D26/A19   9  ├○    │    WROOM-32     │       ○┤ 30  D23
-        D27/A17  10  ├○    │                 │       ○┤ 29  D22/SCL ──→ I2C SCL (J3)
-        D14/A16  11  ├○    └─────────────────┘       ○┤ 28  TX0
-        D12/A15  12  ├○                               ○┤ 27  RX0  
-        D13/A14  13  ├○     [USB Connector]           ○┤ 26  D21/SDA ──→ I2C SDA (J3)
-            GND  14  ├○                               ○┤ 25  D19 ──→ Heater Relay (J5)
-    VIN(J1) 15  ├○       Customer ERD 5V         ○┤ 24  D18 ──→ Light Relay (J5)
-            3V3  16  ├○                               ○┤ 23  D5  ──→ HangOn Filter Relay (J5)
-            GND  17  ├○                               ○┤ 22  D17 ──→ CO2 Relay (J5)
-        D15/A13  18  ├○                               ○┤ 21  D16 ──→ Filter Relay (J5)
-         D2/A12  19  ├○                               ○┤ 20  D4
-                     └─────────────────────────────────┘
+![ESP32 Pinout Diagram](./esp32_pinout_diagram.svg)
 
-Professional PCB Connections:
-• Pin 11 (D14): DS18B20 Temperature Sensor Data → J4 Terminal
-• Pin 13 (D13): Customer Buzzer Control → J8 Terminal
-• Pin 15 (VIN):  Customer ERD Charger 5V Input → J1 Terminal
-• Pin 26 (D21): I2C SDA (Customer RTC + OLED) → J3 Terminal
-• Pin 29 (D22): I2C SCL (Customer RTC + OLED) → J3 Terminal
-• Pin 21 (D16): Filter Relay Control → J5 Terminal
-• Pin 22 (D17): CO2 Relay Control → J5 Terminal
-• Pin 24 (D18): Light Relay Control → J5 Terminal
-• Pin 25 (D19): Heater Relay Control → J5 Terminal
-• Pin 23 (D5):  HangOn Filter Relay Control → J5 Terminal
-• Pin 19 (D2):  Status LED → J6 Terminal
-```
+### **Professional PCB Pin Assignments**
+
+| Pin# | ESP32 Pin | Function | Connection | Terminal | Purpose |
+|------|-----------|----------|------------|----------|---------|
+| **11** | D14/A16 | GPIO Output | DS18B20 Data | J4 | Temperature sensor |
+| **13** | D13/A14 | GPIO Output | Buzzer Control | J8 | Alert buzzer |
+| **15** | VIN | Power Input | 5V Customer ERD | J1 | Main power input |
+| **19** | D2/A12 | GPIO Output | Status LED | J6 | System status indicator |
+| **21** | D16 | GPIO Output | Filter Relay | J5-1 | Main filter control |
+| **22** | D17 | GPIO Output | CO2 Relay | J5-2 | CO2 system control |
+| **23** | D5 | GPIO Output | HangOn Filter | J5-3 | Backup filter control |
+| **24** | D18 | GPIO Output | Light Relay | J5-4 | Lighting control |
+| **25** | D19 | GPIO Output | Heater Relay | J5-5 | Temperature control |
+| **26** | D21/SDA | I2C Data | RTC + OLED SDA | J3-2 | I2C communication |
+| **29** | D22/SCL | I2C Clock | RTC + OLED SCL | J3-3 | I2C communication |
+
+### **Power Distribution from ESP32**
+
+| ESP32 Pin | Voltage | Max Current | Connected To | Notes |
+|-----------|---------|-------------|--------------|-------|
+| **Pin 31 (3V3)** | 3.3V | 600mA | DS3231, SSD1306, DS18B20 | Internal regulator output |
+| **Pin 15 (VIN)** | 5V | 2.5A | Customer ERD Input | External 5V input |
+| **Pins 14,17,32** | GND | - | Common ground | Multiple ground connections |
 
 ---
 
 ## 🔗 **I2C Bus Connection (Shared)**
 
-```
-ESP32 Pin 26 (D21/SDA) ────┬── 82Ω ──┬── DS3231 SDA
-                           │         │
-                           │         └── SSD1306 SDA
-                           │
-                           └── 4.7kΩ pull-up to 3V3
+![I2C Bus Diagram](./i2c_bus_diagram.svg)
 
-ESP32 Pin 29 (D22/SCL) ────┬── 82Ω ──┬── DS3231 SCL
-                           │         │
-                           │         └── SSD1306 SCL
-                           │
-                           └── 4.7kΩ pull-up to 3V3
+### **I2C Bus Component Specifications**
 
-3V3 Supply ────────────────┬── DS3231 VCC
-                           │
-                           └── SSD1306 VCC
-
-GND ───────────────────────┬── DS3231 GND
-                           │
-                           └── SSD1306 GND
-```
+| Component | I2C Address | Voltage | Current | Terminal |
+|-----------|-------------|---------|---------|----------|
+| **DS3231 RTC** | 0x68 | 3.3V | ~20mA | J3 (4-pin) |
+| **SSD1306 OLED** | 0x3C | 3.3V | ~30mA | J3 (4-pin) |
+| **Pull-up Resistors** | - | 3.3V | 4.7kΩ each | On-board |
+| **Series Resistors** | - | - | 82Ω each | Signal protection |
 
 ---
 
 ## 🌡️ **DS18B20 Temperature Sensor Connection**
 
-```
-ESP32 Pin 11 (D14) ───── 100Ω ───── DS18B20 DQ (Data)
+![DS18B20 Connection Diagram](./ds18b20_connection_diagram.svg)
+
+### **DS18B20 Component Specifications**
+
+| Parameter | Value | Notes |
+|-----------|-------|-------|
+| **Supply Voltage** | 3.0V - 5.5V | Powered from ESP32 3V3 |
+| **Operating Current** | ~5mA | During temperature conversion |
+| **Temperature Range** | -55°C to +125°C | Suitable for aquarium use |
+| **Accuracy** | ±0.5°C | From -10°C to +85°C |
+| **Resolution** | 9-12 bits | Configurable precision |
+| **Pull-up Resistor** | 4.7kΩ | Required for 1-Wire protocol |
+| **Series Resistor** | 100Ω | GPIO protection |
+| **Terminal** | J4 (3-pin) | Screw terminal connection |
                                         │
                                         │
 3V3 ─────── 4.7kΩ pull-up ──────────────┘
@@ -85,26 +74,34 @@ ESP32 Pin 11 (D14) ───── 100Ω ───── DS18B20 DQ (Data)
 3V3 ────────────────────────────────── DS18B20 VDD
 
 GND ────────────────────────────────── DS18B20 GND
-
-Waterproof DS18B20 Cable Colors:
-• Red Wire    = VDD (3V3)
-• Black Wire  = GND  
-• Yellow Wire = DQ (Data to GPIO 14)
 ```
+
+**Waterproof DS18B20 Cable Colors:**
+- **Red Wire**: VDD (3V3)
+- **Black Wire**: GND  
+- **Yellow Wire**: DQ (Data to GPIO 14)
 
 ---
 
 ## 🔊 **Buzzer Connection**
 
 ```
-```
 ESP32 Pin 13 (D13) ───── 100Ω ───── Buzzer Positive (+)
-
-GND ─────────────────────────────── Buzzer Negative (-)
-
-Note: For ESP32 Core 3.0+, tone() function is used
-      For ESP32 Core 2.x, LEDC PWM is used
+                                        │
+                                        │
+GND ────────────────────────────────── Buzzer Negative (-)
 ```
+
+**Customer Buzzer Specifications:**
+- **Type**: Active Buzzer (recommended) or Passive Buzzer
+- **Voltage**: 3V-5V compatible
+- **Current**: <30mA
+- **Frequency**: 2kHz-4kHz (passive buzzer)
+- **Connection**: Via J8 PCB screw terminal
+
+**Programming Notes:**
+- ESP32 Core 3.0+: `tone()` function is used
+- ESP32 Core 2.x: LEDC PWM is used
 
 ---
 
@@ -129,9 +126,9 @@ External 12V Supply ───────────────── Relay JD
 External 12V GND ──────────────────── Relay GND (Isolated)
 
 Relay Outputs (Each relay has):
-• COM (Common)
-• NO (Normally Open)  
-• NC (Normally Closed)
+- COM (Common)
+- NO (Normally Open)  
+- NC (Normally Closed)
 
 Note: Remove VCC-JD-VCC jumper for opto-isolation
 ```
@@ -140,37 +137,84 @@ Note: Remove VCC-JD-VCC jumper for opto-isolation
 
 ## 🔋 **Commercial Product Power Distribution System**
 
-```
-Customer ERD Charger 5V Input (External Supply):
-Customer 5V ERD ──► J1 PCB Terminal ──► [F1: 2.5A Fuse] ──► [D1: 1N5819 Reverse Protection] ──► [D2: 1N4744A TVS] ──┬── ESP32 VIN
-                                                                                                                      │
-Customer GND     ─────────────────────────────────────────────────────────────────────────────────────────────────┼── ESP32 GND
-                                                                                                                      │
-                                                                                                                      ├── Built-in Filter Capacitors:
-                                                                                                                      │   C1: 470µF/25V
-                                                                                                                      │   C2: 100nF/50V
-                                                                                                                      │   C5: 470µF/25V
-                                                                                                                      │   C6: 10nF/50V
+![Power Distribution Diagram](./power_distribution_diagram.svg)
 
-Customer SMPS 12V Input (External Supply):
-Customer 12V SMPS ──► J2 PCB Terminal ──► [F2: 3A Fuse] ──► [D3: 1N4744A TVS] ──┬── J5 Terminal (Customer Relay Module JD-VCC)
-                                                                                  │
-Customer 12V GND  ───────────────────────────────────────────────────────────────┼── J5 Terminal (Customer Relay Module GND)
-                                                                                  │
-                                                                                  ├── Built-in Filter Capacitors:
-                                                                                  │   C3: 470µF/25V
-                                                                                  │   C4: 100nF/50V
+### **Power Input Specifications**
 
-3.3V Internal (ESP32 Onboard Regulator):
-ESP32 3V3 ──┬── DS3231 VCC
-            │
-            ├── SSD1306 VCC  
-            │
-            ├── DS18B20 VDD
-            │
-            └── Decoupling Capacitors:
-                C7-C12: 100nF/50V (Near each module)
+| Input Type | Voltage | Current | Fuse | Protection | Terminal |
+|------------|---------|---------|------|------------|----------|
+| **Customer ERD Charger** | 5V DC | 2.5A Max | F1 (2.5A) | D1 + D2 + C1,C2,C5,C6 | J1 |
+| **Customer SMPS** | 12V DC | 3A Max | F2 (3A) | D3 + C3,C4 | J2 |
+
+### **5V Rail Power Flow Diagram**
+
 ```
+Customer ERD 5V ──► J1 Terminal ──► [F1: 2.5A] ──► [D1: 1N5819] ──► [D2: 1N4744A] ──┬── ESP32 VIN
+                                      Fuse         Reverse          TVS              │
+Customer GND    ────────────────────────────────────────────────────────────────────┼── ESP32 GND
+                                                                                     │
+                                                                                     ├── Filter Caps:
+                                                                                     │   C1: 470µF/25V
+                                                                                     │   C2: 100nF/50V
+                                                                                     │   C5: 470µF/25V
+                                                                                     │   C6: 10nF/50V
+```
+
+### **12V Rail Power Flow Diagram**
+
+```
+Customer 12V ──► J2 Terminal ──► [F2: 3A] ──► [D3: 1N4744A] ──┬── J5 Relay JD-VCC
+                                   Fuse        TVS             │
+Customer GND ──────────────────────────────────────────────────┼── J5 Relay GND
+                                                               │
+                                                               ├── Filter Caps:
+                                                               │   C3: 470µF/25V
+                                                               │   C4: 100nF/50V
+```
+
+### **3.3V Internal Distribution**
+
+| Output | Load | Current | Notes |
+|--------|------|---------|-------|
+| **DS3231 VCC** | RTC Module | ~20mA | From ESP32 3V3 pin |
+| **SSD1306 VCC** | OLED Display | ~30mA | From ESP32 3V3 pin |
+| **DS18B20 VDD** | Temperature Sensor | ~5mA | From ESP32 3V3 pin |
+| **Decoupling** | C7-C12 (100nF each) | - | Near each module |
+
+---
+
+## 🛡️ **Protection Circuit Details**
+
+### **5V Rail Protection Components**
+
+| Component | Type | Rating | Function |
+|-----------|------|--------|----------|
+| **F1** | Fuse | 2.5A Fast-Blow | Overcurrent protection |
+| **D1** | Schottky Diode | 1N5819 (40V, 1A) | Reverse polarity protection |
+| **D2** | TVS Diode | 1N4744A (15V) | Transient voltage suppression |
+| **C1, C5** | Electrolytic | 470µF/25V | Primary ripple filtering |
+| **C2, C6** | Ceramic | 100nF/50V | High-frequency noise filtering |
+
+### **12V Rail Protection Components**
+
+| Component | Type | Rating | Function |
+|-----------|------|--------|----------|
+| **F2** | Fuse | 3A Fast-Blow | Overcurrent protection |
+| **D3** | TVS Diode | 1N4744A (15V) | Transient voltage suppression |
+| **C3** | Electrolytic | 470µF/25V | Primary ripple filtering |
+| **C4** | Ceramic | 100nF/50V | High-frequency noise filtering |
+
+### **GPIO Protection Scheme**
+
+```
+ESP32 GPIO Output ───[330Ω]─── Relay Control Input
+ESP32 GPIO Input  ───[100Ω]─── Sensor Signal Input
+```
+
+| Protection Type | Resistor Value | Purpose |
+|----------------|----------------|---------|
+| **Relay Drive** | 330Ω | Current limiting for relay drivers |
+| **Sensor Input** | 100Ω | Input protection from sensor signals |
 
 ---
 
@@ -190,8 +234,6 @@ ESP32 3V3 ──┬── DS3231 VCC
 GPIO Protection (Each control line):
 ESP32 GPIO ───[330Ω]─── Relay Input
 ESP32 GPIO ───[100Ω]─── Sensor Input
-```
-```
 
 I2C Protection:
 ESP32 SDA ───[82Ω]───[4.7kΩ to 3V3]─── I2C SDA Bus
@@ -203,47 +245,66 @@ ESP32 SCL ───[82Ω]───[4.7kΩ to 3V3]─── I2C SCL Bus
 ## 🔌 **Connector Specifications**
 
 ### J1: 5V Power Input (Phoenix Contact)
-```
-Pin 1: +5V Input (Red Wire)
-Pin 2: GND (Black Wire)
-```
+
+| **Pin** | **Signal** | **Wire Color** |
+|---------|------------|----------------|
+| 1 | +5V Input | Red Wire |
+| 2 | GND | Black Wire |
 
 ### J2: 12V Relay Power (Phoenix Contact)
-```
-Pin 1: +12V Input (Red Wire)  
-Pin 2: GND (Black Wire)
-```
+
+| **Pin** | **Signal** | **Wire Color** |
+|---------|------------|----------------|
+| 1 | +12V Input | Red Wire |
+| 2 | GND | Black Wire |
 
 ### J3: I2C Modules (JST XH 4-pin)
-```
-Pin 1: 3V3 (Red Wire)
-Pin 2: GND (Black Wire)
-Pin 3: SDA (Blue Wire)
-Pin 4: SCL (Yellow Wire)
-```
+
+| **Pin** | **Signal** | **Wire Color** |
+|---------|------------|----------------|
+| 1 | 3V3 | Red Wire |
+| 2 | GND | Black Wire |
+| 3 | SDA | Blue Wire |
+| 4 | SCL | Yellow Wire |
 
 ### J4: DS18B20 Temperature (JST XH 3-pin)
-```
-Pin 1: 3V3 (Red Wire)
-Pin 2: GND (Black Wire)  
-Pin 3: DQ Data (Yellow Wire)
-```
+
+| **Pin** | **Signal** | **Wire Color** |
+|---------|------------|----------------|
+| 1 | 3V3 | Red Wire |
+| 2 | GND | Black Wire |
+| 3 | DQ Data | Yellow Wire |
 
 ### J5: Control Outputs (JST XH 8-pin)
-```
-Pin 1: Filter Control (GPIO 16)
-Pin 2: CO2 Control (GPIO 17)
-Pin 3: Light Control (GPIO 18)
-Pin 4: Heater Control (GPIO 19)
-Pin 5: HangOn Control (GPIO 5)
-Pin 6: Buzzer Output (GPIO 13)
-Pin 7: Status LED (GPIO 2)
-Pin 8: GND Reference
-```
+
+| **Pin** | **Signal** | **GPIO** |
+|---------|------------|----------|
+| 1 | Filter Control | GPIO 16 |
+| 2 | CO2 Control | GPIO 17 |
+| 3 | Light Control | GPIO 18 |
+| 4 | Heater Control | GPIO 19 |
+| 5 | HangOn Control | GPIO 5 |
+| 6 | Buzzer Output | GPIO 13 |
+| 7 | Status LED | GPIO 2 |
+| 8 | GND Reference | - |
 
 ---
 
 ## 📏 **PCB Layout Zones**
+
+![PCB Layout Zones Diagram](./pcb_layout_zones_diagram.svg)
+
+### **100mm × 80mm Professional PCB Layout**
+
+| Zone | Dimensions | Components | Purpose |
+|------|------------|------------|---------|
+| **Power Zone** | Left 20mm | F1, F2, D1, D2, D3, C1-C6, J1, J2 | Input protection & filtering |
+| **ESP32 Zone** | Center 40mm | ESP32 DevKit v1 socket | Main controller |
+| **I2C Zone** | Top 15mm | DS3231 (J3), SSD1306 (J3) | Real-time clock & display |
+| **Sensor Zone** | Bottom area | DS18B20 (J4), R1 pull-up | Temperature sensing |
+| **Output Zone** | Right 20mm | J5 terminals, BZ1 buzzer | Control outputs |
+
+### **PCB Layout Diagram**
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -271,13 +332,16 @@ Pin 8: GND Reference
 │                      │  [J4] DS18B20            │         │
 │                      │  [R1] Pull-up            │         │
 └─────────────────────────────────────────────────────────────┘
-
-Layer Stack (4-layer):
-• Layer 1 (Top):    Components + Signal Routing
-• Layer 2 (Inner):  Ground Plane (Solid Pour)
-• Layer 3 (Inner):  Power Planes (+5V, +3V3, +12V)
-• Layer 4 (Bottom): Additional Routing + Test Points
 ```
+
+### **4-Layer PCB Stack-up**
+
+| Layer | Type | Function | Notes |
+|-------|------|----------|-------|
+| **Layer 1 (Top)** | Signal | Components + Signal Routing | Primary component placement |
+| **Layer 2 (Inner)** | Ground | Ground Plane (Solid Pour) | EMI shielding & return path |
+| **Layer 3 (Inner)** | Power | Power Planes (+5V, +3V3, +12V) | Clean power distribution |
+| **Layer 4 (Bottom)** | Signal | Additional Routing + Test Points | Secondary routing & testing |
 
 ---
 
@@ -293,11 +357,11 @@ TP6: I2C SCL Signal ─────────────────── [T
 TP7: DS18B20 Data Signal ────────────── [Test Point]
 TP8: Buzzer Output ───────────────────── [Test Point]
 
-Test Point Placement:
-• Power test points on left edge
-• Signal test points near respective circuits
-• Ground test points at corners
-• All test points accessible with probe
+**Test Point Placement:**
+- **Power test points**: On left edge
+- **Signal test points**: Near respective circuits
+- **Ground test points**: At corners
+- **All test points**: Accessible with probe
 ```
 
 ---
@@ -345,3 +409,42 @@ Step 6: Customer Installation & Final Assembly
 ```
 
 This comprehensive commercial product connection diagram provides all the professional installation references needed for creating your KiCad schematic, PCB layout, and customer installation guide! 🚀
+
+
+
+🎨 Created SVG Diagrams:
+esp32_pinout_diagram.svg - ESP32 DevKit v1 with color-coded pin connections
+
+🔴 Red: Power connections (5V, 3V3)
+🔵 Blue: I2C communication (SDA/SCL)
+🟠 Orange: Temperature sensor
+🟢 Green: Status indicators
+🟣 Purple: Audio/control outputs
+🟡 Yellow: Relay controls
+power_distribution_diagram.svg - Complete power system with protection
+
+🟡 Yellow background: 5V rail section
+🟢 Green background: 12V rail section
+🟠 Orange background: 3.3V internal distribution
+Color-coded components and protection circuits
+pcb_layout_zones_diagram.svg - 100mm×80mm PCB organization
+
+🟡 Yellow: Power zone (left 20mm)
+🔵 Blue: ESP32 zone (center 40mm)
+🔴 Red: Output zone (right 20mm)
+🟢 Green: I2C zone with proper dimensions
+4-layer stack-up visualization
+i2c_bus_diagram.svg - Shared I2C communication
+
+🔵 Blue: SDA data line
+🟢 Cyan: SCL clock line
+🔴 Red: Power distribution
+🟣 Purple: Component modules
+Pull-up resistors and signal protection
+ds18b20_connection_diagram.svg - Temperature sensor wiring
+
+🟠 Orange: DS18B20 sensor and data line
+🔴 Red: Power connections
+⚫ Black: Ground connections
+🟢 Green: Pull-up resistor
+Technical specifications included

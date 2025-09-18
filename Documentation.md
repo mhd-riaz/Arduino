@@ -24,11 +24,14 @@ All API endpoints (except root) require authentication using an API key in the r
 ### Commercial Appliance Control (Customer Equipment)
 
 The system professionally controls 5 customer-provided appliances:
-- **Filter** - Main filtration system (20W)
-- **CO2** - CO2 injection system (15W)
-- **Light** - Aquarium LED lighting (40W)
-- **Heater** - Water heater with temperature control (200W)
-- **HangOnFilter** - Secondary hang-on filter (20W)
+
+| **Appliance**    | **Power Rating** | **Purpose**                           |
+|------------------|------------------|---------------------------------------|
+| Filter           | 20W              | Main filtration system                |
+| CO2              | 15W              | CO2 injection system                  |
+| Light            | 40W              | Aquarium LED lighting                 |
+| Heater           | 200W             | Water heater with temperature control |
+| HangOnFilter     | 20W              | Secondary hang-on filter              |
 
 ### Professional Response Format
 

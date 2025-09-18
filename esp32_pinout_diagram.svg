@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="700" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1000" height="700" fill="#f8f9fa"/>
+  
+  <!-- Title -->
+  <text x="500" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2c3e50">
+    ESP32 DevKit v1 (38-pin) - Commercial Product Configuration
+  </text>
+  
+  <!-- ESP32 Board -->
+  <rect x="300" y="80" width="400" height="500" rx="10" fill="#1e3a8a" stroke="#1e40af" stroke-width="2"/>
+  
+  <!-- ESP32 Chip -->
+  <rect x="380" y="200" width="240" height="160" rx="8" fill="#374151" stroke="#6b7280" stroke-width="1"/>
+  <text x="500" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#fff">
+    ESP32
+  </text>
+  <text x="500" y="290" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#d1d5db">
+    WROOM-32
+  </text>
+  
+  <!-- USB Connector -->
+  <rect x="460" y="80" width="80" height="30" rx="5" fill="#6b7280" stroke="#374151" stroke-width="1"/>
+  <text x="500" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#fff">USB</text>
+  
+  <!-- Left Side Pins -->
+  <!-- Pin 1 - EN -->
+  <circle cx="280" cy="120" r="5" fill="#94a3b8"/>
+  <text x="270" y="125" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">1 EN</text>
+  
+  <!-- Pin 2 - VP/A0 -->
+  <circle cx="280" cy="140" r="5" fill="#94a3b8"/>
+  <text x="270" y="145" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">2 VP/A0</text>
+  
+  <!-- Pin 3 - VN/A3 -->
+  <circle cx="280" cy="160" r="5" fill="#94a3b8"/>
+  <text x="270" y="165" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">3 VN/A3</text>
+  
+  <!-- Pin 4 - D34/A6 -->
+  <circle cx="280" cy="180" r="5" fill="#94a3b8"/>
+  <text x="270" y="185" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">4 D34/A6</text>
+  
+  <!-- Pin 5 - D35/A7 -->
+  <circle cx="280" cy="200" r="5" fill="#94a3b8"/>
+  <text x="270" y="205" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">5 D35/A7</text>
+  
+  <!-- Pin 6 - D32/A4 -->
+  <circle cx="280" cy="220" r="5" fill="#94a3b8"/>
+  <text x="270" y="225" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">6 D32/A4</text>
+  
+  <!-- Pin 7 - D33/A5 -->
+  <circle cx="280" cy="240" r="5" fill="#94a3b8"/>
+  <text x="270" y="245" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">7 D33/A5</text>
+  
+  <!-- Pin 8 - D25/A18 -->
+  <circle cx="280" cy="260" r="5" fill="#94a3b8"/>
+  <text x="270" y="265" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">8 D25/A18</text>
+  
+  <!-- Pin 9 - D26/A19 -->
+  <circle cx="280" cy="280" r="5" fill="#94a3b8"/>
+  <text x="270" y="285" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">9 D26/A19</text>
+  
+  <!-- Pin 10 - D27/A17 -->
+  <circle cx="280" cy="300" r="5" fill="#94a3b8"/>
+  <text x="270" y="305" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">10 D27/A17</text>
+  
+  <!-- Pin 11 - D14/A16 (Temperature Sensor) -->
+  <circle cx="280" cy="320" r="5" fill="#f59e0b"/>
+  <text x="270" y="325" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">11 D14/A16</text>
+  
+  <!-- Pin 12 - D12/A15 -->
+  <circle cx="280" cy="340" r="5" fill="#94a3b8"/>
+  <text x="270" y="345" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">12 D12/A15</text>
+  
+  <!-- Pin 13 - D13/A14 (Buzzer) -->
+  <circle cx="280" cy="360" r="5" fill="#8b5cf6"/>
+  <text x="270" y="365" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">13 D13/A14</text>
+  
+  <!-- Pin 14 - GND -->
+  <circle cx="280" cy="380" r="5" fill="#374151"/>
+  <text x="270" y="385" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">14 GND</text>
+  
+  <!-- Pin 15 - VIN (Power Input) -->
+  <circle cx="280" cy="400" r="5" fill="#dc2626"/>
+  <text x="270" y="405" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">15 VIN</text>
+  
+  <!-- Pin 16 - 3V3 -->
+  <circle cx="280" cy="420" r="5" fill="#dc2626"/>
+  <text x="270" y="425" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">16 3V3</text>
+  
+  <!-- Pin 17 - GND -->
+  <circle cx="280" cy="440" r="5" fill="#374151"/>
+  <text x="270" y="445" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">17 GND</text>
+  
+  <!-- Pin 18 - D15/A13 -->
+  <circle cx="280" cy="460" r="5" fill="#94a3b8"/>
+  <text x="270" y="465" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">18 D15/A13</text>
+  
+  <!-- Pin 19 - D2/A12 (Status LED) -->
+  <circle cx="280" cy="480" r="5" fill="#10b981"/>
+  <text x="270" y="485" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">19 D2/A12</text>
+  
+  <!-- Right Side Pins -->
+  <!-- Pin 38 - 5V -->
+  <circle cx="720" cy="120" r="5" fill="#dc2626"/>
+  <text x="730" y="125" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">38 5V</text>
+  
+  <!-- Pin 37 - CMD -->
+  <circle cx="720" cy="140" r="5" fill="#94a3b8"/>
+  <text x="730" y="145" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">37 CMD</text>
+  
+  <!-- Pin 36 - D3 -->
+  <circle cx="720" cy="160" r="5" fill="#94a3b8"/>
+  <text x="730" y="165" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">36 D3</text>
+  
+  <!-- Pin 35 - D1 -->
+  <circle cx="720" cy="180" r="5" fill="#94a3b8"/>
+  <text x="730" y="185" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">35 D1</text>
+  
+  <!-- Pin 34 - D2 (Status LED) -->
+  <circle cx="720" cy="200" r="5" fill="#10b981"/>
+  <text x="730" y="205" text-anchor="start" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">34 D2</text>
+  
+  <!-- Pin 33 - D0 -->
+  <circle cx="720" cy="220" r="5" fill="#94a3b8"/>
+  <text x="730" y="225" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">33 D0</text>
+  
+  <!-- Pin 32 - GND -->
+  <circle cx="720" cy="240" r="5" fill="#374151"/>
+  <text x="730" y="245" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">32 GND</text>
+  
+  <!-- Pin 31 - 3V3 -->
+  <circle cx="720" cy="260" r="5" fill="#dc2626"/>
+  <text x="730" y="265" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">31 3V3</text>
+  
+  <!-- Pin 30 - D23 -->
+  <circle cx="720" cy="280" r="5" fill="#94a3b8"/>
+  <text x="730" y="285" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">30 D23</text>
+  
+  <!-- Pin 29 - D22/SCL (I2C) -->
+  <circle cx="720" cy="300" r="5" fill="#3b82f6"/>
+  <text x="730" y="305" text-anchor="start" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">29 D22/SCL</text>
+  
+  <!-- Pin 28 - TX0 -->
+  <circle cx="720" cy="320" r="5" fill="#94a3b8"/>
+  <text x="730" y="325" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">28 TX0</text>
+  
+  <!-- Pin 27 - RX0 -->
+  <circle cx="720" cy="340" r="5" fill="#94a3b8"/>
+  <text x="730" y="345" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">27 RX0</text>
+  
+  <!-- Pin 26 - D21/SDA (I2C) -->
+  <circle cx="720" cy="360" r="5" fill="#3b82f6"/>
+  <text x="730" y="365" text-anchor="start" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">26 D21/SDA</text>
+  
+  <!-- Pin 25 - D19 (Heater Relay) -->
+  <circle cx="720" cy="380" r="5" fill="#ef4444"/>
+  <text x="730" y="385" text-anchor="start" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">25 D19</text>
+  
+  <!-- Pin 24 - D18 (Light Relay) -->
+  <circle cx="720" cy="400" r="5" fill="#eab308"/>
+  <text x="730" y="405" text-anchor="start" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">24 D18</text>
+  
+  <!-- Pin 23 - D5 (HangOn Filter Relay) -->
+  <circle cx="720" cy="420" r="5" fill="#06b6d4"/>
+  <text x="730" y="425" text-anchor="start" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">23 D5</text>
+  
+  <!-- Pin 22 - D17 (CO2 Relay) -->
+  <circle cx="720" cy="440" r="5" fill="#10b981"/>
+  <text x="730" y="445" text-anchor="start" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">22 D17</text>
+  
+  <!-- Pin 21 - D16 (Filter Relay) -->
+  <circle cx="720" cy="460" r="5" fill="#8b5cf6"/>
+  <text x="730" y="465" text-anchor="start" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2937">21 D16</text>
+  
+  <!-- Pin 20 - D4 -->
+  <circle cx="720" cy="480" r="5" fill="#94a3b8"/>
+  <text x="730" y="485" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">20 D4</text>
+  
+  <!-- Connection Lines and Labels -->
+  
+  <!-- Power Input (5V) -->
+  <line x1="280" y1="400" x2="100" y2="400" stroke="#dc2626" stroke-width="3"/>
+  <rect x="20" y="385" width="80" height="30" rx="5" fill="#dc2626"/>
+  <text x="60" y="405" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">J1 (5V)</text>
+  
+  <!-- Temperature Sensor -->
+  <line x1="280" y1="320" x2="100" y2="320" stroke="#f59e0b" stroke-width="3"/>
+  <rect x="20" y="305" width="80" height="30" rx="5" fill="#f59e0b"/>
+  <text x="60" y="325" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">J4 Temp</text>
+  
+  <!-- Buzzer -->
+  <line x1="280" y1="360" x2="100" y2="360" stroke="#8b5cf6" stroke-width="3"/>
+  <rect x="20" y="345" width="80" height="30" rx="5" fill="#8b5cf6"/>
+  <text x="60" y="365" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">J8 Buzz</text>
+  
+  <!-- Status LED -->
+  <line x1="280" y1="480" x2="100" y2="480" stroke="#10b981" stroke-width="3"/>
+  <rect x="20" y="465" width="80" height="30" rx="5" fill="#10b981"/>
+  <text x="60" y="485" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">J6 LED</text>
+  
+  <!-- I2C SDA -->
+  <line x1="720" y1="360" x2="900" y2="360" stroke="#3b82f6" stroke-width="3"/>
+  <rect x="900" y="345" width="80" height="30" rx="5" fill="#3b82f6"/>
+  <text x="940" y="365" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">J3 SDA</text>
+  
+  <!-- I2C SCL -->
+  <line x1="720" y1="300" x2="900" y2="300" stroke="#3b82f6" stroke-width="3"/>
+  <rect x="900" y="285" width="80" height="30" rx="5" fill="#3b82f6"/>
+  <text x="940" y="305" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">J3 SCL</text>
+  
+  <!-- Relay Outputs -->
+  <line x1="720" y1="380" x2="900" y2="380" stroke="#ef4444" stroke-width="3"/>
+  <rect x="900" y="365" width="80" height="30" rx="5" fill="#ef4444"/>
+  <text x="940" y="385" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">J5 Heater</text>
+  
+  <line x1="720" y1="400" x2="900" y2="400" stroke="#eab308" stroke-width="3"/>
+  <rect x="900" y="405" width="80" height="30" rx="5" fill="#eab308"/>
+  <text x="940" y="425" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">J5 Light</text>
+  
+  <line x1="720" y1="420" x2="900" y2="440" stroke="#06b6d4" stroke-width="3"/>
+  <rect x="900" y="445" width="80" height="30" rx="5" fill="#06b6d4"/>
+  <text x="940" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#fff">J5 H.Filter</text>
+  
+  <line x1="720" y1="440" x2="900" y2="480" stroke="#10b981" stroke-width="3"/>
+  <rect x="900" y="485" width="80" height="30" rx="5" fill="#10b981"/>
+  <text x="940" y="505" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">J5 CO2</text>
+  
+  <line x1="720" y1="460" x2="900" y2="520" stroke="#8b5cf6" stroke-width="3"/>
+  <rect x="900" y="525" width="80" height="30" rx="5" fill="#8b5cf6"/>
+  <text x="940" y="545" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">J5 Filter</text>
+  
+  <!-- Legend -->
+  <rect x="50" y="600" width="900" height="80" rx="10" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="500" y="620" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#1f2937">Connection Legend</text>
+  
+  <!-- Legend Items -->
+  <rect x="70" y="630" width="20" height="15" fill="#dc2626"/>
+  <text x="100" y="642" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">Power Input/Output</text>
+  
+  <rect x="230" y="630" width="20" height="15" fill="#3b82f6"/>
+  <text x="260" y="642" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">I2C Communication</text>
+  
+  <rect x="420" y="630" width="20" height="15" fill="#ef4444"/>
+  <text x="450" y="642" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">Relay Controls</text>
+  
+  <rect x="580" y="630" width="20" height="15" fill="#f59e0b"/>
+  <text x="610" y="642" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">Sensors</text>
+  
+  <rect x="720" y="630" width="20" height="15" fill="#10b981"/>
+  <text x="750" y="642" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">Status/Indicators</text>
+  
+  <rect x="70" y="650" width="20" height="15" fill="#8b5cf6"/>
+  <text x="100" y="662" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">Audio/Buzzer</text>
+  
+  <rect x="230" y="650" width="20" height="15" fill="#94a3b8"/>
+  <text x="260" y="662" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">Unused Pins</text>
+  
+  <rect x="420" y="650" width="20" height="15" fill="#374151"/>
+  <text x="450" y="662" font-family="Arial, sans-serif" font-size="12" fill="#1f2937">Ground Pins</text>
+</svg>
