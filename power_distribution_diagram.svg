@@ -31,11 +31,15 @@
   
   <!-- D1 Diode -->
   <polygon points="380,115 415,130 380,145 365,130" fill="#059669" stroke="#047857" stroke-width="2"/>
+  <!-- Cathode dash for D1 -->
+  <line x1="415" y1="124" x2="415" y2="136" stroke="#047857" stroke-width="3"/>
   <text x="390" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#fff">D1</text>
   <text x="390" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" fill="#047857">1N5819</text>
   
   <!-- D2 TVS -->
   <polygon points="445,115 480,130 445,145 430,130" fill="#7c3aed" stroke="#5b21b6" stroke-width="2"/>
+  <!-- Cathode dash for D2 -->
+  <line x1="480" y1="124" x2="480" y2="136" stroke="#5b21b6" stroke-width="3"/>
   <text x="457" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#fff">D2</text>
   <text x="457" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" fill="#5b21b6">1N4744A</text>
   
@@ -136,6 +140,8 @@
   
   <!-- D3 TVS -->
   <polygon points="380,395 415,410 380,425 365,410" fill="#7c3aed" stroke="#5b21b6" stroke-width="2"/>
+  <!-- Cathode dash for D3 -->
+  <line x1="415" y1="404" x2="415" y2="416" stroke="#5b21b6" stroke-width="3"/>
   <text x="390" y="415" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#fff">D3</text>
   <text x="390" y="445" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" fill="#5b21b6">1N4744A</text>
   

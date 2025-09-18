@@ -224,7 +224,6 @@ ESP32 GPIO Input  ───[100Ω]─── Sensor Signal Input
 ## 🛡️ **Protection Circuit Details**
 
 ```
-```
 5V Rail Protection:
 5V+ ───[F1]───[D1]───[D2]───[C1]───[C5]─── Clean 5V to ESP32
        2.5A   1N5819  1N4744A  470µF   470µF
