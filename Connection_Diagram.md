@@ -224,19 +224,21 @@ ESP32 GPIO Input  ───[100Ω]─── Sensor Signal Input
 ## 🛡️ **Protection Circuit Details**
 
 ```
+```
 5V Rail Protection:
-5V+ ───[F1]───[D1]───[D2]───[C1||C2]───[C5||C6]─── Clean 5V to ESP32
-       2.5A   1N5819  1N4744A Primary    Secondary
-       Fuse   Schottky 15V     Filter     Filter
+5V+ ───[F1]───[D1]───[D2]───[C1]───[C5]─── Clean 5V to ESP32
+       2.5A   1N5819  1N4744A  470µF   470µF
+       Fuse   Schottky 15V     Filter   Filter
 
 12V Rail Protection:  
-12V+ ───[F2]───[D3]───[C3||C4]─── Clean 12V to Relays
-        3A     1N4744A Primary
-        Fuse   15V     Filter
+12V+ ───[F2]───[D3]───[C3]─── Clean 12V to Relays
+        3A     1N4744A  470µF
+        Fuse   15V      Filter
 
 GPIO Protection (Each control line):
 ESP32 GPIO ───[330Ω]─── Relay Input
 ESP32 GPIO ───[100Ω]─── Sensor Input
+```
 
 I2C Protection:
 ESP32 SDA ───[82Ω]───[4.7kΩ to 3V3]─── I2C SDA Bus
@@ -300,7 +302,7 @@ ESP32 SCL ───[82Ω]───[4.7kΩ to 3V3]─── I2C SCL Bus
 
 | Zone | Dimensions | Components | Purpose |
 |------|------------|------------|---------|
-| **Power Zone** | Left 20mm | F1, F2, D1, D2, D3, C1-C6, J1, J2 | Input protection & filtering |
+| **Power Zone** | Left 20mm | F1, F2, D1, D2, D3, C1, C3, C5, J1, J2 | Input protection & filtering |
 | **ESP32 Zone** | Center 40mm | ESP32 DevKit v1 socket | Main controller |
 | **I2C Zone** | Top 15mm | DS3231 (J3), SSD1306 (J3) | Real-time clock & display |
 | **Sensor Zone** | Bottom area | DS18B20 (J4), R1 pull-up | Temperature sensing |
@@ -317,9 +319,9 @@ ESP32 SCL ───[82Ω]───[4.7kΩ to 3V3]─── I2C SCL Bus
 │                      │                           │(Right   │
 │  [F1] [F2]          │                           │ 20mm)   │
 │  [D1] [D2] [D3]     │        ┌─────────┐       │         │
-│  [C1] [C3]          │        │         │       │ [J5]    │
-│  [C2] [C4]          │        │  ESP32  │       │ Control │
-│  [C5] [C6]          │        │ DevKit  │       │ Outputs │
+│  [C1] [C3] [C5]     │        │         │       │ [J5]    │
+│                      │        │  ESP32  │       │ Control │
+│                      │        │ DevKit  │       │ Outputs │
 │                      │        │   v1    │       │         │
 │  [J1] 5V Input      │        │         │       │ [BZ1]   │
 │  [J2] 12V Input     │        └─────────┘       │ Buzzer  │
@@ -374,7 +376,7 @@ TP8: Buzzer Output ────────────────────�
 Step 1: Power Components
 ├── Install fuses F1, F2
 ├── Install protection diodes D1, D2, D3
-├── Install filter capacitors C1-C6
+├── Install filter capacitors C1, C3, C5
 └── Test power rails with multimeter
 
 Step 2: Protection Resistors

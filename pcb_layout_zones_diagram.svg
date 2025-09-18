@@ -51,24 +51,15 @@
   <rect x="260" y="175" width="15" height="15" rx="2" fill="#059669" stroke="#047857" stroke-width="1"/>
   <text x="267" y="186" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#fff">D3</text>
   
-  <!-- Capacitors -->
+  <!-- Essential Capacitors Only -->
   <rect x="220" y="200" width="12" height="20" rx="2" fill="#2563eb" stroke="#1d4ed8" stroke-width="1"/>
   <text x="226" y="213" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#fff">C1</text>
   
-  <rect x="260" y="200" width="12" height="20" rx="2" fill="#2563eb" stroke="#1d4ed8" stroke-width="1"/>
-  <text x="266" y="213" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#fff">C3</text>
-  
-  <rect x="220" y="225" width="12" height="20" rx="2" fill="#2563eb" stroke="#1d4ed8" stroke-width="1"/>
-  <text x="226" y="238" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#fff">C2</text>
-  
-  <rect x="260" y="225" width="12" height="20" rx="2" fill="#2563eb" stroke="#1d4ed8" stroke-width="1"/>
-  <text x="266" y="238" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#fff">C4</text>
-  
   <rect x="240" y="200" width="12" height="20" rx="2" fill="#2563eb" stroke="#1d4ed8" stroke-width="1"/>
-  <text x="246" y="213" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#fff">C5</text>
+  <text x="246" y="213" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#fff">C3</text>
   
-  <rect x="240" y="225" width="12" height="20" rx="2" fill="#2563eb" stroke="#1d4ed8" stroke-width="1"/>
-  <text x="246" y="238" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#fff">C6</text>
+  <rect x="260" y="200" width="12" height="20" rx="2" fill="#2563eb" stroke="#1d4ed8" stroke-width="1"/>
+  <text x="266" y="213" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#fff">C5</text>
   
   <!-- Terminals -->
   <rect x="220" y="450" width="35" height="20" rx="2" fill="#374151" stroke="#1f2937" stroke-width="1"/>
