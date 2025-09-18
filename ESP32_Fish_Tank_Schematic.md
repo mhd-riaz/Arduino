@@ -62,18 +62,21 @@ The system is designed as a professional control PCB with external customer-prov
 | R2 | 4.7kΩ (I2C SDA Pull-up) | R | Built into PCB |
 | R3 | 4.7kΩ (I2C SCL Pull-up) | R | Built into PCB |
 | R4-R8 | 330Ω (GPIO Relay Protection) | R | Built into PCB |
+| R9 | 100Ω (DS18B20 GPIO Protection) | R | Built into PCB |
+| R10 | 100Ω (Buzzer GPIO Protection) | R | Built into PCB |
+| R11 | 82Ω (I2C SDA Series Protection) | R | Built into PCB |
+| R12 | 82Ω (I2C SCL Series Protection) | R | Built into PCB |
 
 ### Professional PCB Inductors & EMI Suppression (Built into Product)
 
 | **Component** | **Value/Part Number** | **KiCad Symbol** | **Installation** |
 |---------------|----------------------|------------------|------------------|
-| L1 | 10µH/3A (3.3V LC Filter) | L | Built into PCB |
-| FB1 | BLM18PG221SN1D (220Ω@100MHz) | Ferrite_Bead | Built into PCB |
-| FB2 | BLM18PG221SN1D (220Ω@100MHz) | Ferrite_Bead | Built into PCB |
+| FB1 | 120Ω@100MHz/1A (0603 SMD) | Ferrite_Bead | Built into PCB |
+| FB2 | 120Ω@100MHz/1A (0603 SMD) | Ferrite_Bead | Built into PCB |
 | NTC1 | 5D-11 (10Ω Inrush Limiter) | Thermistor | Built into PCB |
 
-**Alternative Ferrite Beads (if BLM18PG221SN1D unavailable):**
-- BLM21PG221SN1D (Murata, 3A rating)
+**Alternative Ferrite Beads (if 120Ω unavailable):**
+- BLM18PG221SN1D (Murata, 220Ω@100MHz)
 - MMZ1608Y121BT000 (TDK equivalent)
 - 28A0301-0A0-10 (Fair-Rite through-hole)
 
@@ -437,7 +440,9 @@ ESP32_FishTank_PCB/
 | C1,C3,C5 | 470µF/25V | Electrolytic Capacitor | 3 | Panasonic |
 | R1,R2,R3 | 4.7kΩ/0.25W | Resistor 1% | 3 | Yageo |
 | R4-R8 | 330Ω/0.25W | Resistor 1% | 5 | Yageo |
-| FB1,FB2 | BLM18PG221SN1D | Ferrite Bead 220Ω@100MHz 2A | 2 | Murata |
+| R9,R10 | 100Ω/0.25W | Resistor 1% (GPIO Protection) | 2 | Yageo |
+| R11,R12 | 82Ω/0.25W | Resistor 1% (I2C Protection) | 2 | Yageo |
+| FB1,FB2 | 120Ω@100MHz/1A | Ferrite Bead 0603 SMD | 2 | Generic |
 
 ### External Modules
 | Component | Description | Interface | Supplier |

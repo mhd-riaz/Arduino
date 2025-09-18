@@ -214,8 +214,8 @@ ESP32 GPIO Input  ───[100Ω]─── Sensor Signal Input
 
 | Component | Type | Rating | Function |
 |-----------|------|--------|----------|
-| **FB1** | Ferrite Bead | BLM18PG221SN1D (220Ω@100MHz, 2A) | Power line EMI filtering |
-| **FB2** | Ferrite Bead | BLM18PG221SN1D (220Ω@100MHz, 2A) | Signal line EMI filtering |
+| **FB1** | Ferrite Bead | 120Ω@100MHz/1A (0603 SMD) | Power line EMI filtering |
+| **FB2** | Ferrite Bead | 120Ω@100MHz/1A (0603 SMD) | Signal line EMI filtering |
 
 **Note**: Ferrite beads provide EMI suppression at high frequencies while maintaining low DC resistance for power and signal integrity.
 
