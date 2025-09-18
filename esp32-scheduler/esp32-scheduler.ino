@@ -1,52 +1,64 @@
 // ============================================================================
 // ESP32 Fish Tank Automation System (Arduino Sketch)
-// Version: 2.0 - Optimized & Customized (5-Device System)
+// Version: 2.0 - Commercial Product Design (5-Device System)
 // Author: mhd-riaz
-// Date: August 23, 2025
+// Date: September 18, 2025
 //
 // Description:
-// This program automates a fishtank environment using an ESP32 Dev Module.
-// It controls five appliances (Filter, CO2, Light, Heater, HangOnFilter) based on 
-// custom schedules, real-time temperature control, and user-initiated overrides via a REST API.
+// Commercial fish tank automation system designed as an end-user product.
+// Controls five appliances (Filter, CO2, Light, Heater, HangOnFilter) with 
+// intelligent scheduling, temperature control, and REST API management.
+// Designed for plug-and-play operation with external power supplies.
 //
-// Features:
-// - Control of 5 appliances (Filter, CO2, Light, Heater, HangOnFilter).
-// - Custom optimized schedules with minute-based timing for efficiency.
-// - DS1307 RTC for accurate timekeeping, synchronized with NTP.
-// - DS18B20 temperature sensor for intelligent heater control (25-29°C range).
-// - 0.96" Blue OLED Display for real-time status (time, temperature, appliance states).
-// - 12V 8-channel optocoupler relay for appliance control.
-// - ESP32 WiFi for network connectivity with automatic fallback to AP mode.
-// - REST API server with JSON input/output for schedule management,
-//   temporary appliance control, and WiFi configuration.
-// - Non-Volatile Storage (NVS) for WiFi credentials and appliance schedules.
-// - Temperature-controlled heater logic with 30-minute minimum runtime.
-// - Emergency safety system for extreme temperature conditions.
-// - Memory optimized with reduced OLED update frequency and efficient scheduling.
-// - Fault tolerance for WiFi network issues (RTC fallback, non-blocking ops).
-// - Audio feedback system with buzzer for connection and emergency alerts.
-// - Default REST API key: "Automate@123".
+// Commercial Product Features:
+// - Professional control PCB with modular external power supplies
+// - Customer provides: SMPS 12V/2A + ERD Charger 5V/2A + 6A MCB protection
+// - Control of 5 appliances via professional relay interface
+// - Custom optimized schedules with minute-based timing for efficiency
+// - DS3231 RTC for accurate timekeeping, synchronized with NTP
+// - DS18B20 temperature sensor for intelligent heater control (25-29°C range)
+// - 0.96" Blue OLED Display for real-time status monitoring
+// - 12V 8-channel optocoupler relay module for appliance control
+// - ESP32 WiFi with automatic fallback to AP mode for setup
+// - REST API server with JSON interface for remote management
+// - Non-Volatile Storage (NVS) for settings persistence
+// - Temperature-controlled heater with 30-minute minimum runtime
+// - Emergency safety system for extreme temperature conditions
+// - Memory optimized for production reliability
+// - Audio feedback system with buzzer alerts
+// - Professional installation with MCB protection
+// - Default REST API key: "Automate@123"
+//
+// Power Supply Architecture (Customer Provides):
+// AC Mains (240V) → [6A MCB] → External Power Supplies → Control PCB
+// - ERD Charger 5V/2A → ESP32 System (via control PCB)
+// - SMPS 12V/2A → Relay Module (via control PCB)
+// - Direct AC → Appliances (via relay contacts)
 //
 // Components Used:
-// - ESP32 Dev Module (38-pin)
-// - DS1307 RTC
-// - DS18B20 temperature sensor
-// - 0.96 Inch Blue OLED Display Module SPI/I2C - 4pin (SSD1306)
-// - 12v 8 channel optocoupler relay
-// - Buzzer
+// - ESP32 Dev Module (38-pin) - Main controller
+// - DS3231 RTC - Accurate timekeeping
+// - DS18B20 temperature sensor - Water temperature monitoring
+// - 0.96" OLED Display (SSD1306) - Status display
+// - 8-channel 12V optocoupler relay module - Appliance control
+// - Buzzer - Audio feedback
+// - External SMPS 12V/2A - Relay power supply (customer provides)
+// - External ERD Charger 5V/2A - ESP32 power supply (customer provides)
+// - 6A MCB - AC mains protection (customer installs)
 //
-// Pinout (Refer to research document for detailed connections):
-// - DS1307 RTC: SDA (GPIO 21), SCL (GPIO 22)
-// - OLED Display: SDA (GPIO 21), SCL (GPIO 22)
-// - DS18B20 Temp Sensor: DQ (GPIO 14) - Requires 4.7KΩ pull-up to 3.3V
-// - Relay Module:
-//   - IN1 (Filter): GPIO 16 - Main filtration system
-//   - IN2 (CO2): GPIO 17 - CO2 injection system  
-//   - IN3 (Light): GPIO 18 - Aquarium lighting
-//   - IN4 (Heater): GPIO 19 - Water heater
-//   - IN5 (HangOnFilter): GPIO 5 - Secondary hang-on filter
-//   - Note: Relay type is configurable via RELAY_ACTIVE_LOW define.
-// - Buzzer: GPIO 13 (PWM capable)
+// Professional Pinout (Control PCB Design):
+// - DS3231 RTC: SDA (GPIO 21), SCL (GPIO 22)
+// - OLED Display: SDA (GPIO 21), SCL (GPIO 22) 
+// - DS18B20 Temp Sensor: DQ (GPIO 14) with 4.7KΩ pull-up to 3.3V
+// - Professional Relay Interface:
+//   - IN1 (Filter): GPIO 16 - Main filtration system (20W pump)
+//   - IN2 (CO2): GPIO 17 - CO2 injection system (15W pump)
+//   - IN3 (Light): GPIO 18 - Aquarium lighting (40W LED)
+//   - IN4 (Heater): GPIO 19 - Water heater (200W)
+//   - IN5 (HangOnFilter): GPIO 5 - Secondary filter (20W)
+//   - Relay type: Active LOW (professional optocoupler modules)
+// - Buzzer: GPIO 13 (PWM capable) - Professional audio feedback
+//
 //
 // Libraries Required:
 // - WiFi (Built-in ESP32)
@@ -76,7 +88,7 @@
 // - Heater control prioritizes temperature over schedule/override with 30-min minimum runtime.
 // - `ArduinoJson` v6 using JsonDocument for dynamic memory management.
 // - Default custom schedules are loaded if NVS is empty.
-// - Emergency safety system activates on extreme temperatures (>35°C or <10°C).
+// - Emergency safety system activates on extreme temperatures (>32°C or <20°C).
 // - Memory optimized with reduced OLED update frequency (2-second intervals).
 // - The system attempts to connect to saved WiFi. If unsuccessful, it
 //   starts an Access Point (AP) "Fishtank_Setup" for configuration and provides audio alerts.
@@ -86,82 +98,87 @@
 //   remove the VCC-JD-VCC jumper for opto-isolation.
 //
 // ============================================================================
-// CIRCUIT PROTECTION & SAFETY (INDIA-SPECIFIC)
+// COMMERCIAL PRODUCT CIRCUIT PROTECTION & SAFETY (INDIA-SPECIFIC)
 // ============================================================================
 //
-// WARNING: Electrical safety is critical! Always use proper fuses and protection.
-// The Indian electrical environment requires robust protection due to:
+// COMMERCIAL INSTALLATION: Customer provides external power supplies and protection.
+// This professional control PCB requires proper electrical installation by qualified electrician.
+// Indian electrical environment protection requirements:
 // - Voltage fluctuations (190V-250V AC mains)
-// - Power surges during monsoons and grid switching
+// - Power surges during monsoons and grid switching  
 // - Frequent power outages and restoration spikes
 //
-// MANDATORY PROTECTION COMPONENTS:
+// CUSTOMER-PROVIDED PROTECTION COMPONENTS:
 //
-// 1. MAINS POWER PROTECTION (230V AC Side):
-//    - Main Circuit Breaker: 10A MCB (Miniature Circuit Breaker)
-//    - Surge Protection Device (SPD): Metal Oxide Varistor 275V
-//    - Earth Leakage Circuit Breaker (ELCB): 30mA for safety
+// 1. MAINS POWER PROTECTION (240V AC Side - Customer Installation):
+//    - Main Circuit Breaker: 6A MCB (Miniature Circuit Breaker) - Customer provides
+//    - Surge Protection Device (SPD): Metal Oxide Varistor 275V - Customer provides
+//    - Earth Leakage Circuit Breaker (ELCB): 30mA for safety - Customer provides
 //
-// 2. 12V DC SUPPLY PROTECTION (Relay Power):
-//    - Input Fuse: 3A slow-blow fuse (before 12V regulator)
-//    - TVS Diode: P6KE15A (15V, 600W) for transient suppression
-//    - Filter Capacitor: 1000µF/25V electrolytic + 100nF ceramic
-//    - Ferrite Bead: FB-43-101 on 12V input line for EMI suppression
+// 2. EXTERNAL POWER SUPPLIES (Customer Provides):
+//    - SMPS 12V/2A: Relay power supply - Customer purchases and installs
+//    - ERD Charger 5V/2A: ESP32 power supply - Customer purchases and installs
+//    - Customer responsible for proper electrical installation and protection
 //
-// 3. 5V DC SUPPLY PROTECTION (ESP32 Power - ERD Charger 5V/2A):
-//    - Primary Supply: ERD charger (5V/2A max) - Phone charger type
-//    - Input Fuse: 2.5A slow-blow fuse (T2.5AL250V) after charger output
-//    - Reverse Polarity Protection: Schottky diode 1N5819 (3A/40V rating)
-//    - Input Filter: 1000µF/16V electrolytic + 100nF ceramic for noise reduction
-//    - ESP32 Power: Direct 5V to ESP32 Dev Module VIN pin (onboard regulator to 3.3V)
-//    - Current Limiting Resistors: Basic protection without monitoring
-//    - TVS Surge Protection: P6KE6.8CA (6.8V bidirectional) across 5V rail
-//    - Inrush Current Limiter: 10Ω NTC thermistor (5D-11) in series with 5V+
-//    - EMI Filter: Ferrite bead (FB-43-101) on 5V input line
-//    - Additional Filtering: 470µF/10V low-ESR capacitor + 10nF ceramic (high-freq noise)
+// 3. CONTROL PCB DC PROTECTION (Built into Product):
+//    - 12V Rail Fuse: 3A slow-blow fuse (T3AL250V) - Built into PCB
+//    - TVS Diode: 1N4744A (15V Zener, THT) - Built into PCB  
+//    - Filter Capacitor: 470µF/25V electrolytic + 100nF ceramic - Built into PCB
+//    - Ferrite Bead: FB-43-101 on 12V input line for EMI - Built into PCB
 //
-// 4. 3.3V LOGIC LEVEL PROTECTION:
-//    - Decoupling Capacitors: 100nF ceramic + 10µF tantalum near ESP32
-//    - ESD Protection: TPD4E02B4 on I2C lines (SDA/SCL)
-//    - Current Limiting Resistors: 330Ω on GPIO outputs to relays
-//    - Power Supply Filtering: LC filter (10µH inductor + 47µF capacitor)
-//    - GPIO Protection: 100Ω series resistors on all GPIO pins
-//    - 3.3V Rail TVS: SMBJ3.3A (3.3V unidirectional) for logic level protection
+// 4. ESP32 5V SUPPLY PROTECTION (Built into Product):
+//    - Primary Supply: ERD charger (5V/2A max) - Customer provides
+//    - Input Fuse: 2.5A slow-blow fuse (T2.5AL250V) - Built into PCB
+//    - Reverse Polarity Protection: Schottky diode 1N5819 (3A/40V) - Built into PCB
+//    - Input Filter: 470µF/25V electrolytic + 100nF ceramic - Built into PCB
+//    - ESP32 Power: Direct 5V to ESP32 Dev Module VIN pin - Built into PCB
+//    - TVS Surge Protection: 1N4744A (15V Zener) across 5V rail - Built into PCB
+//    - Inrush Current Limiter: 10Ω NTC thermistor (5D-11) - Built into PCB
+//    - EMI Filter: Ferrite bead (FB-43-101) on 5V input line - Built into PCB
 //
-// 5. SENSOR PROTECTION (DS18B20, I2C Devices):
-//    - Pull-up Resistors: 4.7kΩ with series 100Ω protection resistors
-//    - EMI Filtering: 100nF capacitors on long sensor wires
-//    - Cable Shielding: Use shielded cable for DS18B20 (>1m runs)
-//    - DS18B20 Protection: 100Ω series resistor + 100nF to ground for noise immunity
-//    - I2C Line Protection: 82Ω series resistors on SDA/SCL + 100pF capacitors
-//    - Sensor Power Filtering: 100µF + 100nF capacitors on sensor VCC lines
-//    - ESD Diodes: BAV99 dual diode array on sensor data lines
+// 5. 3.3V LOGIC LEVEL PROTECTION (Built into Product):
+//    - Decoupling Capacitors: 100nF ceramic + 10µF tantalum near ESP32 - Built into PCB
+//    - ESD Protection: TPD4E02B4 on I2C lines (SDA/SCL) - Built into PCB
+//    - Current Limiting Resistors: 330Ω on GPIO outputs to relays - Built into PCB
+//    - Power Supply Filtering: LC filter (10µH inductor + 47µF capacitor) - Built into PCB
+//    - GPIO Protection: 100Ω series resistors on all GPIO pins - Built into PCB
+//    - 3.3V Rail TVS: 1N4744A (15V Zener) for logic level protection - Built into PCB
 //
-// 6. RELAY ISOLATION & PROTECTION:
-//    - Optical Isolation: PC817 optocouplers (already in relay module)
-//    - Flyback Protection: 1N4007 diodes across relay coils (usually built-in)
-//    - Contact Protection: RC snubber (100Ω + 100nF) across AC contacts
-//    - Ground Isolation: Separate grounds for high voltage and logic sides
+// 6. SENSOR PROTECTION (Built into Product):
+//    - Pull-up Resistors: 4.7kΩ with series 100Ω protection resistors - Built into PCB
+//    - EMI Filtering: 100nF capacitors on long sensor wires - Built into PCB
+//    - Cable Shielding: Use shielded cable for DS18B20 (>1m runs) - Installation requirement
+//    - DS18B20 Protection: 100Ω series resistor + 100nF to ground - Built into PCB
+//    - I2C Line Protection: 82Ω series resistors on SDA/SCL + 100pF capacitors - Built into PCB
+//    - Sensor Power Filtering: 100µF + 100nF capacitors on sensor VCC lines - Built into PCB
+//    - ESD Diodes: BAV99 dual diode array on sensor data lines - Built into PCB
 //
-// 7. EMERGENCY SAFETY FEATURES:
-//    - Emergency Stop Switch: Normally-closed, breaks all power
-//    - Thermal Fuse: 70°C thermal cutoff on power supplies
-//    - Watchdog Timer: Hardware watchdog (ESP32 built-in + external)
-//    - Status LED: Power indicator and fault LED
+// 7. RELAY ISOLATION & PROTECTION (Built into Product):
+//    - Optical Isolation: PC817 optocouplers (relay module feature) - Built into PCB
+//    - Flyback Protection: 1N4007 diodes across relay coils (relay module feature) - Built into PCB
+//    - Contact Protection: RC snubber (100Ω + 100nF) across AC contacts - Customer installation
+//    - Ground Isolation: Separate grounds for high voltage and logic sides - Built into PCB
 //
-// RECOMMENDED FUSE SPECIFICATIONS (Based on ERD 5V/2A Charger):
-// - Main AC: 10A MCB (C-curve, 6kA breaking capacity)
-// - 12V Rail: 3A Slow-blow ceramic fuse (T3AL250V)
-// - 5V Rail (ERD Charger): 2.5A Slow-blow ceramic fuse (T2.5AL250V) - allows brief startup current
-// - ESP32 Supply: 1A Fast-blow fuse (F1AL250V) on ESP32 VIN line
-// - Sensor Lines: 100mA PTC fuses on long cable runs
-// - I2C Bus: 200mA PTC fuse for RTC and OLED protection
+// 8. COMMERCIAL PRODUCT SAFETY FEATURES (Built into Product):
+//    - Emergency Stop Input: Normally-closed contact provision - Built into PCB
+//    - Thermal Monitoring: Software temperature monitoring via DS18B20 - Built into PCB
+//    - Watchdog Timer: Hardware watchdog (ESP32 built-in + software) - Built into PCB
+//    - Status LEDs: Power indicator and fault indication - Built into PCB
 //
-// GROUNDING & EARTHING:
-// - Proper earthing connection to water-safe earth rod
-// - Star grounding topology (single point ground)
-// - Separate analog and digital ground planes
-// - Use GFCI/RCD protection for any water-contact equipment
+// COMMERCIAL PRODUCT FUSE SPECIFICATIONS:
+// - Customer AC Protection: 6A MCB (C-curve, 6kA breaking capacity) - Customer provides
+// - 12V Rail Protection: 3A Slow-blow ceramic fuse (T3AL250V) - Built into PCB
+// - 5V Rail Protection: 2.5A Slow-blow ceramic fuse (T2.5AL250V) - Built into PCB
+// - ESP32 Supply Protection: 1A Fast-blow fuse (F1AL250V) - Built into PCB
+// - Sensor Lines: 100mA PTC fuses on long cable runs - Built into PCB
+// - I2C Bus: 200mA PTC fuse for RTC and OLED protection - Built into PCB
+//
+// CUSTOMER INSTALLATION REQUIREMENTS:
+// - Proper earthing connection to water-safe earth rod - Customer responsibility
+// - Star grounding topology (single point ground) - Installation requirement
+// - Separate analog and digital ground planes - Built into PCB design
+// - Use GFCI/RCD protection for any water-contact equipment - Customer responsibility
+// - Professional electrical installation by qualified electrician - Customer responsibility
 //
 // ============================================================================
 // HARDWARE PROTECTION COMPONENTS SHOPPING LIST:
@@ -175,9 +192,8 @@
 // - PTC Fuses: 100mA, 200mA self-resetting (sensor lines)
 //
 // SURGE PROTECTION DIODES:
-// - P6KE6.8CA: 6.8V bidirectional TVS (5V rail protection)
-// - P6KE15A: 15V unidirectional TVS (12V rail protection)
-// - SMBJ3.3A: 3.3V unidirectional TVS (logic level protection)
+// - 1N4744A: 15V Zener diode (5V and 12V rail protection)
+// - 1N4744A: 15V Zener diode (3.3V logic level protection)
 // - BAV99: Dual switching diode array (sensor ESD protection)
 //
 // RECTIFIER & PROTECTION DIODES:
@@ -186,9 +202,9 @@
 // - 1N5822: 3A/40V Schottky (high current reverse protection)
 //
 // CAPACITORS (FILTERING & DECOUPLING):
-// - 1000µF/16V: Electrolytic (5V rail primary filter)
-// - 1000µF/25V: Electrolytic (12V rail primary filter)
-// - 470µF/10V: Low-ESR electrolytic (5V secondary filter)
+// - 470µF/25V: Electrolytic (5V rail primary filter)
+// - 470µF/25V: Electrolytic (12V rail primary filter)
+// - 100µF/16V: Low-ESR electrolytic (5V secondary filter)
 // - 100µF/6.3V: Tantalum (sensor power filter)
 // - 47µF/6.3V: Ceramic (3.3V rail filter)
 // - 10µF/6.3V: Tantalum (ESP32 decoupling)
@@ -354,7 +370,7 @@ const char *NVS_KEY_PASS = "password";
 const char *NVS_KEY_SCHEDULES = "schedules_json";
 
 // Time Management (NTP + RTC System)
-RTC_DS1307 rtc;
+RTC_DS3231 rtc;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 5.5 * 3600, 60000);  // IST offset (5.5 hours), update every 60s
 unsigned long lastNtpSyncMillis = 0;

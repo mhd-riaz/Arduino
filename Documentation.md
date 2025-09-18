@@ -1,35 +1,38 @@
-# ESP32 Fish Tank Automation System - REST API Documentation
+# ESP32 Fish Tank Automation Commercial Product - Professional REST API Documentation
 
 ## Overview
 
-This document provides comprehensive documentation for the ESP32 Fish Tank Automation System REST API. The API allows remote control and monitoring of a 5-appliance aquarium automation system with intelligent scheduling, temperature control, and emergency safety features.
+This document provides comprehensive professional documentation for the ESP32 Fish Tank Automation System Commercial Product REST API. The API enables remote control and monitoring of a 5-appliance aquarium automation system designed for end-user commercial installations with intelligent scheduling, temperature control, and emergency safety features.
 
-### Base Information
+### Commercial Product Information
 
+- **Product**: ESP32 Fish Tank Automation Control PCB
 - **Base URL**: `http://<ESP32_IP_ADDRESS>`
 - **Protocol**: HTTP/1.1
 - **Content Type**: `application/json`
 - **Authentication**: API Key (Header-based)
 - **Port**: `80` (default HTTP)
+- **Professional Installation**: Requires qualified electrician for AC power setup
+- **Customer Configuration**: User configures WiFi and schedules via REST API
 
-### Authentication
+### Professional Authentication
 
-All API endpoints (except root) require authentication using an API key in the request header.
+All API endpoints (except root) require authentication using an API key in the request header for secure commercial operation.
 
 **Header**: `X-API-Key: Automate@123`
 
-### Appliances
+### Commercial Appliance Control (Customer Equipment)
 
-The system controls 5 appliances:
-- **Filter** - Main filtration system
-- **CO2** - CO2 injection system
-- **Light** - Aquarium lighting
-- **Heater** - Water heater (temperature-controlled)
-- **HangOnFilter** - Secondary hang-on filter
+The system professionally controls 5 customer-provided appliances:
+- **Filter** - Main filtration system (20W)
+- **CO2** - CO2 injection system (15W)
+- **Light** - Aquarium LED lighting (40W)
+- **Heater** - Water heater with temperature control (200W)
+- **HangOnFilter** - Secondary hang-on filter (20W)
 
-### Response Format
+### Professional Response Format
 
-All API responses follow a consistent JSON format:
+All API responses follow a consistent JSON format for professional integration:
 
 ```json
 {
@@ -536,30 +539,30 @@ curl -X POST http://192.168.1.100/refresh \
 
 ---
 
-## 🔧 System Features
+## 🔧 Commercial Product System Features
 
-### Temperature Control
-- **Intelligent Heater**: Automatically controlled based on water temperature
-- **Target Range**: 25°C - 29°C 
-- **Minimum Runtime**: 30 minutes to prevent short cycling
-- **Priority**: Temperature control overrides manual/schedule control
+### Professional Temperature Control
+- **Intelligent Heater Control**: Automatically manages 200W customer-provided heater based on water temperature
+- **Commercial Target Range**: 25°C - 29°C optimized for tropical fish
+- **Professional Runtime Management**: 30-minute minimum runtime to prevent short cycling and extend heater life
+- **Priority Control**: Temperature control overrides manual/schedule control for safety
 
-### Emergency Safety
-- **Temperature Limits**: Emergency shutdown if temp >32°C or <20°C
-- **Sensor Monitoring**: Automatic emergency if sensor fails (8+ consecutive failures)
-- **Auto-Recovery**: System resumes when conditions are safe
-- **Manual Reset**: Emergency can be manually reset via API
+### Commercial Safety Systems
+- **Temperature Protection**: Emergency shutdown if temp >32°C or <20°C to protect aquatic life
+- **Sensor Monitoring**: Automatic emergency response if DS18B20 sensor fails (8+ consecutive failures)
+- **Auto-Recovery**: System automatically resumes normal operation when conditions are safe
+- **Manual Reset**: Emergency can be manually reset via API for professional servicing
 
-### Override System
-- **Temporary Override**: Auto-revert after specified minutes
-- **Permanent Override**: Manual control until reset
-- **Priority**: Temperature > Override > Schedule
+### Professional Override System
+- **Temporary Override**: Auto-revert after specified minutes for maintenance purposes
+- **Permanent Override**: Manual control until reset for professional testing
+- **Control Priority**: Temperature > Override > Schedule for optimal safety
 
-### Schedule System
-- **Minute Precision**: Timing accurate to the minute
-- **Multiple Intervals**: Each appliance supports multiple on/off periods
-- **Overnight Support**: Intervals can span midnight
-- **Persistent Storage**: Schedules saved to non-volatile memory
+### Commercial Schedule System
+- **Precision Timing**: Minute-level accuracy for professional aquarium lighting cycles
+- **Multiple Intervals**: Each appliance supports multiple on/off periods for complex schedules
+- **24-Hour Support**: Intervals can span midnight for full-day operation
+- **Professional Storage**: Schedules saved to non-volatile memory for power-outage resilience
 
 ---
 

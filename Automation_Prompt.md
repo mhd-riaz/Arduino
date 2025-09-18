@@ -1,51 +1,51 @@
-# ESP32 Fish Tank Automation System - Code Generation Prompt
+# ESP32 Fish Tank Automation Commercial Product - Professional Code Generation Prompt
 
-## System Overview
-Generate a complete ESP32 fish tank automation system (Arduino sketch) that manages 5 aquarium appliances with intelligent scheduling, temperature control, WiFi connectivity, and REST API interface. This is a production-ready system with safety features and memory optimizations.
+## Commercial Product Overview
+Generate a complete ESP32 fish tank automation system (Arduino sketch) for commercial end-user product sales. This professional control PCB manages 5 customer-provided aquarium appliances with intelligent scheduling, temperature control, WiFi connectivity, and comprehensive REST API interface. Designed for professional installation with external power supplies and customer-provided components.
 
-## Hardware Specifications
+## Commercial Hardware Specifications
 
-### Microcontroller
-- **ESP32 Dev Module (38-pin)** with WiFi capability
+### Professional Microcontroller
+- **ESP32 Dev Module (38-pin)** with WiFi capability - Built into PCB
 
-### Components & Connections
-- **DS1307 RTC Module**: SDA (GPIO 21), SCL (GPIO 22) - Real-time clock with NTP synchronization
-- **DS18B20 Temperature Sensor**: Data (GPIO 14) with 4.7KΩ pull-up resistor to 3.3V
-- **SSD1306 OLED Display (0.96", 128x64)**: SDA (GPIO 21), SCL (GPIO 22), I2C address 0x3C
-- **8-Channel Relay Module (12V)**: Active LOW control, separate 12V supply for JD-VCC
-- **Buzzer**: GPIO 13 (PWM capable) for audio feedback
-- **Power**: ESP32 powered via USB/external 5V, relays via separate 12V supply
+### Customer-Provided External Components & Professional Connections
+- **DS3231 RTC Module**: Customer connects to PCB J3 terminal (SDA GPIO 21, SCL GPIO 22)
+- **DS18B20 Temperature Sensor**: Customer installs and connects to PCB J4 terminal (Data GPIO 14) with built-in 4.7KΩ pull-up
+- **SSD1306 OLED Display (0.96", 128x64)**: Customer connects to PCB J3 terminal (shared I2C, address 0x3C)
+- **8-Channel Relay Module (12V)**: Customer connects to PCB J5 terminal with external 12V SMPS
+- **Buzzer**: Customer connects to PCB J8 terminal (PWM GPIO 13) for audio feedback
+- **Power Architecture**: Customer provides ERD Charger 5V/2A via J1 and SMPS 12V/2A via J2
 
-### Appliances & GPIO Mapping
-1. **Filter** (Main filter pump): GPIO 16
-2. **CO2** (CO2 injection system): GPIO 17  
-3. **Light** (Aquarium lighting): GPIO 18
-4. **Heater** (Water heater): GPIO 19
-5. **HangOnFilter** (Hang-on filter): GPIO 20
+### Professional Appliance Control & Customer Equipment
+1. **Filter** (Customer 20W main filter pump): GPIO 16 via J5 Terminal
+2. **CO2** (Customer 15W CO2 injection system): GPIO 17 via J5 Terminal
+3. **Light** (Customer 40W LED aquarium lighting): GPIO 18 via J5 Terminal
+4. **Heater** (Customer 200W water heater): GPIO 19 via J5 Terminal
+5. **HangOnFilter** (Customer 20W hang-on filter): GPIO 5 via J5 Terminal
 
-## Core Functionality Requirements
+## Commercial Product Core Functionality Requirements
 
-### 1. WiFi & Network Management
-- **Station Mode**: Connect to saved WiFi credentials stored in NVS
-- **Access Point Mode**: Fallback "Fishtank_Setup" AP (password: "password123") if connection fails
-- **Connection Timeout**: 30 seconds before switching to AP mode
-- **WiFi Recovery**: Automatic reconnection attempts every 5 seconds
-- **Audio Feedback**: Buzzer alerts for connection issues (3 buzzes, 1000ms interval)
+### 1. Professional WiFi & Network Management
+- **Station Mode**: Connect to customer WiFi credentials stored in NVS
+- **Access Point Mode**: Fallback "FishTank_Commercial" AP (password: "Commercial123") for customer setup
+- **Professional Connection Timeout**: 30 seconds before switching to AP mode
+- **WiFi Recovery**: Automatic reconnection attempts every 5 seconds for commercial reliability
+- **Customer Audio Feedback**: Buzzer alerts for connection issues (3 buzzes, 1000ms interval)
 
-### 2. Time Management System
-- **Primary Clock**: DS1307 RTC module for accurate timekeeping
+### 2. Commercial Time Management System
+- **Primary Clock**: Customer DS3231 RTC module for precise commercial timekeeping
 - **NTP Synchronization**: Automatic sync every 3 hours when WiFi connected (IST timezone +5.5 hours)
-- **Fallback Time**: Use compile-time if RTC not running
-- **Time Format**: 24-hour format, minute-based scheduling for efficiency
+- **Fallback Time**: Use compile-time if customer RTC not running
+- **Time Format**: 24-hour format, minute-based scheduling for professional efficiency
 
-### 3. Appliance Control Logic
-- **Schedule-Based Control**: Default ON/OFF intervals for each appliance
-- **Manual Override**: Temporary control via REST API with optional timeout
-- **Temperature Control**: Intelligent heater management (25°C-29°C range, 30-min minimum runtime)
-- **Priority System**: Temperature control > Manual override > Schedule
-- **Safety Features**: Emergency shutdown on extreme temperatures (>35°C or <10°C)
+### 3. Commercial Appliance Control Logic
+- **Schedule-Based Control**: Professional ON/OFF intervals for customer appliances
+- **Manual Override**: Temporary control via REST API with optional timeout for maintenance
+- **Professional Temperature Control**: Intelligent 200W heater management (25°C-29°C range, 30-min minimum runtime)
+- **Priority System**: Temperature control > Manual override > Schedule for optimal commercial operation
+- **Commercial Safety Features**: Emergency shutdown on extreme temperatures (>32°C or <20°C) to protect aquatic life
 
-### 4. Default Schedules (Time in Minutes from Midnight)
+### 4. Commercial Default Schedules (Time in Minutes from Midnight)
 ```cpp
 // CO2: 8:30 AM - 1:30 PM (510-810), 3:30 PM - 8:30 PM (930-1230)
 CO2: on_interval 510-810, on_interval 930-1230
@@ -72,25 +72,25 @@ Filter: off_interval 810-930
 
 ### 6. Data Storage (NVS)
 - **WiFi Credentials**: SSID and password persistence
-- **Appliance Schedules**: JSON format storage with auto-save
-- **Namespaces**: "wifi_creds" and "app_schedules"
-- **Default Loading**: Auto-generate default schedules if NVS empty
+- **Professional Data Storage**: JSON format with auto-save for commercial reliability
+- **Secure Namespaces**: "wifi_creds" and "app_schedules" for customer data protection
+- **Default Configuration**: Auto-generate professional default schedules if NVS empty
 
-## REST API Specifications
+## Commercial REST API Specifications
 
-### Server Configuration
-- **Port**: 80 (HTTP)
-- **Authentication**: X-API-Key header with value "Automate@123"
-- **Content-Type**: application/json
-- **Body Size Limit**: 2048 bytes for POST requests
+### Professional Server Configuration
+- **Port**: 80 (HTTP) for customer web interface access
+- **Authentication**: X-API-Key header with value "Automate@123" for secure commercial operation
+- **Content-Type**: application/json for professional API standards
+- **Body Size Limit**: 2048 bytes for POST requests to prevent memory issues
 
-### API Endpoints
+### Commercial API Endpoints
 
 #### 1. GET `/status`
-Returns system status including current time, temperature, and appliance states with control modes.
+Returns comprehensive system status including current time, temperature, and appliance states with control modes for professional monitoring.
 
 #### 2. POST `/control`
-Control individual or multiple appliances with optional timeout.
+Professional control interface for individual or multiple customer appliances with optional timeout for maintenance operations.
 ```json
 // Single appliance
 {
@@ -167,23 +167,23 @@ Reset emergency shutdown state (only if conditions are safe).
 ### Memory Management
 - **Buffer Limits**: 2KB POST body, 4KB JSON documents
 - **NVS Namespaces**: Separate WiFi and schedule storage
-- **Display Optimization**: Minimal text updates
-- **Loop Efficiency**: Non-blocking operations with millis() timing
+- **Display Optimization**: Minimal text updates for commercial efficiency
+- **Loop Efficiency**: Non-blocking operations with millis() timing for professional performance
 
-## Safety & Emergency Features
+## Commercial Safety & Emergency Features
 
-### Emergency Conditions
-- **High Temperature**: > 35°C (immediate shutdown)
-- **Low Temperature**: < 10°C (immediate shutdown)
-- **Emergency Shutdown**: Turn OFF all appliances, sound alarm (5 buzzes @ 2kHz)
+### Professional Emergency Conditions
+- **High Temperature**: > 32°C (immediate shutdown) - Commercial aquatic life protection
+- **Low Temperature**: < 20°C (immediate shutdown) - Professional temperature range
+- **Emergency Shutdown**: Turn OFF all customer appliances, sound alarm (5 buzzes @ 2kHz)
 
-### Audio Feedback System
-- **WiFi Issues**: 3 buzzes, 1000ms intervals
-- **Emergency Alert**: 5 rapid buzzes @ 2kHz frequency
-- **Confirmation**: Single buzz for successful operations
-- **LEDC API**: Use ledcWriteTone() for PWM buzzer control
+### Commercial Audio Feedback System
+- **WiFi Issues**: 3 buzzes, 1000ms intervals for customer notification
+- **Emergency Alert**: 5 rapid buzzes @ 2kHz frequency for critical situations
+- **Confirmation**: Single buzz for successful operations and customer feedback
+- **LEDC API**: Use ledcWriteTone() for PWM buzzer control with ESP32 Core 3.0+ compatibility
 
-## Required Libraries
+## Required Professional Libraries
 ```cpp
 #include <WiFi.h>                    // ESP32 built-in
 #include <ESPAsyncWebServer.h>       // https://github.com/me-no-dev/ESPAsyncWebServer
