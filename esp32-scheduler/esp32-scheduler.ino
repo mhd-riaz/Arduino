@@ -185,7 +185,7 @@
 // ============================================================================
 //
 // FUSES & CIRCUIT BREAKERS:
-// - 10A MCB (C-curve, 6kA): Main AC supply protection
+// - 6A MCB (C-curve, 6kA): Main AC supply protection
 // - T3AL250V: 3A slow-blow ceramic fuse (12V rail)
 // - T2.5AL250V: 2.5A slow-blow ceramic fuse (5V rail)
 // - F1AL250V: 1A fast-blow fuse (ESP32 VIN)
@@ -337,7 +337,7 @@ const char PROGMEM STR_WILDCARD[] = "*";
 // Relay Configuration
 // Set to true for Active LOW relays (LOW = ON, HIGH = OFF) - Most common
 // Set to false for Active HIGH relays (HIGH = ON, LOW = OFF)
-#define RELAY_ACTIVE_LOW false   // Change this based on your relay module type
+#define RELAY_ACTIVE_LOW true   // Professional optocoupler modules are Active LOW
 
 // DS18B20 Temperature Sensor Pin
 #define ONE_WIRE_BUS 14  // DS18B20 data pin (requires 4.7KΩ pull-up to 3.3V)
@@ -442,7 +442,7 @@ const unsigned long DEBUG_PRINT_INTERVAL_MS = 30000;  // Print debug info every 
 // OLED Display System
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 unsigned long lastOLEDUpdateMillis = 0;
-const unsigned long OLED_UPDATE_INTERVAL_MS = 5000;  // Update every 5 seconds
+const unsigned long OLED_UPDATE_INTERVAL_MS = 2000;  // Update every 2 seconds (memory optimized)
 char oledBuffer[64];  // Reusable buffer for OLED text formatting
 
 // WiFi Connection Management
@@ -460,6 +460,15 @@ const float EMERGENCY_TEMP_LOW = 20.0;   // Emergency shutdown if temperature be
 bool lastEmergencyState = false;         // Cache to avoid redundant operations
 unsigned long emergencyActivatedTime = 0; // Track when emergency was activated
 const unsigned long EMERGENCY_RESET_TIME_MS = 30 * 60 * 1000; // Auto-reset emergency after 30 minutes
+
+// Emergency Reason Tracking
+enum EmergencyReason {
+  NO_EMERGENCY = 0,
+  TEMP_TOO_HIGH,
+  TEMP_TOO_LOW, 
+  SENSOR_FAILURE
+};
+EmergencyReason currentEmergencyReason = NO_EMERGENCY;
 
 // System Health Monitoring & Alert System
 unsigned long lastSystemHeartbeat = 0;
@@ -810,14 +819,27 @@ void loop() {
 
   // Check emergency conditions - exclude zero/invalid values to prevent false alarms
   bool currentEmergencyState = false;
+  EmergencyReason newEmergencyReason = NO_EMERGENCY;
+  
   if (currentTemperatureC > 0.0) {
     // Only check temperature limits if we have valid readings
-    currentEmergencyState = (currentTemperatureC > EMERGENCY_TEMP_HIGH || 
-                            currentTemperatureC < EMERGENCY_TEMP_LOW);
+    if (currentTemperatureC > EMERGENCY_TEMP_HIGH) {
+      currentEmergencyState = true;
+      newEmergencyReason = TEMP_TOO_HIGH;
+    } else if (currentTemperatureC < EMERGENCY_TEMP_LOW) {
+      currentEmergencyState = true;
+      newEmergencyReason = TEMP_TOO_LOW;
+    }
   }
   // Always check sensor failure regardless of temperature value
   if (temperatureReadFailures >= MAX_TEMP_FAILURES) {
     currentEmergencyState = true;
+    newEmergencyReason = SENSOR_FAILURE;
+  }
+  
+  // Update emergency reason when state changes
+  if (currentEmergencyState) {
+    currentEmergencyReason = newEmergencyReason;
   }
   
   // Auto-reset emergency after timeout or when conditions are safe
@@ -834,6 +856,7 @@ void loop() {
       emergencyActivatedTime = 0;
       temperatureReadFailures = 0;  // Reset failure counter
       temperatureRecoveryCount = 0;  // Reset recovery counter
+      currentEmergencyReason = NO_EMERGENCY;  // Reset emergency reason
       #if DEBUG_MODE
       Serial.println(timeoutReset ? 
         F("[EMERGENCY] Auto-reset after timeout - System resumed") :
@@ -1353,7 +1376,21 @@ void updateOLED(DateTime now) {
   
   display.setCursor(40, y + (NUM_APPLIANCES * 8));
   if (emergencyShutdown) {
-    display.print(F("EMRG!"));
+    // Display specific emergency reason
+    switch (currentEmergencyReason) {
+      case TEMP_TOO_HIGH:
+        display.print(F("TEMP HIGH"));
+        break;
+      case TEMP_TOO_LOW:
+        display.print(F("TEMP LOW"));
+        break;
+      case SENSOR_FAILURE:
+        display.print(F("SENSOR"));
+        break;
+      default:
+        display.print(F("EMRG!"));
+        break;
+    }
   } else if (WiFi.status() == WL_CONNECTED) {
     // Show more meaningful IP info - last two octets
     IPAddress ip = WiFi.localIP();
