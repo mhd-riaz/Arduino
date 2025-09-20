@@ -40,6 +40,16 @@
   
   <rect x="250" y="150" width="25" height="15" rx="2" fill="#7c2d12" stroke="#451a03" stroke-width="1"/>
   <text x="262" y="162" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#fff">F2</text>
+
+  <!-- NTC2 Inrush Limiter (12V) -->
+  <rect x="240" y="130" width="20" height="15" rx="6" fill="#fbbf24" stroke="#b45309" stroke-width="1"/>
+  <text x="250" y="142" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#b45309">NTC2</text>
+  <text x="250" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="6" fill="#b45309">5D-11</text>
+
+  <!-- NTC1 Inrush Limiter -->
+  <rect x="210" y="130" width="20" height="15" rx="6" fill="#fbbf24" stroke="#b45309" stroke-width="1"/>
+  <text x="220" y="142" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#b45309">NTC1</text>
+  <text x="220" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="6" fill="#b45309">5D-11</text>
   
   <!-- Diodes -->
   <rect x="220" y="175" width="15" height="15" rx="2" fill="#059669" stroke="#047857" stroke-width="1"/>

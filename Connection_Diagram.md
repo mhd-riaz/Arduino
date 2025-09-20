@@ -142,13 +142,14 @@ Note: Remove VCC-JD-VCC jumper for opto-isolation
 
 | Input Type | Voltage | Current | Fuse | Protection | Terminal |
 |------------|---------|---------|------|------------|----------|
-| **Customer ERD Charger** | 5V DC | 2.5A Max | F1 (2.5A) | D1 + D2 + C1,C5 | J1 |
+| **Customer ERD Charger** | 5V DC | 2.5A Max | F1 (2.5A) | NTC1 + D1 + D2 + C1,C5 | J1 |
 | **Customer SMPS** | 12V DC | 3A Max | F2 (3A) | D3 + C3 | J2 |
 
 ### **5V Rail Power Flow Diagram**
 
 ```
-Customer ERD 5V ──► J1 Terminal ──► [F1: 2.5A] ──► [D1: 1N5819] ──► [D2: 1N4744A] ──┬── ESP32 VIN
+Customer ERD 5V ──► J1 Terminal ──► [NTC1: 5D-11] ──► [F1: 2.5A] ──► [D1: 1N5819] ──► [D2: 1N4744A] ──┬── ESP32 VIN
+                                 Inrush Limiter        Fuse         Reverse          TVS              │
                                       Fuse         Reverse          TVS              │
 Customer GND    ────────────────────────────────────────────────────────────────────┼── ESP32 GND
                                                                                      │
@@ -160,12 +161,12 @@ Customer GND    ─────────────────────�
 ### **12V Rail Power Flow Diagram**
 
 ```
-Customer 12V ──► J2 Terminal ──► [F2: 3A] ──► [D3: 1N4744A] ──┬── J5 Relay JD-VCC
-                                   Fuse        TVS             │
-Customer GND ──────────────────────────────────────────────────┼── J5 Relay GND
-                                                               │
-                                                               ├── Filter Caps:
-                                                               │   C3: 470µF/25V
+Customer 12V ──► J2 Terminal ──► [NTC2: 5D-11] ──► [F2: 3A] ──► [D3: 1N4744A] ──┬── J5 Relay JD-VCC
+                                 Inrush Limiter    Fuse        TVS               │
+Customer GND ────────────────────────────────────────────────────────────────────┼── J5 Relay GND
+                                                                               │
+                                                                               ├── Filter Caps:
+                                                                               │   C3: 470µF/25V
 ```
 
 ### **3.3V Internal Distribution**
@@ -194,6 +195,7 @@ Customer GND ──────────────────────�
 
 | Component | Type | Rating | Function |
 |-----------|------|--------|----------|
+| **NTC2** | Inrush Limiter | 5D-11 (10Ω) | Limits inrush current |
 | **F2** | Fuse | 3A Fast-Blow | Overcurrent protection |
 | **D3** | TVS Diode | 1N4744A (15V) | Transient voltage suppression |
 | **C3** | Electrolytic | 470µF/25V | Primary ripple filtering |
@@ -230,9 +232,10 @@ ESP32 GPIO Input  ───[100Ω]─── Sensor Signal Input
        Fuse   Schottky 15V     Filter   Filter
 
 12V Rail Protection:  
-12V+ ───[F2]───[D3]───[C3]─── Clean 12V to Relays
-        3A     1N4744A  470µF
-        Fuse   15V      Filter
+12V+ ───[NTC2]───[F2]───[D3]───[C3]─── Clean 12V to Relays
+        5D-11    3A     1N4744A  470µF
+        Inrush   Fuse   15V      Filter
+        Limiter
 
 GPIO Protection (Each control line):
 ESP32 GPIO ───[330Ω]─── Relay Input
