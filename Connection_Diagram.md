@@ -19,8 +19,8 @@ This document provides professional connection diagrams for the ESP32 Fish Tank 
 | **15** | VIN | Power Input | 5V Customer ERD | J1 | Main power input |
 | **21** | D16 | GPIO Output | Filter Relay | J5-1 | Main filter control |
 | **22** | D17 | GPIO Output | CO2 Relay | J5-2 | CO2 system control |
-| **23** | D5 | GPIO Output | HangOn Filter | J5-3 | Backup filter control |
-| **24** | D18 | GPIO Output | Light Relay | J5-4 | Lighting control |
+| **23** | D18 | GPIO Output | HangOn Filter | J5-3 | Backup filter control |
+| **24** | D5 | GPIO Output | Light Relay | J5-4 | Lighting control |
 | **25** | D19 | GPIO Output | Heater Relay | J5-5 | Temperature control |
 | **26** | D21/SDA | I2C Data | RTC + OLED SDA | J3-2 | I2C communication |
 | **29** | D22/SCL | I2C Clock | RTC + OLED SCL | J3-3 | I2C communication |
@@ -288,9 +288,9 @@ ESP32 SCL ───[82Ω]───[4.7kΩ to 3V3]─── I2C SCL Bus
 |---------|------------|----------|
 | 1 | Filter Control | GPIO 16 |
 | 2 | CO2 Control | GPIO 17 |
-| 3 | Light Control | GPIO 18 |
+| 3 | Light Control | GPIO 5 |
 | 4 | Heater Control | GPIO 19 |
-| 5 | HangOn Control | GPIO 5 |
+| 5 | HangOn Control | GPIO 18 |
 | 6 | Buzzer Output | GPIO 13 |
 | 7 | GND Reference | - |
 

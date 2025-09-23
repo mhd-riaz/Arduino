@@ -53,9 +53,9 @@
 // - Professional Relay Interface:
 //   - IN1 (Filter): GPIO 16 - Main filtration system (20W pump)
 //   - IN2 (CO2): GPIO 17 - CO2 injection system (15W pump)
-//   - IN3 (Light): GPIO 18 - Aquarium lighting (40W LED)
+//   - IN3 (Light): GPIO 5 - Aquarium lighting (40W LED)
 //   - IN4 (Heater): GPIO 19 - Water heater (200W)
-//   - IN5 (HangOnFilter): GPIO 5 - Secondary filter (20W)
+//   - IN5 (HangOnFilter): GPIO 18 - Secondary filter (20W)
 //   - Relay type: Active LOW (professional optocoupler modules)
 // - Buzzer: GPIO 13 (PWM capable) - Professional audio feedback
 //
@@ -286,9 +286,9 @@ const char PROGMEM STR_WILDCARD[] = "*";
 // Appliance Relay Pins (Final GPIO assignments for 5-device system)
 #define MOTOR_RELAY_PIN 16      // Main Filter (Primary filtration system)
 #define CO2_RELAY_PIN 17        // CO2 System (CO2 injection for plants)
-#define LIGHT_RELAY_PIN 18      // Aquarium Lights (LED lighting system)
+#define LIGHT_RELAY_PIN 5       // Aquarium Lights (LED lighting system)
 #define HEATER_RELAY_PIN 19     // Water Heater (Temperature control)
-#define HANGON_FILTER_PIN 5     // Hang-on Filter (Secondary filtration)
+#define HANGON_FILTER_PIN 18    // Hang-on Filter (Secondary filtration)
 
 // Relay Configuration
 // Set to true for Active LOW relays (LOW = ON, HIGH = OFF) - Most common

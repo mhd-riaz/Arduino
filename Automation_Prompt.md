@@ -19,9 +19,9 @@ Generate a complete ESP32 fish tank automation system (Arduino sketch) for comme
 ### Professional Appliance Control & Customer Equipment
 1. **Filter** (Customer 20W main filter pump): GPIO 16 via J5 Terminal
 2. **CO2** (Customer 15W CO2 injection system): GPIO 17 via J5 Terminal
-3. **Light** (Customer 40W LED aquarium lighting): GPIO 18 via J5 Terminal
+3. **Light** (Customer 40W LED aquarium lighting): GPIO 5 via J5 Terminal
 4. **Heater** (Customer 200W water heater): GPIO 19 via J5 Terminal
-5. **HangOnFilter** (Customer 20W hang-on filter): GPIO 5 via J5 Terminal
+5. **HangOnFilter** (Customer 20W hang-on filter): GPIO 18 via J5 Terminal
 
 ## Commercial Product Core Functionality Requirements
 
