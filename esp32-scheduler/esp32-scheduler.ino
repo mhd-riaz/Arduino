@@ -1,8 +1,8 @@
 // ============================================================================
 // ESP32 Fish Tank Automation System (Arduino Sketch)
-// Version: 2.0 - Commercial Product Design (5-Device System)
+// Version: 3.0 - Commercial Product Design (5-Device System)
 // Author: mhd-riaz
-// Date: September 18, 2025
+// Date: September 23, 2025
 //
 // Description:
 // Commercial fish tank automation system designed as an end-user product.
@@ -259,7 +259,7 @@
 #define PERMANENT_OVERRIDE_VALUE ULONG_MAX  // Value used to indicate permanent override
 
 // Temperature Sensor Constants  
-#define DEVICE_DISCONNECTED_C -127.0  // DallasTemperature library constant for sensor error
+// #define DEVICE_DISCONNECTED_C -127.0  // DallasTemperature library constant for sensor error (already defined by DallasTemperature)
 
 
 
@@ -575,7 +575,8 @@ void setup() {
       delay(1000);                      // Wait 1 second before next buzz
     }
   }
-  if (!rtc.isrunning()) {
+  // Use rtc.lostPower() to check if RTC lost power and set time if needed
+  if (rtc.lostPower()) {
     #if DEBUG_MODE
     Serial.println(F("[RTC] RTC is NOT running, setting time from build time."));
     #endif
@@ -1094,7 +1095,7 @@ void loadSchedules() {
   #if DEBUG_MODE
   Serial.println("[NVS] Loading schedules from NVS...");
   #endif
-  StaticJsonDocument<2048> doc;  // Use StaticJsonDocument with adequate size
+  JsonDocument doc(2048);  // Use JsonDocument for compatibility
   DeserializationError error = deserializeJson(doc, schedulesJson);
 
   if (error) {
@@ -1115,7 +1116,7 @@ void loadSchedules() {
       ScheduleEntry entry;
       entry.type = scheduleObj["type"].as<String>();
       // Convert hours and minutes to total minutes, or use direct minutes if provided
-      if (scheduleObj.containsKey("start_min")) {
+  if (scheduleObj["start_min"].is<int>()) {
         entry.start_min = scheduleObj["start_min"].as<int>();
         entry.end_min = scheduleObj["end_min"].as<int>();
       } else {
@@ -1409,7 +1410,7 @@ void handleRoot(AsyncWebServerRequest *request) {
 void handleStatus(AsyncWebServerRequest *request) {
   if (!authenticateRequest(request)) return;
 
-  StaticJsonDocument<1024> doc;  // Use StaticJsonDocument with fixed size
+  JsonDocument doc(1024);  // Use JsonDocument for compatibility
   DateTime now = rtc.now();
 
   doc["timestamp"] = now.timestamp();
@@ -1480,7 +1481,7 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
 
   // Only process when we have received all the data
   if (index + len == total) {
-    StaticJsonDocument<1024> doc;  // Control endpoint - moderate size needed
+  JsonDocument doc(1024);  // Use JsonDocument for compatibility
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1531,7 +1532,7 @@ void handleGetSchedules(AsyncWebServerRequest *request) {
   if (!authenticateRequest(request)) return;
 
   // Use StaticJsonDocument for better memory efficiency
-  StaticJsonDocument<2048> doc;  // Get schedules needs larger size
+  JsonDocument doc(2048);  // Use JsonDocument for compatibility
   JsonObject schedules_json = doc["schedules"].to<JsonObject>();
 
   for (auto const &[applianceName, schedulesVec] : applianceSchedules) {
@@ -1586,7 +1587,7 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
 
   // Only process when we have received all the data
   if (index + len == total) {
-    StaticJsonDocument<2048> doc;  // Schedules endpoint - larger size needed
+  JsonDocument doc(2048);  // Use JsonDocument for compatibility
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1624,7 +1625,7 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
         ScheduleEntry entry;
         entry.type = scheduleObj["type"].as<String>();
         // Convert hours and minutes to total minutes, or use direct minutes if provided
-        if (scheduleObj.containsKey("start_min")) {
+  if (scheduleObj["start_min"].is<int>()) {
           entry.start_min = scheduleObj["start_min"].as<int>();
           entry.end_min = scheduleObj["end_min"].as<int>();
         } else {
@@ -1803,7 +1804,7 @@ void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t
 
   // Only process when we have received all the data
   if (index + len == total) {
-    StaticJsonDocument<512> doc;  // Reset endpoint - small size needed
+  JsonDocument doc(512);  // Use JsonDocument for compatibility
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1920,7 +1921,7 @@ void handleUpdateSingleSchedule(AsyncWebServerRequest *request, uint8_t *data, s
 
   // Only process when we have received all the data
   if (index + len == total) {
-    StaticJsonDocument<1024> doc;  // Single schedule update - moderate size needed
+  JsonDocument doc(1024);  // Use JsonDocument for compatibility
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1968,7 +1969,7 @@ void handleUpdateSingleSchedule(AsyncWebServerRequest *request, uint8_t *data, s
       ScheduleEntry entry;
       entry.type = scheduleObj["type"].as<String>();
       // Convert hours and minutes to total minutes, or use direct minutes if provided
-      if (scheduleObj.containsKey("start_min")) {
+  if (scheduleObj["start_min"].is<int>()) {
         entry.start_min = scheduleObj["start_min"].as<int>();
         entry.end_min = scheduleObj["end_min"].as<int>();
       } else {
