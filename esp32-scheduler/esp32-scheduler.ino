@@ -6,7 +6,7 @@
 //
 // Description:
 // Commercial fish tank automation system designed as an end-user product.
-// Controls five appliances (Filter, CO2, Light, Heater, HangOnFilter) with 
+// Controls five appliances (Filter, CO2, Light, Heater, HangOnFilter) with
 // intelligent scheduling, temperature control, and REST API management.
 // Designed for plug-and-play operation with external power supplies.
 //
@@ -48,7 +48,7 @@
 //
 // Professional Pinout (Control PCB Design):
 // - DS3231 RTC: SDA (GPIO 21), SCL (GPIO 22)
-// - OLED Display: SDA (GPIO 21), SCL (GPIO 22) 
+// - OLED Display: SDA (GPIO 21), SCL (GPIO 22)
 // - DS18B20 Temp Sensor: DQ (GPIO 14) with 4.7KΩ pull-up to 3.3V
 // - Professional Relay Interface:
 //   - IN1 (Filter): GPIO 16 - Main filtration system (20W pump)
@@ -105,7 +105,7 @@
 // This professional control PCB requires proper electrical installation by qualified electrician.
 // Indian electrical environment protection requirements:
 // - Voltage fluctuations (190V-250V AC mains)
-// - Power surges during monsoons and grid switching  
+// - Power surges during monsoons and grid switching
 // - Frequent power outages and restoration spikes
 //
 // CUSTOMER-PROVIDED PROTECTION COMPONENTS:
@@ -122,7 +122,7 @@
 //
 // 3. CONTROL PCB DC PROTECTION (Built into Product):
 //    - 12V Rail Fuse: 3A slow-blow fuse (T3AL250V) - Built into PCB
-//    - TVS Diode: 1N4744A (15V Zener, THT) - Built into PCB  
+//    - TVS Diode: 1N4744A (15V Zener, THT) - Built into PCB
 //    - Filter Capacitor: 470µF/25V electrolytic - Built into PCB
 //    - Ferrite Bead: BLM18PG221SN1D (220Ω@100MHz) on 12V input line for EMI - Built into PCB
 //
@@ -176,7 +176,7 @@
 //
 // FUSES & CIRCUIT BREAKERS:
 // - 6A MCB (C-curve, 6kA): Main AC supply protection - Customer provides
-// - T3AL250V: 3A slow-blow ceramic fuse (12V rail) - Built into PCB  
+// - T3AL250V: 3A slow-blow ceramic fuse (12V rail) - Built into PCB
 // - T2.5AL250V: 2.5A slow-blow ceramic fuse (5V rail) - Built into PCB
 //
 // SURGE PROTECTION DIODES:
@@ -237,28 +237,28 @@
 // Core 3.0+ deprecated ledcAttach/ledcWriteTone in favor of simpler APIs
 
 #if ESP_ARDUINO_VERSION_MAJOR >= 3
-  // ESP32 Arduino Core 3.0+ - Use modern tone() API
-  #define BUZZER_INIT(pin, freq, resolution) // No initialization needed for tone()
-  #define BUZZER_TONE(pin, frequency) tone(pin, frequency)
-  #define BUZZER_OFF(pin) noTone(pin)
+// ESP32 Arduino Core 3.0+ - Use modern tone() API
+#define BUZZER_INIT(pin, freq, resolution)  // No initialization needed for tone()
+#define BUZZER_TONE(pin, frequency) tone(pin, frequency)
+#define BUZZER_OFF(pin) noTone(pin)
 #else
-  // ESP32 Arduino Core 2.x - Use legacy LEDC API
-  #define BUZZER_INIT(pin, freq, resolution) ledcAttach(pin, freq, resolution)
-  #define BUZZER_TONE(pin, frequency) ledcWriteTone(pin, frequency)
-  #define BUZZER_OFF(pin) ledcWriteTone(pin, 0)
+// ESP32 Arduino Core 2.x - Use legacy LEDC API
+#define BUZZER_INIT(pin, freq, resolution) ledcAttach(pin, freq, resolution)
+#define BUZZER_TONE(pin, frequency) ledcWriteTone(pin, frequency)
+#define BUZZER_OFF(pin) ledcWriteTone(pin, 0)
 #endif
 
 // ============================================================================
 // 1.5. Constants and Limits (Optimized)
 // ============================================================================
-#define MAX_POST_BODY_SIZE 1536  // Reduced from 2048 for better memory usage
-#define MAX_JSON_DOC_SIZE 2048   // Reduced from 4096 for better memory usage
-#define RESPONSE_BUFFER_SIZE 512 // Buffer for HTTP responses
+#define MAX_POST_BODY_SIZE 1536   // Reduced from 2048 for better memory usage
+#define MAX_JSON_DOC_SIZE 2048    // Reduced from 4096 for better memory usage
+#define RESPONSE_BUFFER_SIZE 512  // Buffer for HTTP responses
 
 // Override Constants
 #define PERMANENT_OVERRIDE_VALUE ULONG_MAX  // Value used to indicate permanent override
 
-// Temperature Sensor Constants  
+// Temperature Sensor Constants
 // #define DEVICE_DISCONNECTED_C -127.0  // DallasTemperature library constant for sensor error (already defined by DallasTemperature)
 
 
@@ -284,16 +284,16 @@ const char PROGMEM STR_WILDCARD[] = "*";
 // 2. Pin Definitions
 // ============================================================================
 // Appliance Relay Pins (Final GPIO assignments for 5-device system)
-#define MOTOR_RELAY_PIN 16      // Main Filter (Primary filtration system)
-#define CO2_RELAY_PIN 17        // CO2 System (CO2 injection for plants)
-#define LIGHT_RELAY_PIN 5       // Aquarium Lights (LED lighting system)
-#define HEATER_RELAY_PIN 19     // Water Heater (Temperature control)
-#define HANGON_FILTER_PIN 18    // Hang-on Filter (Secondary filtration)
+#define MOTOR_RELAY_PIN 16    // Main Filter (Primary filtration system)
+#define CO2_RELAY_PIN 17      // CO2 System (CO2 injection for plants)
+#define LIGHT_RELAY_PIN 5     // Aquarium Lights (LED lighting system)
+#define HEATER_RELAY_PIN 19   // Water Heater (Temperature control)
+#define HANGON_FILTER_PIN 18  // Hang-on Filter (Secondary filtration)
 
 // Relay Configuration
 // Set to true for Active LOW relays (LOW = ON, HIGH = OFF) - Most common
 // Set to false for Active HIGH relays (HIGH = ON, LOW = OFF)
-#define RELAY_ACTIVE_LOW true   // Professional optocoupler modules are Active LOW
+#define RELAY_ACTIVE_LOW true  // Professional optocoupler modules are Active LOW
 
 // DS18B20 Temperature Sensor Pin
 #define ONE_WIRE_BUS 14  // DS18B20 data pin (requires 4.7KΩ pull-up to 3.3V)
@@ -354,8 +354,8 @@ const int MIN_RECOVERY_READINGS = 3;                          // Require 3 good 
 // Appliance Management System (Optimized)
 enum ApplianceState { OFF,
                       ON };
-enum ApplianceMode { SCHEDULED,      // Following programmed schedule
-                     OVERRIDDEN,     // Manual override active  
+enum ApplianceMode { SCHEDULED,          // Following programmed schedule
+                     OVERRIDDEN,         // Manual override active
                      TEMP_CONTROLLED };  // Temperature-controlled (heater only)
 
 struct ScheduleEntry {
@@ -365,22 +365,22 @@ struct ScheduleEntry {
 };
 
 struct Appliance {
-  String name;                        // Device name (Filter, CO2, Light, Heater, HangOnFilter)
-  int pin;                           // GPIO pin for relay control
-  ApplianceState currentState;       // Current physical state (ON/OFF)
-  ApplianceState scheduledState;     // State according to schedule
-  ApplianceState overrideState;      // State from manual override
-  unsigned long overrideEndTime;     // millis() when override expires (0 = no override)
-  ApplianceMode currentMode;         // Current control mode (SCHEDULED/OVERRIDDEN/TEMP_CONTROLLED)
+  String name;                    // Device name (Filter, CO2, Light, Heater, HangOnFilter)
+  int pin;                        // GPIO pin for relay control
+  ApplianceState currentState;    // Current physical state (ON/OFF)
+  ApplianceState scheduledState;  // State according to schedule
+  ApplianceState overrideState;   // State from manual override
+  unsigned long overrideEndTime;  // millis() when override expires (0 = no override)
+  ApplianceMode currentMode;      // Current control mode (SCHEDULED/OVERRIDDEN/TEMP_CONTROLLED)
 };
 
 // Array of 5 appliance objects with custom configurations
 Appliance appliances[] = {
-  { "Filter", MOTOR_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },           // Primary filtration (GPIO 16)
-  { "CO2", CO2_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },                // CO2 injection system (GPIO 17)
-  { "Light", LIGHT_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },            // LED lighting system (GPIO 18)
-  { "Heater", HEATER_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },          // Water heater with temp control (GPIO 19)
-  { "HangOnFilter", HANGON_FILTER_PIN, OFF, OFF, OFF, 0, SCHEDULED }    // Secondary hang-on filter (GPIO 5)
+  { "Filter", MOTOR_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },         // Primary filtration (GPIO 16)
+  { "CO2", CO2_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },              // CO2 injection system (GPIO 17)
+  { "Light", LIGHT_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },          // LED lighting system (GPIO 18)
+  { "Heater", HEATER_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },        // Water heater with temp control (GPIO 19)
+  { "HangOnFilter", HANGON_FILTER_PIN, OFF, OFF, OFF, 0, SCHEDULED }  // Secondary hang-on filter (GPIO 5)
 };
 const int NUM_APPLIANCES = sizeof(appliances) / sizeof(appliances[0]);
 
@@ -391,7 +391,7 @@ std::map<String, std::vector<ScheduleEntry>> applianceSchedules;
 String postBody = "";
 
 // Debug and logging configuration
-#define DEBUG_MODE true   // Set to true for development, false for production to save memory
+#define DEBUG_MODE true  // Set to true for development, false for production to save memory
 unsigned long lastDebugPrintMillis = 0;
 const unsigned long DEBUG_PRINT_INTERVAL_MS = 30000;  // Print debug info every 30 seconds (reduced frequency)
 
@@ -399,29 +399,29 @@ const unsigned long DEBUG_PRINT_INTERVAL_MS = 30000;  // Print debug info every 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 unsigned long lastOLEDUpdateMillis = 0;
 const unsigned long OLED_UPDATE_INTERVAL_MS = 2000;  // Update every 2 seconds (memory optimized)
-char oledBuffer[64];  // Reusable buffer for OLED text formatting
+char oledBuffer[64];                                 // Reusable buffer for OLED text formatting
 
 // WiFi Connection Management
 const unsigned long WIFI_CONNECT_TIMEOUT_MS = 30000;  // 30 seconds for connection
 bool wifiConnected = false;
 bool apModeActive = false;
-int wifiReconnectAttempts = 0;                         // Track reconnection attempts
-const int MAX_WIFI_RECONNECT_ATTEMPTS = 5;            // Max attempts before giving up
-unsigned long lastWifiReconnectMillis = 0;            // Separate timing for WiFi reconnection
+int wifiReconnectAttempts = 0;              // Track reconnection attempts
+const int MAX_WIFI_RECONNECT_ATTEMPTS = 5;  // Max attempts before giving up
+unsigned long lastWifiReconnectMillis = 0;  // Separate timing for WiFi reconnection
 
 // Emergency Safety System
 bool emergencyShutdown = false;
-const float EMERGENCY_TEMP_HIGH = 32.0;  // Emergency shutdown if temperature exceeds 32°C
-const float EMERGENCY_TEMP_LOW = 20.0;   // Emergency shutdown if temperature below 20°C
-bool lastEmergencyState = false;         // Cache to avoid redundant operations
-unsigned long emergencyActivatedTime = 0; // Track when emergency was activated
-const unsigned long EMERGENCY_RESET_TIME_MS = 30 * 60 * 1000; // Auto-reset emergency after 30 minutes
+const float EMERGENCY_TEMP_HIGH = 32.0;                        // Emergency shutdown if temperature exceeds 32°C
+const float EMERGENCY_TEMP_LOW = 20.0;                         // Emergency shutdown if temperature below 20°C
+bool lastEmergencyState = false;                               // Cache to avoid redundant operations
+unsigned long emergencyActivatedTime = 0;                      // Track when emergency was activated
+const unsigned long EMERGENCY_RESET_TIME_MS = 30 * 60 * 1000;  // Auto-reset emergency after 30 minutes
 
 // Emergency Reason Tracking
 enum EmergencyReason {
   NO_EMERGENCY = 0,
   TEMP_TOO_HIGH,
-  TEMP_TOO_LOW, 
+  TEMP_TOO_LOW,
   SENSOR_FAILURE
 };
 EmergencyReason currentEmergencyReason = NO_EMERGENCY;
@@ -430,7 +430,7 @@ EmergencyReason currentEmergencyReason = NO_EMERGENCY;
 unsigned long lastSystemHeartbeat = 0;
 unsigned long lastLoopTime = 0;
 const unsigned long SYSTEM_WATCHDOG_TIMEOUT_MS = 90000;  // 90 seconds
-const unsigned long LOOP_HANG_TIMEOUT_MS = 45000;       // 45 seconds
+const unsigned long LOOP_HANG_TIMEOUT_MS = 45000;        // 45 seconds
 bool systemHealthOK = true;
 bool alertSounded = false;
 
@@ -452,7 +452,7 @@ void syncTimeNTP();
 // System Health Monitoring
 void updateSystemHeartbeat();
 void checkSystemHealth();
-void alertSystemFailure(const char* reason);
+void alertSystemFailure(const char *reason);
 
 // Schedule Management
 void loadSchedules();
@@ -464,7 +464,7 @@ void setRelayState(int pin, ApplianceState state);
 int getRelayOffState();
 int getRelayOnState();
 
-// Display & Utility Functions  
+// Display & Utility Functions
 void updateOLED(DateTime now);
 bool isTimeInInterval(int currentMinutes, int startMin, int endMin);
 bool authenticateRequest(AsyncWebServerRequest *request);
@@ -512,10 +512,10 @@ int getRelayOnState() {
  */
 void setRelayState(int pin, ApplianceState state) {
   // Cache the current GPIO state to avoid redundant writes
-  static int lastPinStates[40] = {-1}; // ESP32 has up to 40 GPIO pins, initialize to invalid state
-  
+  static int lastPinStates[40] = { -1 };  // ESP32 has up to 40 GPIO pins, initialize to invalid state
+
   int newState = (state == ON) ? getRelayOnState() : getRelayOffState();
-  
+
   // Only write if state has changed
   if (pin < 40 && lastPinStates[pin] != newState) {
     digitalWrite(pin, newState);
@@ -529,27 +529,27 @@ void setRelayState(int pin, ApplianceState state) {
 void setup() {
   // Add small delay for power stabilization
   delay(500);
-  
+
   // Set CPU frequency for stability
   setCpuFrequencyMhz(160);
-  
+
   Serial.begin(115200);
   Serial.println(F("\n[SETUP] Starting ESP32 Fish Tank Automation System..."));
   Serial.printf(F("[SETUP] CPU Frequency: %dMHz\n"), getCpuFrequencyMhz());
-  
+
   // Add 2-second startup delay with beep indicator
   delay(2000);
-  
+
   // Configure Buzzer Pin early for startup beep (ESP32 Core compatible)
   BUZZER_INIT(BUZZER_PIN, 1000, 8);  // Cross-compatible initialization
-  
+
   // Startup beep to indicate system is ready
   BUZZER_TONE(BUZZER_PIN, 1500);  // 1.5kHz startup tone
-  delay(300);                       // Beep duration
-  BUZZER_OFF(BUZZER_PIN);     // Turn off
-  #if DEBUG_MODE
+  delay(300);                     // Beep duration
+  BUZZER_OFF(BUZZER_PIN);         // Turn off
+#if DEBUG_MODE
   Serial.println("[SETUP] System startup beep completed.");
-  #endif
+#endif
 
   // Initialize NVS (WiFi namespace will be used initially)
   if (!preferences.begin(NVS_NAMESPACE_WIFI, false)) {
@@ -560,9 +560,9 @@ void setup() {
   Wire.begin(OLED_SDA, OLED_SCL);
   Wire.setClock(100000);  // Standard mode (100kHz)
   Wire.setTimeout(5000);
-  #if DEBUG_MODE
+#if DEBUG_MODE
   Serial.println(F("[I2C] I2C bus initialized."));
-  #endif
+#endif
 
   // Initialize RTC
   if (!rtc.begin()) {
@@ -570,31 +570,31 @@ void setup() {
     // Sound continuous error buzzer to alert user
     while (1) {
       BUZZER_TONE(BUZZER_PIN, 2000);  // 2kHz error tone
-      delay(500);                       // Buzz for 500ms
-      BUZZER_OFF(BUZZER_PIN);     // Turn off
-      delay(1000);                      // Wait 1 second before next buzz
+      delay(500);                     // Buzz for 500ms
+      BUZZER_OFF(BUZZER_PIN);         // Turn off
+      delay(1000);                    // Wait 1 second before next buzz
     }
   }
   // Use rtc.lostPower() to check if RTC lost power and set time if needed
   if (rtc.lostPower()) {
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.println(F("[RTC] RTC is NOT running, setting time from build time."));
-    #endif
+#endif
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  // Set to compile time as fallback
   }
-  #if DEBUG_MODE
+#if DEBUG_MODE
   Serial.println(F("[RTC] RTC initialized."));
-  #endif
+#endif
 
   // Initialize OLED Display
   if (!display.begin(SSD1306_SWITCHCAPVCC, I2C_ADDRESS)) {
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.println(F("[ERROR] OLED init failed"));
-    #endif
+#endif
   } else {
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.println(F("[OLED] Display initialized."));
-    #endif
+#endif
     display.display();  // Show initial Adafruit logo
     delay(1500);        // Reduced delay for faster startup
     display.clearDisplay();
@@ -607,41 +607,41 @@ void setup() {
 
   // Initialize DS18B20 Temperature Sensor
   sensors.begin();
-  sensors.setResolution(12);  // Set to 12-bit resolution for better accuracy
+  sensors.setResolution(12);            // Set to 12-bit resolution for better accuracy
   sensors.setWaitForConversion(false);  // Use non-blocking mode
-  
+
   // Initialize sensor state variables
   temperatureReadFailures = 0;
   temperatureRecoveryCount = 0;
-  
+
   // Take an initial temperature reading
   sensors.requestTemperatures();
   delay(200);  // Wait for conversion
   float initialTemp = sensors.getTempCByIndex(0);
   if (initialTemp != DEVICE_DISCONNECTED_C && initialTemp > -50.0 && initialTemp < 100.0) {
     currentTemperatureC = initialTemp;
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.printf("[DS18B20] Initial temperature reading: %.1f°C\n", currentTemperatureC);
-    #endif
+#endif
   } else {
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.println("[DS18B20] Warning: Initial temperature reading failed, using default 25.0°C");
-    #endif
+#endif
   }
-  
-  #if DEBUG_MODE
+
+#if DEBUG_MODE
   Serial.println("[DS18B20] Temperature sensor initialized and configured.");
-  #endif
+#endif
 
   // Configure Relay Pins and ensure they are OFF initially
   for (int i = 0; i < NUM_APPLIANCES; i++) {
     pinMode(appliances[i].pin, OUTPUT);
     setRelayState(appliances[i].pin, OFF);  // Set to OFF using proper relay type
-    #if DEBUG_MODE
-    Serial.printf("[RELAY] Pin %d (%s) set to OFF (Relay Type: %s).\n", 
-                  appliances[i].pin, appliances[i].name.c_str(), 
+#if DEBUG_MODE
+    Serial.printf("[RELAY] Pin %d (%s) set to OFF (Relay Type: %s).\n",
+                  appliances[i].pin, appliances[i].name.c_str(),
                   RELAY_ACTIVE_LOW ? "Active LOW" : "Active HIGH");
-    #endif
+#endif
   }
 
   // Attempt WiFi Connection
@@ -662,7 +662,7 @@ void setup() {
   // Apply initial appliance states based on current time and schedules
   DateTime now = rtc.now();
   int currentMinutes = now.hour() * 60 + now.minute();
-  
+
   for (int i = 0; i < NUM_APPLIANCES; i++) {
     applyApplianceLogic(appliances[i], currentMinutes);
   }
@@ -670,31 +670,41 @@ void setup() {
   // Configure REST API Endpoints
   server.on("/", HTTP_GET, handleRoot);
   server.on("/status", HTTP_GET, handleStatus);
-  server.on("/control", HTTP_POST, [](AsyncWebServerRequest *request){
-    // Response will be sent by the body handler
-  }, NULL, handleControl);
+  server.on(
+    "/control", HTTP_POST, [](AsyncWebServerRequest *request) {
+      // Response will be sent by the body handler
+    },
+    NULL, handleControl);
   server.on("/schedules", HTTP_GET, handleGetSchedules);
-  server.on("/schedules", HTTP_POST, [](AsyncWebServerRequest *request){
-    // Response will be sent by the body handler  
-  }, NULL, handlePostSchedules);
-  server.on("/schedule", HTTP_POST, [](AsyncWebServerRequest *request){
-    // Response will be sent by the body handler for single appliance update
-  }, NULL, handleUpdateSingleSchedule);
-  server.on("/wifi", HTTP_POST, [](AsyncWebServerRequest *request){
-    // Response will be sent by the body handler
-  }, NULL, handleWifiConfig);
+  server.on(
+    "/schedules", HTTP_POST, [](AsyncWebServerRequest *request) {
+      // Response will be sent by the body handler
+    },
+    NULL, handlePostSchedules);
+  server.on(
+    "/schedule", HTTP_POST, [](AsyncWebServerRequest *request) {
+      // Response will be sent by the body handler for single appliance update
+    },
+    NULL, handleUpdateSingleSchedule);
+  server.on(
+    "/wifi", HTTP_POST, [](AsyncWebServerRequest *request) {
+      // Response will be sent by the body handler
+    },
+    NULL, handleWifiConfig);
   server.on("/emergency/reset", HTTP_POST, handleEmergencyReset);
-  server.on("/reset", HTTP_POST, [](AsyncWebServerRequest *request){
-    // Response will be sent by the body handler
-  }, NULL, handleResetToSchedule);
+  server.on(
+    "/reset", HTTP_POST, [](AsyncWebServerRequest *request) {
+      // Response will be sent by the body handler
+    },
+    NULL, handleResetToSchedule);
   server.on("/refresh", HTTP_POST, handleForceRefresh);
   server.onNotFound(handleNotFound);
 
   // Start the server
   server.begin();
-  #if DEBUG_MODE
+#if DEBUG_MODE
   Serial.println("[API] REST API server started.");
-  #endif
+#endif
   Serial.println("[SETUP] System ready!");
 }
 
@@ -725,26 +735,26 @@ void loop() {
     sensors.requestTemperatures();
     delay(50);  // Give sensor time to complete conversion
     float tempReading = sensors.getTempCByIndex(0);
-    
+
     if (tempReading != DEVICE_DISCONNECTED_C && tempReading > -50.0 && tempReading < 100.0) {
       // Valid temperature reading
       currentTemperatureC = (currentTemperatureC * 0.9) + (tempReading * 0.1);
-      
+
       // Track recovery after failures
       if (temperatureReadFailures > 0) {
         temperatureRecoveryCount++;
-        #if DEBUG_MODE
-        Serial.printf(F("[TEMP] Recovery reading %d/%d (%.1f°C)\n"), 
-                     temperatureRecoveryCount, MIN_RECOVERY_READINGS, tempReading);
-        #endif
-        
+#if DEBUG_MODE
+        Serial.printf(F("[TEMP] Recovery reading %d/%d (%.1f°C)\n"),
+                      temperatureRecoveryCount, MIN_RECOVERY_READINGS, tempReading);
+#endif
+
         // Only reset failures after multiple successful readings
         if (temperatureRecoveryCount >= MIN_RECOVERY_READINGS) {
           temperatureReadFailures = 0;
           temperatureRecoveryCount = 0;
-          #if DEBUG_MODE
+#if DEBUG_MODE
           Serial.println(F("[TEMP] Sensor recovery confirmed - failures reset"));
-          #endif
+#endif
         }
       } else {
         temperatureRecoveryCount = 0;  // Reset recovery counter when sensor is stable
@@ -753,16 +763,16 @@ void loop() {
       // Temperature sensor failure detected
       temperatureReadFailures++;
       temperatureRecoveryCount = 0;  // Reset recovery on new failure
-      #if DEBUG_MODE
-      Serial.printf(F("[TEMP] Sensor read failure %d/%d (Reading: %.1f)\n"), 
-                   temperatureReadFailures, MAX_TEMP_FAILURES, tempReading);
-      #endif
-      
+#if DEBUG_MODE
+      Serial.printf(F("[TEMP] Sensor read failure %d/%d (Reading: %.1f)\n"),
+                    temperatureReadFailures, MAX_TEMP_FAILURES, tempReading);
+#endif
+
       // Take fail-safe action after consecutive failures
       if (temperatureReadFailures >= MAX_TEMP_FAILURES) {
-        #if DEBUG_MODE
+#if DEBUG_MODE
         Serial.println(F("[EMERGENCY] Temperature sensor failed - Activating fail-safe mode"));
-        #endif
+#endif
         emergencyShutdown = true;
         emergencyActivatedTime = millis();
         // Sound emergency alert
@@ -777,7 +787,7 @@ void loop() {
   // Check emergency conditions - exclude zero/invalid values to prevent false alarms
   bool currentEmergencyState = false;
   EmergencyReason newEmergencyReason = NO_EMERGENCY;
-  
+
   if (currentTemperatureC > 0.0) {
     // Only check temperature limits if we have valid readings
     if (currentTemperatureC > EMERGENCY_TEMP_HIGH) {
@@ -793,45 +803,39 @@ void loop() {
     currentEmergencyState = true;
     newEmergencyReason = SENSOR_FAILURE;
   }
-  
+
   // Update emergency reason when state changes
   if (currentEmergencyState) {
     currentEmergencyReason = newEmergencyReason;
   }
-  
+
   // Auto-reset emergency after timeout or when conditions are safe
   if (emergencyShutdown && emergencyActivatedTime > 0) {
     bool timeoutReset = (long)(millis() - emergencyActivatedTime) >= EMERGENCY_RESET_TIME_MS;
-    bool conditionsSafe = (currentTemperatureC > 0.0 && 
-                          currentTemperatureC > EMERGENCY_TEMP_LOW && 
-                          currentTemperatureC < EMERGENCY_TEMP_HIGH && 
-                          temperatureReadFailures == 0 &&
-                          temperatureRecoveryCount == 0);  // Only reset when sensor is fully stable
-    
+    bool conditionsSafe = (currentTemperatureC > 0.0 && currentTemperatureC > EMERGENCY_TEMP_LOW && currentTemperatureC < EMERGENCY_TEMP_HIGH && temperatureReadFailures == 0 && temperatureRecoveryCount == 0);  // Only reset when sensor is fully stable
+
     if (timeoutReset || conditionsSafe) {
       emergencyShutdown = false;
       emergencyActivatedTime = 0;
-      temperatureReadFailures = 0;  // Reset failure counter
-      temperatureRecoveryCount = 0;  // Reset recovery counter
+      temperatureReadFailures = 0;            // Reset failure counter
+      temperatureRecoveryCount = 0;           // Reset recovery counter
       currentEmergencyReason = NO_EMERGENCY;  // Reset emergency reason
-      #if DEBUG_MODE
-      Serial.println(timeoutReset ? 
-        F("[EMERGENCY] Auto-reset after timeout - System resumed") :
-        F("[EMERGENCY] Auto-reset: Conditions safe - System resumed"));
-      #endif
+#if DEBUG_MODE
+      Serial.println(timeoutReset ? F("[EMERGENCY] Auto-reset after timeout - System resumed") : F("[EMERGENCY] Auto-reset: Conditions safe - System resumed"));
+#endif
       buzz(2, 300);  // Confirmation buzzes
     }
   }
-  
+
   if (currentEmergencyState != lastEmergencyState) {
     emergencyShutdown = currentEmergencyState;
     lastEmergencyState = currentEmergencyState;
     if (emergencyShutdown) {
       emergencyActivatedTime = millis();
-      #if DEBUG_MODE
-      Serial.printf(F("[EMERGENCY] Temperature %.1f°C or sensor failure - Shutting down all appliances\n"), 
-                   currentTemperatureC);
-      #endif
+#if DEBUG_MODE
+      Serial.printf(F("[EMERGENCY] Temperature %.1f°C or sensor failure - Shutting down all appliances\n"),
+                    currentTemperatureC);
+#endif
     }
   }
 
@@ -842,15 +846,15 @@ void loop() {
     }
   }
 
-  // Conditional debug output (only if DEBUG_MODE enabled and reduced frequency)
-  #if DEBUG_MODE
+// Conditional debug output (only if DEBUG_MODE enabled and reduced frequency)
+#if DEBUG_MODE
   if ((long)(millis() - lastDebugPrintMillis) >= DEBUG_PRINT_INTERVAL_MS) {
-    Serial.printf(F("[DEBUG] %02d:%02d T:%.1f°C Heap:%u Emergency:%s\n"), 
+    Serial.printf(F("[DEBUG] %02d:%02d T:%.1f°C Heap:%u Emergency:%s\n"),
                   now.hour(), now.minute(), currentTemperatureC, ESP.getFreeHeap(),
                   emergencyShutdown ? "Y" : "N");
     lastDebugPrintMillis = millis();
   }
-  #endif
+#endif
 
   // Update OLED display periodically
   if ((long)(millis() - lastOLEDUpdateMillis) >= OLED_UPDATE_INTERVAL_MS) {
@@ -875,7 +879,7 @@ void connectWiFi() {
     wifiConnected = false;
     return;
   }
-  
+
   // Switch to WiFi namespace to read credentials
   preferences.end();  // End current namespace
   if (!preferences.begin(NVS_NAMESPACE_WIFI, false)) {
@@ -884,22 +888,22 @@ void connectWiFi() {
     wifiReconnectAttempts++;
     return;
   }
-  
+
   String ssid = preferences.getString(NVS_KEY_SSID, "");
   String password = preferences.getString(NVS_KEY_PASS, "");
 
   if (ssid.length() == 0) {
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.println(F("[WiFi] No saved WiFi credentials. Cannot connect to STA mode."));
-    #endif
+#endif
     wifiConnected = false;
     return;
   }
 
-  #if DEBUG_MODE
-  Serial.printf(F("[WiFi] Attempting to connect to SSID: %s (Attempt %d/%d)\n"), 
-               ssid.c_str(), wifiReconnectAttempts + 1, MAX_WIFI_RECONNECT_ATTEMPTS);
-  #endif
+#if DEBUG_MODE
+  Serial.printf(F("[WiFi] Attempting to connect to SSID: %s (Attempt %d/%d)\n"),
+                ssid.c_str(), wifiReconnectAttempts + 1, MAX_WIFI_RECONNECT_ATTEMPTS);
+#endif
   WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
   WiFi.begin(ssid.c_str(), password.c_str());
@@ -908,9 +912,9 @@ void connectWiFi() {
   int dotCount = 0;
   while (WiFi.status() != WL_CONNECTED && (long)(millis() - startTime) < WIFI_CONNECT_TIMEOUT_MS) {
     delay(1000);
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.print(".");
-    #endif
+#endif
     // Update display every 3 seconds
     if (++dotCount % 3 == 0) {
       display.clearDisplay();
@@ -918,7 +922,7 @@ void connectWiFi() {
       display.println(F("Connecting WiFi..."));
       display.setCursor(0, 10);
       display.println(ssid);
-      snprintf(oledBuffer, sizeof(oledBuffer), "Attempt %d/%d", 
+      snprintf(oledBuffer, sizeof(oledBuffer), "Attempt %d/%d",
                wifiReconnectAttempts + 1, MAX_WIFI_RECONNECT_ATTEMPTS);
       display.setCursor(0, 20);
       display.println(oledBuffer);
@@ -927,22 +931,22 @@ void connectWiFi() {
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.println(F("\n[WiFi] Connected to WiFi!"));
     Serial.print(F("[WiFi] IP Address: "));
     Serial.println(WiFi.localIP());
-    #endif
+#endif
     wifiConnected = true;
     apModeActive = false;
     wifiReconnectAttempts = 0;  // Reset attempt counter on successful connection
   } else {
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.println(F("\n[WiFi] Failed to connect to WiFi."));
-    #endif
+#endif
     wifiConnected = false;
     wifiReconnectAttempts++;
   }
-  
+
   // Close WiFi namespace
   preferences.end();
 }
@@ -951,16 +955,16 @@ void connectWiFi() {
  * @brief Starts the ESP32 in Access Point (AP) mode for configuration.
  */
 void startAPMode() {
-  #if DEBUG_MODE
+#if DEBUG_MODE
   Serial.println("[AP] Starting Access Point mode...");
-  #endif
+#endif
   WiFi.mode(WIFI_AP);
   WiFi.softAP("Fishtank_Setup", "password123");  // Default AP name and password
   IPAddress apIP = WiFi.softAPIP();
-  #if DEBUG_MODE
+#if DEBUG_MODE
   Serial.print("[AP] AP IP address: ");
   Serial.println(apIP);
-  #endif
+#endif
   apModeActive = true;
 
   display.clearDisplay();
@@ -982,13 +986,13 @@ void startAPMode() {
  * @param delayMs Delay between buzzes in milliseconds.
  */
 void buzz(int count, int delayMs) {
-  #if DEBUG_MODE
+#if DEBUG_MODE
   Serial.printf("[BUZZER] Buzzing %d times...\n", count);
-  #endif
+#endif
   for (int i = 0; i < count; i++) {
     BUZZER_TONE(BUZZER_PIN, 1000);  // 1kHz tone
-    delay(200);                       // Buzz duration
-    BUZZER_OFF(BUZZER_PIN);     // Turn off
+    delay(200);                     // Buzz duration
+    BUZZER_OFF(BUZZER_PIN);         // Turn off
     if (i < count - 1) {
       delay(delayMs);
     }
@@ -1000,26 +1004,26 @@ void buzz(int count, int delayMs) {
  */
 void syncTimeNTP() {
   if (WiFi.status() == WL_CONNECTED) {
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.println("[NTP] Syncing time with NTP server...");
-    #endif
+#endif
     timeClient.begin();
     if (timeClient.forceUpdate()) {
       unsigned long epochTime = timeClient.getEpochTime();
       rtc.adjust(DateTime(epochTime));
-      #if DEBUG_MODE
+#if DEBUG_MODE
       Serial.printf("[NTP] RTC adjusted to: %s\n", rtc.now().timestamp().c_str());
-      #endif
+#endif
       timeClient.end();  // End NTP client to free resources
     } else {
-      #if DEBUG_MODE
+#if DEBUG_MODE
       Serial.println("[NTP] Failed to get time from NTP server.");
-      #endif
+#endif
     }
   } else {
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.println("[NTP] WiFi not connected, skipping NTP sync.");
-    #endif
+#endif
   }
 }
 
@@ -1030,37 +1034,37 @@ void syncTimeNTP() {
 void loadDefaultSchedules() {
   // Clear existing schedules
   applianceSchedules.clear();
-  
+
   // Define custom default schedules (all times converted to minutes for efficiency)
   // CO2: 8:30 AM - 1:30 PM (510-810), 3:30 PM - 8:30 PM (930-1230)
-  applianceSchedules["CO2"].push_back({ "on_interval", 510, 810 });         
-  applianceSchedules["CO2"].push_back({ "on_interval", 930, 1230 });        
-  
+  applianceSchedules["CO2"].push_back({ "on_interval", 510, 810 });
+  applianceSchedules["CO2"].push_back({ "on_interval", 930, 1230 });
+
   // Light: 9:30 AM - 1:30 PM (570-810), 4:30 PM - 8:30 PM (990-1230)
-  applianceSchedules["Light"].push_back({ "on_interval", 570, 810 });       
-  applianceSchedules["Light"].push_back({ "on_interval", 990, 1230 });      
-  
+  applianceSchedules["Light"].push_back({ "on_interval", 570, 810 });
+  applianceSchedules["Light"].push_back({ "on_interval", 990, 1230 });
+
   // Heater: 12:00 AM - 4:30 AM (0-270), 8:30 PM - 11:59 PM (1230-1439)
-  applianceSchedules["Heater"].push_back({ "on_interval", 0, 270 });        
-  applianceSchedules["Heater"].push_back({ "on_interval", 1230, 1439 });    
-  
+  applianceSchedules["Heater"].push_back({ "on_interval", 0, 270 });
+  applianceSchedules["Heater"].push_back({ "on_interval", 1230, 1439 });
+
   // Hang-on Filter: 6:30 AM - 8:30 AM (390-510), 8:30 PM - 10:30 PM (1230-1350)
-  applianceSchedules["HangOnFilter"].push_back({ "on_interval", 390, 510 }); 
+  applianceSchedules["HangOnFilter"].push_back({ "on_interval", 390, 510 });
   applianceSchedules["HangOnFilter"].push_back({ "on_interval", 1230, 1350 });
-  
+
   // Filter: 1:30 PM - 3:30 PM (810-930) - OFF during this time for maintenance
-  applianceSchedules["Filter"].push_back({ "off_interval", 810, 930 });     
+  applianceSchedules["Filter"].push_back({ "off_interval", 810, 930 });
 
   markSchedulesDirty();  // Schedule delayed save
-  
-  #if DEBUG_MODE
+
+#if DEBUG_MODE
   Serial.println(F("[Factory Reset] Default schedules loaded:"));
   Serial.println(F("  CO2: 8:30-13:30 (510-810), 15:30-20:30 (930-1230)"));
   Serial.println(F("  Light: 9:30-13:30 (570-810), 16:30-20:30 (990-1230)"));
   Serial.println("  Heater: 0:00-4:30 (0-270), 20:30-23:59 (1230-1439)");
   Serial.println("  HangOnFilter: 6:30-8:30 (390-510), 20:30-22:30 (1230-1350)");
   Serial.println("  Filter: OFF 13:30-15:30 (810-930), otherwise ON");
-  #endif
+#endif
 }
 
 /**
@@ -1081,28 +1085,28 @@ void loadSchedules() {
     Serial.println("[NVS] Failed to open schedules namespace.");
     return;
   }
-  
+
   String schedulesJson = preferences.getString(NVS_KEY_SCHEDULES, "");
 
   if (schedulesJson.length() == 0) {
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.println("[NVS] No schedules found in NVS. Loading custom default schedules...");
-    #endif
+#endif
     loadDefaultSchedules();
     return;
   }
 
-  #if DEBUG_MODE
+#if DEBUG_MODE
   Serial.println("[NVS] Loading schedules from NVS...");
-  #endif
+#endif
   JsonDocument doc(2048);  // Use JsonDocument for compatibility
   DeserializationError error = deserializeJson(doc, schedulesJson);
 
   if (error) {
-    #if DEBUG_MODE
+#if DEBUG_MODE
     Serial.print(F("[NVS] deserializeJson() failed: "));
     Serial.println(error.f_str());
-    #endif
+#endif
     return;
   }
 
@@ -1116,7 +1120,7 @@ void loadSchedules() {
       ScheduleEntry entry;
       entry.type = scheduleObj["type"].as<String>();
       // Convert hours and minutes to total minutes, or use direct minutes if provided
-  if (scheduleObj["start_min"].is<int>()) {
+      if (scheduleObj["start_min"].is<int>()) {
         entry.start_min = scheduleObj["start_min"].as<int>();
         entry.end_min = scheduleObj["end_min"].as<int>();
       } else {
@@ -1127,10 +1131,10 @@ void loadSchedules() {
       applianceSchedules[applianceName].push_back(entry);
     }
   }
-  #if DEBUG_MODE
+#if DEBUG_MODE
   Serial.println("[NVS] Schedules loaded successfully.");
-  #endif
-  
+#endif
+
   // Close schedules namespace
   preferences.end();
 }
@@ -1145,7 +1149,7 @@ void saveSchedules() {
     Serial.println(F("[NVS] Failed to open schedules namespace for saving."));
     return;
   }
-  
+
   StaticJsonDocument<2048> doc;  // Use StaticJsonDocument with adequate size
 
   for (auto const &[applianceName, schedulesVec] : applianceSchedules) {
@@ -1163,10 +1167,10 @@ void saveSchedules() {
   serializeJson(doc, schedulesJson);
   preferences.putString(NVS_KEY_SCHEDULES, schedulesJson);
 
-  #if DEBUG_MODE
+#if DEBUG_MODE
   Serial.println(F("[NVS] Schedules saved successfully."));
-  #endif
-  
+#endif
+
   schedulesDirty = false;  // Reset dirty flag
   preferences.end();
 }
@@ -1214,7 +1218,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
     // Default behavior: Filter is ON by default, others are OFF by default
     bool defaultState = (app.name == "Filter");
     targetState = defaultState ? ON : OFF;
-    
+
     if (applianceSchedules.count(app.name)) {
       std::vector<ScheduleEntry> &schedules = applianceSchedules[app.name];
       bool isScheduledOn = false;
@@ -1235,7 +1239,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
         // Filter: ON by default, turn OFF only during off_interval
         targetState = isScheduledOff ? OFF : ON;
       } else {
-        // Other appliances: OFF by default, turn ON only during on_interval  
+        // Other appliances: OFF by default, turn ON only during on_interval
         targetState = isScheduledOn ? ON : OFF;
       }
     }
@@ -1245,7 +1249,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
   // 3. Intelligent Heater Temperature Logic (highest priority - overrides everything)
   if (app.name == "Heater" && currentTemperatureC > 0) {
     bool currentHeaterState = (targetState == ON);
-    
+
     if (currentTemperatureC < TEMP_THRESHOLD_ON) {
       // Temperature too low - force heater ON
       if (!currentHeaterState && !heaterForcedOn) {
@@ -1277,14 +1281,14 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
   if (app.currentState != targetState) {
     app.currentState = targetState;
     setRelayState(app.pin, app.currentState);  // Use configurable relay control
-    // Only log state changes for critical events (temperature control) or if debug mode
-    #if DEBUG_MODE
+// Only log state changes for critical events (temperature control) or if debug mode
+#if DEBUG_MODE
     Serial.printf("[CONTROL] %s: %s\n", app.name.c_str(), (app.currentState == ON ? "ON" : "OFF"));
-    #else
+#else
     if (app.name == "Heater" && app.currentMode == TEMP_CONTROLLED) {
       Serial.printf("[TEMP] Heater: %s\n", (app.currentState == ON ? "ON" : "OFF"));
     }
-    #endif
+#endif
   }
 }
 
@@ -1304,7 +1308,7 @@ void updateOLED(DateTime now) {
 
   // Row 1: Current Time
   display.setCursor(0, 0);
-  snprintf(oledBuffer, sizeof(oledBuffer), "%02d:%02d:%02d %02d/%02d", 
+  snprintf(oledBuffer, sizeof(oledBuffer), "%02d:%02d:%02d %02d/%02d",
            now.hour(), now.minute(), now.second(), now.day(), now.month());
   display.print(oledBuffer);
 
@@ -1313,15 +1317,15 @@ void updateOLED(DateTime now) {
   for (int i = 0; i < NUM_APPLIANCES; i++) {
     display.setCursor(0, y + (i * 8));
     // Use custom short names for better readability
-    const char* shortName;
+    const char *shortName;
     if (appliances[i].name == "Filter") shortName = "Filter";
     else if (appliances[i].name == "HangOnFilter") shortName = "HOF";
     else if (appliances[i].name == "CO2") shortName = "CO2";
     else if (appliances[i].name == "Light") shortName = "Light";
     else if (appliances[i].name == "Heater") shortName = "Heater";
     else shortName = appliances[i].name.c_str();
-    
-    snprintf(oledBuffer, sizeof(oledBuffer), "%s: %s", shortName, 
+
+    snprintf(oledBuffer, sizeof(oledBuffer), "%s: %s", shortName,
              (appliances[i].currentState == ON ? "ON" : "OFF"));
     display.print(oledBuffer);
   }
@@ -1330,7 +1334,7 @@ void updateOLED(DateTime now) {
   display.setCursor(0, y + (NUM_APPLIANCES * 8));
   snprintf(oledBuffer, sizeof(oledBuffer), "%.1fC", currentTemperatureC);
   display.print(oledBuffer);
-  
+
   display.setCursor(40, y + (NUM_APPLIANCES * 8));
   if (emergencyShutdown) {
     // Display specific emergency reason
@@ -1481,7 +1485,7 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
 
   // Only process when we have received all the data
   if (index + len == total) {
-  JsonDocument doc(1024);  // Use JsonDocument for compatibility
+    JsonDocument doc(1024);  // Use JsonDocument for compatibility
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1587,7 +1591,7 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
 
   // Only process when we have received all the data
   if (index + len == total) {
-  JsonDocument doc(2048);  // Use JsonDocument for compatibility
+    JsonDocument doc(2048);  // Use JsonDocument for compatibility
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1625,7 +1629,7 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
         ScheduleEntry entry;
         entry.type = scheduleObj["type"].as<String>();
         // Convert hours and minutes to total minutes, or use direct minutes if provided
-  if (scheduleObj["start_min"].is<int>()) {
+        if (scheduleObj["start_min"].is<int>()) {
           entry.start_min = scheduleObj["start_min"].as<int>();
           entry.end_min = scheduleObj["end_min"].as<int>();
         } else {
@@ -1638,14 +1642,14 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
     }
 
     markSchedulesDirty();  // Schedule delayed save
-    
+
     // Immediately re-evaluate all appliances with new schedules
     DateTime now = rtc.now();
     int currentMinutes = now.hour() * 60 + now.minute();
     for (int i = 0; i < NUM_APPLIANCES; i++) {
       applyApplianceLogic(appliances[i], currentMinutes);
     }
-    
+
     request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"Schedules updated and applied immediately\"}\n");
   }
 }
@@ -1662,7 +1666,7 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
 void handleWifiConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
   if (!authenticateRequest(request)) return;
 
-  // Check total size limit  
+  // Check total size limit
   if (total > MAX_POST_BODY_SIZE) {
     request->send(413, "application/json", "{\"error\": \"Request body too large\"}\n");
     return;
@@ -1722,7 +1726,7 @@ void handleNotFound(AsyncWebServerRequest *request) {
 }
 
 // ============================================================================
-// 9. System Health and Safety Functions  
+// 9. System Health and Safety Functions
 // ============================================================================
 
 /**
@@ -1731,13 +1735,13 @@ void handleNotFound(AsyncWebServerRequest *request) {
 void emergencyShutdownAll() {
   Serial.println("[EMERGENCY] Emergency shutdown!");
   emergencyShutdown = true;
-  
+
   // Turn off all appliances immediately using proper relay control
   for (int i = 0; i < NUM_APPLIANCES; i++) {
     appliances[i].currentState = OFF;
     setRelayState(appliances[i].pin, OFF);  // Use configurable relay control
   }
-  
+
   // Sound emergency alert
   for (int i = 0; i < 5; i++) {
     BUZZER_TONE(BUZZER_PIN, 2000);
@@ -1757,7 +1761,7 @@ void handleEmergencyReset(AsyncWebServerRequest *request) {
     request->send(400, "application/json", "{\"error\": \"No emergency shutdown active\"}\n");
     return;
   }
-  
+
   // Check if conditions are safe to reset
   if (currentTemperatureC > EMERGENCY_TEMP_LOW && currentTemperatureC < EMERGENCY_TEMP_HIGH) {
     emergencyShutdown = false;
@@ -1804,7 +1808,7 @@ void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t
 
   // Only process when we have received all the data
   if (index + len == total) {
-  JsonDocument doc(512);  // Use JsonDocument for compatibility
+    JsonDocument doc(512);  // Use JsonDocument for compatibility
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1823,26 +1827,26 @@ void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t
       // Factory Reset: Reset all appliances and restore default schedules
       for (int i = 0; i < NUM_APPLIANCES; i++) {
         appliances[i].overrideEndTime = 0;  // Clear override
-        appliances[i].overrideState = OFF;   // Reset override state
+        appliances[i].overrideState = OFF;  // Reset override state
         resetCount++;
       }
-      
+
       // Load default factory schedules
       loadDefaultSchedules();
-      
-      #if DEBUG_MODE
+
+#if DEBUG_MODE
       Serial.println("[API] Factory reset completed: All appliance overrides cleared and default schedules restored");
-      #endif
+#endif
     } else if (!appliancesToReset.isNull()) {
       // Reset specific appliances
       for (JsonVariant applianceName : appliancesToReset) {
         String appName = applianceName.as<String>();
-        
+
         bool found = false;
         for (int i = 0; i < NUM_APPLIANCES; i++) {
           if (appliances[i].name == appName) {
             appliances[i].overrideEndTime = 0;  // Clear override
-            appliances[i].overrideState = OFF;   // Reset override state
+            appliances[i].overrideState = OFF;  // Reset override state
             found = true;
             resetCount++;
             break;
@@ -1878,12 +1882,12 @@ void handleForceRefresh(AsyncWebServerRequest *request) {
 
   DateTime now = rtc.now();
   int currentMinutes = now.hour() * 60 + now.minute();
-  
+
   // Force re-evaluation of all appliances
   for (int i = 0; i < NUM_APPLIANCES; i++) {
     applyApplianceLogic(appliances[i], currentMinutes);
   }
-  
+
   Serial.println("[API] Forced refresh of all appliances completed");
   request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"All appliances refreshed with current schedules\"}\n");
 }
@@ -1921,7 +1925,7 @@ void handleUpdateSingleSchedule(AsyncWebServerRequest *request, uint8_t *data, s
 
   // Only process when we have received all the data
   if (index + len == total) {
-  JsonDocument doc(1024);  // Use JsonDocument for compatibility
+    JsonDocument doc(1024);  // Use JsonDocument for compatibility
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1969,7 +1973,7 @@ void handleUpdateSingleSchedule(AsyncWebServerRequest *request, uint8_t *data, s
       ScheduleEntry entry;
       entry.type = scheduleObj["type"].as<String>();
       // Convert hours and minutes to total minutes, or use direct minutes if provided
-  if (scheduleObj["start_min"].is<int>()) {
+      if (scheduleObj["start_min"].is<int>()) {
         entry.start_min = scheduleObj["start_min"].as<int>();
         entry.end_min = scheduleObj["end_min"].as<int>();
       } else {
@@ -1989,14 +1993,14 @@ void handleUpdateSingleSchedule(AsyncWebServerRequest *request, uint8_t *data, s
 
     // Save updated schedules to NVS
     markSchedulesDirty();  // Schedule delayed save
-    
+
     // Immediately re-evaluate the specific appliance with new schedule
     DateTime now = rtc.now();
     int currentMinutes = now.hour() * 60 + now.minute();
     if (applianceIndex >= 0) {
       applyApplianceLogic(appliances[applianceIndex], currentMinutes);
     }
-    
+
     Serial.printf("[API] Schedule updated for %s\n", applianceName.c_str());
     request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"Schedule updated for " + applianceName + " and applied immediately\"}\n");
   }
