@@ -1099,7 +1099,7 @@ void loadSchedules() {
 #if DEBUG_MODE
   Serial.println("[NVS] Loading schedules from NVS...");
 #endif
-  JsonDocument doc(2048);  // Use JsonDocument for compatibility
+  StaticJsonDocument<2048> doc;  // Use StaticJsonDocument for ArduinoJson v6
   DeserializationError error = deserializeJson(doc, schedulesJson);
 
   if (error) {
@@ -1414,7 +1414,7 @@ void handleRoot(AsyncWebServerRequest *request) {
 void handleStatus(AsyncWebServerRequest *request) {
   if (!authenticateRequest(request)) return;
 
-  JsonDocument doc(1024);  // Use JsonDocument for compatibility
+  StaticJsonDocument<1024> doc;  // Use StaticJsonDocument for ArduinoJson v6
   DateTime now = rtc.now();
 
   doc["timestamp"] = now.timestamp();
@@ -1485,7 +1485,7 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
 
   // Only process when we have received all the data
   if (index + len == total) {
-    JsonDocument doc(1024);  // Use JsonDocument for compatibility
+  StaticJsonDocument<1024> doc;  // Use StaticJsonDocument for ArduinoJson v6
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1536,7 +1536,7 @@ void handleGetSchedules(AsyncWebServerRequest *request) {
   if (!authenticateRequest(request)) return;
 
   // Use StaticJsonDocument for better memory efficiency
-  JsonDocument doc(2048);  // Use JsonDocument for compatibility
+  StaticJsonDocument<2048> doc;  // Use StaticJsonDocument for ArduinoJson v6
   JsonObject schedules_json = doc["schedules"].to<JsonObject>();
 
   for (auto const &[applianceName, schedulesVec] : applianceSchedules) {
@@ -1591,7 +1591,7 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
 
   // Only process when we have received all the data
   if (index + len == total) {
-    JsonDocument doc(2048);  // Use JsonDocument for compatibility
+  StaticJsonDocument<2048> doc;  // Use StaticJsonDocument for ArduinoJson v6
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1808,7 +1808,7 @@ void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t
 
   // Only process when we have received all the data
   if (index + len == total) {
-    JsonDocument doc(512);  // Use JsonDocument for compatibility
+  StaticJsonDocument<512> doc;  // Use StaticJsonDocument for ArduinoJson v6
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1925,7 +1925,7 @@ void handleUpdateSingleSchedule(AsyncWebServerRequest *request, uint8_t *data, s
 
   // Only process when we have received all the data
   if (index + len == total) {
-    JsonDocument doc(1024);  // Use JsonDocument for compatibility
+  StaticJsonDocument<1024> doc;  // Use StaticJsonDocument for ArduinoJson v6
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
