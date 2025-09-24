@@ -1346,13 +1346,13 @@ void updateOLED(DateTime now) {
   static unsigned long lastScrollMillis = 0;
   static int scrollOffset = 0;
   const char *errorMsg = "TEMP SENSOR NOT DETECTED - CHECK CONNECTION!  ";
-  int maxVisibleChars = 21; // 128px/6px per char (font size 1)
+  int maxVisibleChars = 21;  // 128px/6px per char (font size 1)
   int errorMsgLen = strlen(errorMsg);
 
   display.setCursor(0, y + (NUM_APPLIANCES * 8));
   if (tempSensorError) {
     // Running text (marquee) for error message
-    if (millis() - lastScrollMillis > 200) { // Scroll every 200ms
+    if (millis() - lastScrollMillis > 200) {  // Scroll every 200ms
       scrollOffset = (scrollOffset + 1) % errorMsgLen;
       lastScrollMillis = millis();
     }
