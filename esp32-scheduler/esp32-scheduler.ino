@@ -928,6 +928,10 @@ void connectWiFi() {
 
   unsigned long startTime = millis();
   int dotCount = 0;
+  // For scrolling SSID
+  static int ssidScrollOffset = 0;
+  static unsigned long lastScrollMillis = 0;
+  const int scrollDelay = 250; // ms per scroll step
   while (WiFi.status() != WL_CONNECTED && (long)(millis() - startTime) < WIFI_CONNECT_TIMEOUT_MS) {
     delay(1000);
 #if DEBUG_MODE
@@ -936,12 +940,35 @@ void connectWiFi() {
     // Update display every 3 seconds
     if (++dotCount % 3 == 0) {
       display.clearDisplay();
+      display.setTextSize(1); // Smallest font for max info
+      display.setTextColor(SSD1306_WHITE);
       display.setCursor(0, 0);
-      display.println(F("Connecting WiFi..."));
+      display.println(F("Connecting to SSID:"));
+      // Scroll SSID if too long
+      int maxVisibleChars = 18; // 18 chars at size 1 (128px/7px)
+      int ssidLen = ssid.length();
+      String ssidToShow;
+      if (ssidLen > maxVisibleChars) {
+        // Scroll the SSID horizontally
+        if (millis() - lastScrollMillis > scrollDelay) {
+          ssidScrollOffset = (ssidScrollOffset + 1) % (ssidLen + 2); // +2 for smooth loop
+          lastScrollMillis = millis();
+        }
+        if (ssidScrollOffset + maxVisibleChars <= ssidLen) {
+          ssidToShow = ssid.substring(ssidScrollOffset, ssidScrollOffset + maxVisibleChars);
+        } else {
+          // Wrap around
+          int firstPart = ssidLen - ssidScrollOffset;
+          ssidToShow = ssid.substring(ssidScrollOffset);
+          ssidToShow += "  ";
+          ssidToShow += ssid.substring(0, maxVisibleChars - firstPart);
+        }
+      } else {
+        ssidToShow = ssid;
+      }
       display.setCursor(0, 10);
-      display.println(ssid);
-      snprintf(oledBuffer, sizeof(oledBuffer), "Attempt %d/%d",
-               wifiReconnectAttempts + 1, MAX_WIFI_RECONNECT_ATTEMPTS);
+      display.println(ssidToShow);
+      snprintf(oledBuffer, sizeof(oledBuffer), "Attempt %d/%d", wifiReconnectAttempts + 1, MAX_WIFI_RECONNECT_ATTEMPTS);
       display.setCursor(0, 20);
       display.println(oledBuffer);
       display.display();
