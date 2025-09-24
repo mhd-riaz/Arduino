@@ -931,7 +931,7 @@ void connectWiFi() {
   // For scrolling SSID
   static int ssidScrollOffset = 0;
   static unsigned long lastScrollMillis = 0;
-  const int scrollDelay = 250; // ms per scroll step
+  const int scrollDelay = 250;  // ms per scroll step
   while (WiFi.status() != WL_CONNECTED && (long)(millis() - startTime) < WIFI_CONNECT_TIMEOUT_MS) {
     delay(1000);
 #if DEBUG_MODE
@@ -940,18 +940,18 @@ void connectWiFi() {
     // Update display every 3 seconds
     if (++dotCount % 3 == 0) {
       display.clearDisplay();
-      display.setTextSize(1); // Smallest font for max info
+      display.setTextSize(1);  // Smallest font for max info
       display.setTextColor(SSD1306_WHITE);
       display.setCursor(0, 0);
       display.println(F("Connecting to SSID:"));
       // Scroll SSID if too long
-      int maxVisibleChars = 18; // 18 chars at size 1 (128px/7px)
+      int maxVisibleChars = 18;  // 18 chars at size 1 (128px/7px)
       int ssidLen = ssid.length();
       String ssidToShow;
       if (ssidLen > maxVisibleChars) {
         // Scroll the SSID horizontally
         if (millis() - lastScrollMillis > scrollDelay) {
-          ssidScrollOffset = (ssidScrollOffset + 1) % (ssidLen + 2); // +2 for smooth loop
+          ssidScrollOffset = (ssidScrollOffset + 1) % (ssidLen + 2);  // +2 for smooth loop
           lastScrollMillis = millis();
         }
         if (ssidScrollOffset + maxVisibleChars <= ssidLen) {
@@ -1005,9 +1005,9 @@ void startAPMode() {
 #endif
   WiFi.mode(WIFI_AP);
   // Set constant AP IP: 192.168.0.1 (gateway and subnet match)
-  IPAddress apIP(192,168,0,1);
-  IPAddress apGateway(192,168,0,1);
-  IPAddress apSubnet(255,255,255,0);
+  IPAddress apIP(192, 168, 0, 1);
+  IPAddress apGateway(192, 168, 0, 1);
+  IPAddress apSubnet(255, 255, 255, 0);
   WiFi.softAPConfig(apIP, apGateway, apSubnet);
   WiFi.softAP("MyTank", "password@123");  // Default AP name and password
   apIP = WiFi.softAPIP();
