@@ -337,13 +337,13 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 float currentTemperatureC = 25.0;  // Initialize with reasonable default
 unsigned long lastTempReadMillis = 0;
-const unsigned long TEMP_READ_INTERVAL_MS = 15000;  // Normal: 15 seconds
+const unsigned long TEMP_READ_INTERVAL_MS = 15000;       // Normal: 15 seconds
 const unsigned long TEMP_READ_ERROR_INTERVAL_MS = 5000;  // Error: 5 seconds
 
 // DS18B20 Sensor Error Handling
 bool tempSensorError = false;
 unsigned long lastTempSensorErrorBuzzMillis = 0;
-const unsigned long TEMP_SENSOR_ERROR_BUZZ_INTERVAL_MS = 3600000UL; // 1 hour
+const unsigned long TEMP_SENSOR_ERROR_BUZZ_INTERVAL_MS = 3600000UL;  // 1 hour
 
 // Intelligent Heater Control Logic
 const float TEMP_THRESHOLD_ON = 25.0;                         // Turn heater ON if temp drops below 25°C
@@ -743,11 +743,11 @@ void loop() {
     delay(50);  // Give sensor time to complete conversion
     float tempReading = sensors.getTempCByIndex(0);
 
-  if (tempReading != DEVICE_DISCONNECTED_C && tempReading > -50.0 && tempReading < 100.0) {
+    if (tempReading != DEVICE_DISCONNECTED_C && tempReading > -50.0 && tempReading < 100.0) {
       // Valid temperature reading
       currentTemperatureC = (currentTemperatureC * 0.9) + (tempReading * 0.1);
       if (tempSensorError) {
-        tempSensorError = false; // Sensor recovered
+        tempSensorError = false;  // Sensor recovered
         lastTempSensorErrorBuzzMillis = 0;
       }
       // Track recovery after failures
@@ -771,14 +771,14 @@ void loop() {
     } else {
       // Temperature sensor failure detected
       if (temperatureReadFailures < MAX_TEMP_FAILURES) {
-  temperatureReadFailures++;
-  temperatureRecoveryCount = 0;  // Reset recovery on new failure
-  tempSensorError = true;
+        temperatureReadFailures++;
+        temperatureRecoveryCount = 0;  // Reset recovery on new failure
+        tempSensorError = true;
 #if DEBUG_MODE
-  Serial.printf(F("[TEMP] Sensor read failure %d/%d (Reading: %.1f)\n"),
-          temperatureReadFailures, MAX_TEMP_FAILURES, tempReading);
+        Serial.printf(F("[TEMP] Sensor read failure %d/%d (Reading: %.1f)\n"),
+                      temperatureReadFailures, MAX_TEMP_FAILURES, tempReading);
 #endif
-      // No emergency shutdown for temp sensor failure; just log and warn (handled elsewhere)
+        // No emergency shutdown for temp sensor failure; just log and warn (handled elsewhere)
       }
     }
     lastTempReadMillis = millis();
@@ -787,7 +787,7 @@ void loop() {
   // DS18B20 Sensor Error: Spontaneous 3-buzz warning every hour
   if (tempSensorError) {
     if (lastTempSensorErrorBuzzMillis == 0 || (millis() - lastTempSensorErrorBuzzMillis) >= TEMP_SENSOR_ERROR_BUZZ_INTERVAL_MS) {
-      buzz(3, 300); // 3 quick buzzes
+      buzz(3, 300);  // 3 quick buzzes
       lastTempSensorErrorBuzzMillis = millis();
     }
   }
@@ -1502,7 +1502,7 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
 
   // Only process when we have received all the data
   if (index + len == total) {
-  StaticJsonDocument<1024> doc;  // Use StaticJsonDocument for ArduinoJson v6
+    StaticJsonDocument<1024> doc;  // Use StaticJsonDocument for ArduinoJson v6
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1608,7 +1608,7 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
 
   // Only process when we have received all the data
   if (index + len == total) {
-  StaticJsonDocument<2048> doc;  // Use StaticJsonDocument for ArduinoJson v6
+    StaticJsonDocument<2048> doc;  // Use StaticJsonDocument for ArduinoJson v6
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1825,7 +1825,7 @@ void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t
 
   // Only process when we have received all the data
   if (index + len == total) {
-  StaticJsonDocument<512> doc;  // Use StaticJsonDocument for ArduinoJson v6
+    StaticJsonDocument<512> doc;  // Use StaticJsonDocument for ArduinoJson v6
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
@@ -1942,7 +1942,7 @@ void handleUpdateSingleSchedule(AsyncWebServerRequest *request, uint8_t *data, s
 
   // Only process when we have received all the data
   if (index + len == total) {
-  StaticJsonDocument<1024> doc;  // Use StaticJsonDocument for ArduinoJson v6
+    StaticJsonDocument<1024> doc;  // Use StaticJsonDocument for ArduinoJson v6
     DeserializationError error = deserializeJson(doc, postBody);
 
     if (error) {
