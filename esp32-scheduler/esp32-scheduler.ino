@@ -1343,42 +1343,55 @@ void updateOLED(DateTime now) {
   }
 
   // Temperature and System Status (bottom row)
+  static unsigned long lastScrollMillis = 0;
+  static int scrollOffset = 0;
+  const char *errorMsg = "TEMP SENSOR NOT DETECTED - CHECK CONNECTION!  ";
+  int maxVisibleChars = 21; // 128px/6px per char (font size 1)
+  int errorMsgLen = strlen(errorMsg);
+
   display.setCursor(0, y + (NUM_APPLIANCES * 8));
   if (tempSensorError) {
-    display.print(F("TEMP SENSOR ERR"));
+    // Running text (marquee) for error message
+    if (millis() - lastScrollMillis > 200) { // Scroll every 200ms
+      scrollOffset = (scrollOffset + 1) % errorMsgLen;
+      lastScrollMillis = millis();
+    }
+    char scrollBuf[32];
+    for (int i = 0; i < maxVisibleChars; i++) {
+      scrollBuf[i] = errorMsg[(scrollOffset + i) % errorMsgLen];
+    }
+    scrollBuf[maxVisibleChars] = '\0';
+    display.print(scrollBuf);
   } else {
     snprintf(oledBuffer, sizeof(oledBuffer), "%.1fC", currentTemperatureC);
     display.print(oledBuffer);
-  }
-
-  display.setCursor(40, y + (NUM_APPLIANCES * 8));
-  if (tempSensorError) {
-    display.print(F("SENSOR!"));
-  } else if (emergencyShutdown) {
-    // Display specific emergency reason
-    switch (currentEmergencyReason) {
-      case TEMP_TOO_HIGH:
-        display.print(F("TEMP HIGH"));
-        break;
-      case TEMP_TOO_LOW:
-        display.print(F("TEMP LOW"));
-        break;
-      case SENSOR_FAILURE:
-        display.print(F("SENSOR"));
-        break;
-      default:
-        display.print(F("EMRG!"));
-        break;
+    display.setCursor(40, y + (NUM_APPLIANCES * 8));
+    if (emergencyShutdown) {
+      // Display specific emergency reason
+      switch (currentEmergencyReason) {
+        case TEMP_TOO_HIGH:
+          display.print(F("TEMP HIGH"));
+          break;
+        case TEMP_TOO_LOW:
+          display.print(F("TEMP LOW"));
+          break;
+        case SENSOR_FAILURE:
+          display.print(F("SENSOR"));
+          break;
+        default:
+          display.print(F("EMRG!"));
+          break;
+      }
+    } else if (WiFi.status() == WL_CONNECTED) {
+      // Show more meaningful IP info - last two octets
+      IPAddress ip = WiFi.localIP();
+      snprintf(oledBuffer, sizeof(oledBuffer), "%d.%d", ip[2], ip[3]);
+      display.print(oledBuffer);
+    } else if (apModeActive) {
+      display.print(F("AP"));
+    } else {
+      display.print(F("NoWiFi"));
     }
-  } else if (WiFi.status() == WL_CONNECTED) {
-    // Show more meaningful IP info - last two octets
-    IPAddress ip = WiFi.localIP();
-    snprintf(oledBuffer, sizeof(oledBuffer), "%d.%d", ip[2], ip[3]);
-    display.print(oledBuffer);
-  } else if (apModeActive) {
-    display.print(F("AP"));
-  } else {
-    display.print(F("NoWiFi"));
   }
 
   display.display();
