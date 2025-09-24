@@ -601,13 +601,14 @@ void setup() {
 #if DEBUG_MODE
     Serial.println(F("[OLED] Display initialized."));
 #endif
-    display.display();  // Show initial Adafruit logo
-    delay(1500);        // Reduced delay for faster startup
     display.clearDisplay();
-    display.setTextSize(1);
+    display.setTextSize(2); // Larger text
     display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 0);
-    display.println("Starting...");
+    display.setCursor(0, 20); // Center-ish vertically for 64px display
+    display.println("Bismillah");
+    display.display();
+    delay(2000); // Show for 2 seconds
+    display.clearDisplay();
     display.display();
   }
 
@@ -677,6 +678,7 @@ void setup() {
   // Configure REST API Endpoints
   server.on("/", HTTP_GET, handleRoot);
   server.on("/status", HTTP_GET, handleStatus);
+  server.on("/restart", HTTP_GET, handleRestart); // [GET] /restart endpoint for system reboot
   server.on(
     "/control", HTTP_POST, [](AsyncWebServerRequest *request) {
       // Response will be sent by the body handler
@@ -713,6 +715,17 @@ void setup() {
   Serial.println("[API] REST API server started.");
 #endif
   Serial.println("[SETUP] System ready!");
+}
+
+/**
+ * @brief Handles the "/restart" GET endpoint. Reboots the ESP32 after authenticating the API key.
+ * Responds with JSON and then triggers ESP.restart().
+ */
+void handleRestart(AsyncWebServerRequest *request) {
+  if (!authenticateRequest(request)) return;
+  request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"System will reboot now\"}\n");
+  delay(1000); // Allow response to be sent
+  ESP.restart();
 }
 
 // ============================================================================

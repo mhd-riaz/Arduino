@@ -514,23 +514,24 @@ curl -X POST http://192.168.1.100/emergency/reset \
 
 ---
 
-### 8. System Refresh
 
-#### `POST /refresh`
-**Description**: Force immediate re-evaluation of all appliance states.
+### 9. System Reboot
+
+#### `GET /restart`
+**Description**: Immediately reboots the ESP32 system. Use for remote recovery, field servicing, or to clear hardware/software faults. Requires API key authentication.
 
 **Authentication**: Required
 
-**Request Body**: Empty
+**Request Body**: None
 
 **Features**:
-- **Immediate Update**: Forces instant schedule re-calculation
-- **Temperature Check**: Re-evaluates heater temperature logic
-- **Override Validation**: Checks and expires old overrides
+- **Remote Reboot**: Instantly reboots the ESP32 for full system recovery
+- **Safe Operation**: Response is sent before reboot is triggered
+- **Field Service**: Designed for commercial/field deployments
 
 **Example**:
 ```bash
-curl -X POST http://192.168.1.100/refresh \
+curl -X GET http://192.168.1.100/restart \
   -H "X-API-Key: Automate@123"
 ```
 
@@ -538,7 +539,7 @@ curl -X POST http://192.168.1.100/refresh \
 ```json
 {
   "status": "success",
-  "message": "System state refreshed and appliances re-evaluated"
+  "message": "System will reboot now"
 }
 ```
 
