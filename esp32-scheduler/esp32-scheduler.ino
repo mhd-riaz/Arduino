@@ -743,7 +743,7 @@ void loop() {
     delay(50);  // Give sensor time to complete conversion
     float tempReading = sensors.getTempCByIndex(0);
 
-    if (tempReading != DEVICE_DISCONNECTED_C && tempReading > -50.0 && tempReading < 100.0) {
+  if (tempReading != DEVICE_DISCONNECTED_C && tempReading > -50.0 && tempReading < 100.0) {
       // Valid temperature reading
       currentTemperatureC = (currentTemperatureC * 0.9) + (tempReading * 0.1);
       if (tempSensorError) {
@@ -770,24 +770,15 @@ void loop() {
       }
     } else {
       // Temperature sensor failure detected
-      temperatureReadFailures++;
-      temperatureRecoveryCount = 0;  // Reset recovery on new failure
-      tempSensorError = true;
+      if (temperatureReadFailures < MAX_TEMP_FAILURES) {
+  temperatureReadFailures++;
+  temperatureRecoveryCount = 0;  // Reset recovery on new failure
+  tempSensorError = true;
 #if DEBUG_MODE
-      Serial.printf(F("[TEMP] Sensor read failure %d/%d (Reading: %.1f)\n"),
-                    temperatureReadFailures, MAX_TEMP_FAILURES, tempReading);
+  Serial.printf(F("[TEMP] Sensor read failure %d/%d (Reading: %.1f)\n"),
+          temperatureReadFailures, MAX_TEMP_FAILURES, tempReading);
 #endif
-      // Take fail-safe action after consecutive failures
-      if (temperatureReadFailures >= MAX_TEMP_FAILURES) {
-#if DEBUG_MODE
-        Serial.println(F("[EMERGENCY] Temperature sensor failed - Activating fail-safe mode"));
-#endif
-        emergencyShutdown = true;
-        emergencyActivatedTime = millis();
-        // Sound emergency alert
-        BUZZER_TONE(BUZZER_PIN, 1000);
-        delay(100);
-        BUZZER_OFF(BUZZER_PIN);
+      // No emergency shutdown for temp sensor failure; just log and warn (handled elsewhere)
       }
     }
     lastTempReadMillis = millis();
@@ -815,11 +806,7 @@ void loop() {
       newEmergencyReason = TEMP_TOO_LOW;
     }
   }
-  // Always check sensor failure regardless of temperature value
-  if (temperatureReadFailures >= MAX_TEMP_FAILURES) {
-    currentEmergencyState = true;
-    newEmergencyReason = SENSOR_FAILURE;
-  }
+  // Do NOT trigger emergency for temp sensor failure anymore
 
   // Update emergency reason when state changes
   if (currentEmergencyState) {
