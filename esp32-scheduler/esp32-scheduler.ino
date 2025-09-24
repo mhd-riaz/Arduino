@@ -1901,7 +1901,9 @@ void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t
       responseMessage = String(resetCount) + " appliances reset to schedule";
     }
 
-    request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"" + responseMessage + "\"}\n");
+  request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"" + responseMessage + " (System will reboot)\"}\n");
+  delay(1000); // Allow response to be sent
+  ESP.restart();
   }
 }
 

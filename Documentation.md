@@ -414,7 +414,7 @@ curl -X POST http://192.168.1.100/wifi \
 ### 6. Reset Operations
 
 #### `POST /reset`
-**Description**: Reset appliance overrides or perform factory reset.
+**Description**: Reset appliance overrides or perform factory reset. **After a successful reset, the system will automatically reboot.**
 
 **Authentication**: Required
 
@@ -433,9 +433,11 @@ curl -X POST http://192.168.1.100/wifi \
 ```
 
 **Features**:
+**Features**:
 - **Selective Reset**: Reset only specified appliances back to schedule
 - **Factory Reset**: Clear all overrides + restore default schedules
 - **Default Schedules**: Optimized for fish tank automation
+- **Automatic Reboot**: The system will automatically reboot after a successful reset for full recovery.
 
 **Factory Reset Defaults**:
 - **CO2**: 8:30-13:30 & 15:30-20:30
@@ -468,7 +470,7 @@ curl -X POST http://192.168.1.100/reset \
 ```json
 {
   "status": "success",
-  "message": "Factory reset completed: 5 appliances reset and default schedules restored"
+  "message": "Factory reset completed: 5 appliances reset and default schedules restored (System will reboot)"
 }
 ```
 
