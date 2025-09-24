@@ -602,12 +602,12 @@ void setup() {
     Serial.println(F("[OLED] Display initialized."));
 #endif
     display.clearDisplay();
-    display.setTextSize(2); // Larger text
+    display.setTextSize(2);  // Larger text
     display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 20); // Center-ish vertically for 64px display
+    display.setCursor(0, 20);  // Center-ish vertically for 64px display
     display.println("Bismillah");
     display.display();
-    delay(2000); // Show for 2 seconds
+    delay(2000);  // Show for 2 seconds
     display.clearDisplay();
     display.display();
   }
@@ -678,7 +678,7 @@ void setup() {
   // Configure REST API Endpoints
   server.on("/", HTTP_GET, handleRoot);
   server.on("/status", HTTP_GET, handleStatus);
-  server.on("/restart", HTTP_GET, handleRestart); // [GET] /restart endpoint for system reboot
+  server.on("/restart", HTTP_GET, handleRestart);  // [GET] /restart endpoint for system reboot
   server.on(
     "/control", HTTP_POST, [](AsyncWebServerRequest *request) {
       // Response will be sent by the body handler
@@ -724,7 +724,7 @@ void setup() {
 void handleRestart(AsyncWebServerRequest *request) {
   if (!authenticateRequest(request)) return;
   request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"System will reboot now\"}\n");
-  delay(1000); // Allow response to be sent
+  delay(1000);  // Allow response to be sent
   ESP.restart();
 }
 
@@ -1914,9 +1914,9 @@ void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t
       responseMessage = String(resetCount) + " appliances reset to schedule";
     }
 
-  request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"" + responseMessage + " (System will reboot)\"}\n");
-  delay(1000); // Allow response to be sent
-  ESP.restart();
+    request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"" + responseMessage + " (System will reboot)\"}\n");
+    delay(1000);  // Allow response to be sent
+    ESP.restart();
   }
 }
 
