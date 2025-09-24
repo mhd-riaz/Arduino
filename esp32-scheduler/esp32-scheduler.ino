@@ -335,7 +335,7 @@ const unsigned long NTP_SYNC_INTERVAL_MS = 3 * 3600 * 1000;  // Sync every 3 hou
 // Temperature Sensor & Control System
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
-float currentTemperatureC = 25.0;  // Initialize with reasonable default
+float currentTemperatureC = -127.0;  // Initialize with sensor error value
 unsigned long lastTempReadMillis = 0;
 const unsigned long TEMP_READ_INTERVAL_MS = 15000;       // Normal: 15 seconds
 const unsigned long TEMP_READ_ERROR_INTERVAL_MS = 5000;  // Error: 5 seconds
@@ -630,8 +630,9 @@ void setup() {
     Serial.printf("[DS18B20] Initial temperature reading: %.1f°C\n", currentTemperatureC);
 #endif
   } else {
+    currentTemperatureC = DEVICE_DISCONNECTED_C;
 #if DEBUG_MODE
-    Serial.println("[DS18B20] Warning: Initial temperature reading failed, using default 25.0°C");
+    Serial.println("[DS18B20] Warning: Initial temperature reading failed, using error value -127.0°C");
 #endif
   }
 
@@ -1344,7 +1345,7 @@ void updateOLED(DateTime now) {
   // Temperature and System Status (bottom row)
   display.setCursor(0, y + (NUM_APPLIANCES * 8));
   if (tempSensorError) {
-    display.print(F("TEMP SENSOR ERROR"));
+    display.print(F("TEMP SENSOR ERR"));
   } else {
     snprintf(oledBuffer, sizeof(oledBuffer), "%.1fC", currentTemperatureC);
     display.print(oledBuffer);
