@@ -45,7 +45,6 @@ This document provides professional connection diagrams for the ESP32 Fish Tank 
 |-----------|-------------|---------|---------|----------|
 | **DS3231 RTC** | 0x68 | 3.3V | ~20mA | J3 (4-pin) |
 | **SSD1306 OLED** | 0x3C | 3.3V | ~30mA | J3 (4-pin) |
-| **Pull-up Resistors** | - | 3.3V | 4.7kΩ each | On-board |
 | **Series Resistors** | - | - | 82Ω each | Signal protection |
 
 ---
@@ -243,8 +242,8 @@ ESP32 GPIO ───[100Ω]─── Sensor Input
 ```
 
 I2C Protection:
-ESP32 SDA ───[82Ω]───[4.7kΩ to 3V3]─── I2C SDA Bus
-ESP32 SCL ───[82Ω]───[4.7kΩ to 3V3]─── I2C SCL Bus
+ESP32 SDA ───[82Ω]─── I2C SDA Bus
+ESP32 SCL ───[82Ω]─── I2C SCL Bus
 ```
 
 ---

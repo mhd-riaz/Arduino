@@ -337,7 +337,13 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 float currentTemperatureC = 25.0;  // Initialize with reasonable default
 unsigned long lastTempReadMillis = 0;
-const unsigned long TEMP_READ_INTERVAL_MS = 15000;  // Read every 15 seconds
+const unsigned long TEMP_READ_INTERVAL_MS = 15000;  // Normal: 15 seconds
+const unsigned long TEMP_READ_ERROR_INTERVAL_MS = 5000;  // Error: 5 seconds
+
+// DS18B20 Sensor Error Handling
+bool tempSensorError = false;
+unsigned long lastTempSensorErrorBuzzMillis = 0;
+const unsigned long TEMP_SENSOR_ERROR_BUZZ_INTERVAL_MS = 3600000UL; // 1 hour
 
 // Intelligent Heater Control Logic
 const float TEMP_THRESHOLD_ON = 25.0;                         // Turn heater ON if temp drops below 25°C
@@ -528,7 +534,7 @@ void setRelayState(int pin, ApplianceState state) {
 // ============================================================================
 void setup() {
   // Add small delay for power stabilization
-  delay(500);
+  delay(800);
 
   // Set CPU frequency for stability
   setCpuFrequencyMhz(160);
@@ -569,8 +575,8 @@ void setup() {
     Serial.println(F("[ERROR] RTC not found!"));
     // Sound continuous error buzzer to alert user
     while (1) {
-      BUZZER_TONE(BUZZER_PIN, 2000);  // 2kHz error tone
-      delay(500);                     // Buzz for 500ms
+      BUZZER_TONE(BUZZER_PIN, 3000);  // 3kHz error tone
+      delay(800);                     // Buzz for 800ms
       BUZZER_OFF(BUZZER_PIN);         // Turn off
       delay(1000);                    // Wait 1 second before next buzz
     }
@@ -730,8 +736,9 @@ void loop() {
   DateTime now = rtc.now();
   int currentMinutes = now.hour() * 60 + now.minute();  // Convert to minutes once
 
-  // Read temperature periodically
-  if ((long)(millis() - lastTempReadMillis) >= TEMP_READ_INTERVAL_MS) {
+  // Read temperature more frequently if sensor error
+  unsigned long tempReadInterval = tempSensorError ? TEMP_READ_ERROR_INTERVAL_MS : TEMP_READ_INTERVAL_MS;
+  if ((long)(millis() - lastTempReadMillis) >= tempReadInterval) {
     sensors.requestTemperatures();
     delay(50);  // Give sensor time to complete conversion
     float tempReading = sensors.getTempCByIndex(0);
@@ -739,7 +746,10 @@ void loop() {
     if (tempReading != DEVICE_DISCONNECTED_C && tempReading > -50.0 && tempReading < 100.0) {
       // Valid temperature reading
       currentTemperatureC = (currentTemperatureC * 0.9) + (tempReading * 0.1);
-
+      if (tempSensorError) {
+        tempSensorError = false; // Sensor recovered
+        lastTempSensorErrorBuzzMillis = 0;
+      }
       // Track recovery after failures
       if (temperatureReadFailures > 0) {
         temperatureRecoveryCount++;
@@ -747,7 +757,6 @@ void loop() {
         Serial.printf(F("[TEMP] Recovery reading %d/%d (%.1f°C)\n"),
                       temperatureRecoveryCount, MIN_RECOVERY_READINGS, tempReading);
 #endif
-
         // Only reset failures after multiple successful readings
         if (temperatureRecoveryCount >= MIN_RECOVERY_READINGS) {
           temperatureReadFailures = 0;
@@ -763,11 +772,11 @@ void loop() {
       // Temperature sensor failure detected
       temperatureReadFailures++;
       temperatureRecoveryCount = 0;  // Reset recovery on new failure
+      tempSensorError = true;
 #if DEBUG_MODE
       Serial.printf(F("[TEMP] Sensor read failure %d/%d (Reading: %.1f)\n"),
                     temperatureReadFailures, MAX_TEMP_FAILURES, tempReading);
 #endif
-
       // Take fail-safe action after consecutive failures
       if (temperatureReadFailures >= MAX_TEMP_FAILURES) {
 #if DEBUG_MODE
@@ -782,6 +791,14 @@ void loop() {
       }
     }
     lastTempReadMillis = millis();
+  }
+
+  // DS18B20 Sensor Error: Spontaneous 3-buzz warning every hour
+  if (tempSensorError) {
+    if (lastTempSensorErrorBuzzMillis == 0 || (millis() - lastTempSensorErrorBuzzMillis) >= TEMP_SENSOR_ERROR_BUZZ_INTERVAL_MS) {
+      buzz(3, 300); // 3 quick buzzes
+      lastTempSensorErrorBuzzMillis = millis();
+    }
   }
 
   // Check emergency conditions - exclude zero/invalid values to prevent false alarms
@@ -1247,33 +1264,40 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
   }
 
   // 3. Intelligent Heater Temperature Logic (highest priority - overrides everything)
-  if (app.name == "Heater" && currentTemperatureC > 0) {
-    bool currentHeaterState = (targetState == ON);
-
-    if (currentTemperatureC < TEMP_THRESHOLD_ON) {
-      // Temperature too low - force heater ON
-      if (!currentHeaterState && !heaterForcedOn) {
-        heaterOnTimeMillis = millis();
-        heaterForcedOn = true;
-      }
-      targetState = ON;
-      app.currentMode = TEMP_CONTROLLED;
-    } else if (currentTemperatureC >= TEMP_THRESHOLD_OFF) {
-      // Temperature reached target - check minimum runtime
-      if (heaterForcedOn && ((long)(millis() - heaterOnTimeMillis) < HEATER_MIN_RUN_TIME_MS)) {
-        targetState = ON;  // Keep ON for minimum 30-minute runtime
+  if (app.name == "Heater") {
+    if (tempSensorError) {
+      // Sensor error: override to scheduled state, do not use temp logic
+      targetState = app.scheduledState;
+      app.currentMode = SCHEDULED;
+      heaterForcedOn = false;
+      heaterOnTimeMillis = 0;
+    } else if (currentTemperatureC > 0) {
+      bool currentHeaterState = (targetState == ON);
+      if (currentTemperatureC < TEMP_THRESHOLD_ON) {
+        // Temperature too low - force heater ON
+        if (!currentHeaterState && !heaterForcedOn) {
+          heaterOnTimeMillis = millis();
+          heaterForcedOn = true;
+        }
+        targetState = ON;
         app.currentMode = TEMP_CONTROLLED;
-      } else {
-        heaterForcedOn = false;
-        heaterOnTimeMillis = 0;
-        targetState = OFF;
-        app.currentMode = (app.overrideEndTime > 0) ? OVERRIDDEN : SCHEDULED;
+      } else if (currentTemperatureC >= TEMP_THRESHOLD_OFF) {
+        // Temperature reached target - check minimum runtime
+        if (heaterForcedOn && ((long)(millis() - heaterOnTimeMillis) < HEATER_MIN_RUN_TIME_MS)) {
+          targetState = ON;  // Keep ON for minimum 30-minute runtime
+          app.currentMode = TEMP_CONTROLLED;
+        } else {
+          heaterForcedOn = false;
+          heaterOnTimeMillis = 0;
+          targetState = OFF;
+          app.currentMode = (app.overrideEndTime > 0) ? OVERRIDDEN : SCHEDULED;
+        }
       }
-    }
-    // Ensure minimum runtime is respected (optimized check)
-    if (heaterForcedOn && targetState == OFF) {
-      targetState = ON;
-      app.currentMode = TEMP_CONTROLLED;
+      // Ensure minimum runtime is respected (optimized check)
+      if (heaterForcedOn && targetState == OFF) {
+        targetState = ON;
+        app.currentMode = TEMP_CONTROLLED;
+      }
     }
   }
 
@@ -1332,11 +1356,17 @@ void updateOLED(DateTime now) {
 
   // Temperature and System Status (bottom row)
   display.setCursor(0, y + (NUM_APPLIANCES * 8));
-  snprintf(oledBuffer, sizeof(oledBuffer), "%.1fC", currentTemperatureC);
-  display.print(oledBuffer);
+  if (tempSensorError) {
+    display.print(F("TEMP SENSOR ERROR"));
+  } else {
+    snprintf(oledBuffer, sizeof(oledBuffer), "%.1fC", currentTemperatureC);
+    display.print(oledBuffer);
+  }
 
   display.setCursor(40, y + (NUM_APPLIANCES * 8));
-  if (emergencyShutdown) {
+  if (tempSensorError) {
+    display.print(F("SENSOR!"));
+  } else if (emergencyShutdown) {
     // Display specific emergency reason
     switch (currentEmergencyReason) {
       case TEMP_TOO_HIGH:

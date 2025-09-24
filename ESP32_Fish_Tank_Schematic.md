@@ -59,8 +59,6 @@ The system is designed as a professional control PCB with external customer-prov
 | **Component** | **Value/Purpose** | **KiCad Symbol** | **Installation** |
 |---------------|-------------------|------------------|------------------|
 | R1 | 4.7kΩ (DS18B20 Pull-up) | R | Built into PCB |
-| R2 | 4.7kΩ (I2C SDA Pull-up) | R | Built into PCB |
-| R3 | 4.7kΩ (I2C SCL Pull-up) | R | Built into PCB |
 | R4-R8 | 330Ω (GPIO Relay Protection) | R | Built into PCB |
 | R9 | 100Ω (DS18B20 GPIO Protection) | R | Built into PCB |
 | R10 | 100Ω (Buzzer GPIO Protection) | R | Built into PCB |
@@ -215,7 +213,7 @@ ESP32 GPIO → [100Ω Resistor] → Sensor Input
 
 ### I2C Protection
 ```
-ESP32 I2C → [82Ω Series] → [4.7kΩ Pull-up] → Modules
+ESP32 I2C → [82Ω Series] → Modules
 ```
 
 ---
