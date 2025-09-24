@@ -977,8 +977,13 @@ void startAPMode() {
   Serial.println("[AP] Starting Access Point mode...");
 #endif
   WiFi.mode(WIFI_AP);
-  WiFi.softAP("Fishtank_Setup", "password123");  // Default AP name and password
-  IPAddress apIP = WiFi.softAPIP();
+  // Set constant AP IP: 192.168.0.1 (gateway and subnet match)
+  IPAddress apIP(192,168,0,1);
+  IPAddress apGateway(192,168,0,1);
+  IPAddress apSubnet(255,255,255,0);
+  WiFi.softAPConfig(apIP, apGateway, apSubnet);
+  WiFi.softAP("MyTank", "password@123");  // Default AP name and password
+  apIP = WiFi.softAPIP();
 #if DEBUG_MODE
   Serial.print("[AP] AP IP address: ");
   Serial.println(apIP);
@@ -989,9 +994,9 @@ void startAPMode() {
   display.setCursor(0, 0);
   display.println("AP Mode Active:");
   display.setCursor(0, 10);
-  display.println("SSID: Fishtank_Setup");
+  display.println("SSID: MyTank");
   display.setCursor(0, 20);
-  display.println("Pass: password123");
+  display.println("Pass: password@123");
   display.setCursor(0, 30);
   display.print("IP: ");
   display.println(apIP);

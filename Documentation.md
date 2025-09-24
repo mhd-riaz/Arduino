@@ -385,9 +385,14 @@ curl -X POST http://192.168.1.100/schedule \
 }
 ```
 
+
 **Features**:
 - **Automatic Reconnection**: ESP32 will attempt to connect to new network
 - **Fallback**: If connection fails, reverts to AP mode
+- **AP Mode for Configuration**: If the ESP32 cannot connect to WiFi, it creates its own Access Point for setup:
+  - **SSID**: <your new SSID>
+  - **Password**: <your new password>
+  - **Default AP IP**: 192.168.0.1
 - **Validation**: SSID cannot be empty
 
 **Example**:
