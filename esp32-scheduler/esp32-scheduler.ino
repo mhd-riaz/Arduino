@@ -418,7 +418,7 @@ unsigned long lastWifiReconnectMillis = 0;  // Separate timing for WiFi reconnec
 // Emergency Safety System
 bool emergencyShutdown = false;
 const float EMERGENCY_TEMP_HIGH = 32.0;                        // Emergency shutdown if temperature exceeds 32°C
-const float EMERGENCY_TEMP_LOW = 20.0;                         // Emergency shutdown if temperature below 20°C
+const float EMERGENCY_TEMP_LOW = 15.0;                         // Emergency shutdown if temperature below 20°C
 bool lastEmergencyState = false;                               // Cache to avoid redundant operations
 unsigned long emergencyActivatedTime = 0;                      // Track when emergency was activated
 const unsigned long EMERGENCY_RESET_TIME_MS = 30 * 60 * 1000;  // Auto-reset emergency after 30 minutes
@@ -543,8 +543,8 @@ void setup() {
   Serial.println(F("\n[SETUP] Starting ESP32 Fish Tank Automation System..."));
   Serial.printf(F("[SETUP] CPU Frequency: %dMHz\n"), getCpuFrequencyMhz());
 
-  // Add 2-second startup delay with beep indicator
-  delay(2000);
+  // Add 1-second startup delay with beep indicator
+  delay(1000);
 
   // Configure Buzzer Pin early for startup beep (ESP32 Core compatible)
   BUZZER_INIT(BUZZER_PIN, 1000, 8);  // Cross-compatible initialization
