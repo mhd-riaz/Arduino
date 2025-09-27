@@ -874,7 +874,7 @@ void loop() {
   }
 #endif
 
-  // Update OLED display periodically
+  // Update OLED display periodically (for time updates when no state changes)
   if ((long)(millis() - lastOLEDUpdateMillis) >= OLED_UPDATE_INTERVAL_MS) {
     updateOLED(now);
     lastOLEDUpdateMillis = millis();
@@ -1338,6 +1338,9 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
   if (app.currentState != targetState) {
     app.currentState = targetState;
     setRelayState(app.pin, app.currentState);  // Use configurable relay control
+    // Immediately update OLED to reflect the change
+    DateTime now = rtc.now();
+    updateOLED(now);
 // Only log state changes for critical events (temperature control) or if debug mode
 #if DEBUG_MODE
     Serial.printf("[CONTROL] %s: %s\n", app.name.c_str(), (app.currentState == ON ? "ON" : "OFF"));
@@ -1517,6 +1520,9 @@ void handleStatus(AsyncWebServerRequest *request) {
       }
     }
   }
+
+  // Update OLED to ensure it matches the API response
+  updateOLED(now);
 
   String response;
   serializeJson(doc, response);
