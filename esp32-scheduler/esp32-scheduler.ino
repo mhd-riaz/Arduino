@@ -570,15 +570,23 @@ void setup() {
   Serial.println(F("[I2C] I2C bus initialized."));
 #endif
 
+  int i = 0;
   // Initialize RTC
   if (!rtc.begin()) {
     Serial.println(F("[ERROR] RTC not found!"));
     // Sound continuous error buzzer to alert user
     while (1) {
+      i++;
       BUZZER_TONE(BUZZER_PIN, 3000);  // 3kHz error tone
       delay(800);                     // Buzz for 800ms
       BUZZER_OFF(BUZZER_PIN);         // Turn off
       delay(1000);                    // Wait 1 second before next buzz
+
+      // Restart ESP if RTC not found
+      if (i >= 10) {
+        delay(1000);
+        ESP.restart();
+      }
     }
   }
   // Use rtc.lostPower() to check if RTC lost power and set time if needed
