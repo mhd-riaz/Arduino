@@ -2,7 +2,7 @@
 // ESP32 Fish Tank Automation System (Arduino Sketch)
 // Version: 3.0 - Commercial Product Design (5-Device System)
 // Author: mhd-riaz
-// Date: September 23, 2025
+// Date: September 27, 2025
 //
 // Description:
 // Commercial fish tank automation system designed as an end-user product.
@@ -418,7 +418,7 @@ unsigned long lastWifiReconnectMillis = 0;  // Separate timing for WiFi reconnec
 // Emergency Safety System
 bool emergencyShutdown = false;
 const float EMERGENCY_TEMP_HIGH = 32.0;                        // Emergency shutdown if temperature exceeds 32°C
-const float EMERGENCY_TEMP_LOW = 15.0;                         // Emergency shutdown if temperature below 20°C
+const float EMERGENCY_TEMP_LOW = 15.0;                         // Emergency shutdown if temperature below 15°C
 bool lastEmergencyState = false;                               // Cache to avoid redundant operations
 unsigned long emergencyActivatedTime = 0;                      // Track when emergency was activated
 const unsigned long EMERGENCY_RESET_TIME_MS = 30 * 60 * 1000;  // Auto-reset emergency after 30 minutes
