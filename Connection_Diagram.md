@@ -17,9 +17,9 @@ This document provides professional connection diagrams for the ESP32 Fish Tank 
 | **11** | D14/A16 | GPIO Output | DS18B20 Data | J4 | Temperature sensor |
 | **13** | D13/A14 | GPIO Output | Buzzer Control | J8 | Alert buzzer |
 | **15** | VIN | Power Input | 5V Customer ERD | J1 | Main power input |
-| **21** | D16 | GPIO Output | Filter Relay | J5-1 | Main filter control |
-| **22** | D17 | GPIO Output | CO2 Relay | J5-2 | CO2 system control |
-| **23** | D18 | GPIO Output | HangOn Filter | J5-3 | Backup filter control |
+| **21** | D16 | GPIO Output | CO2 Relay | J5-2 | CO2 system control |
+| **22** | D17 | GPIO Output | HangOn Filter | J5-3 | Backup filter control |
+| **23** | D18 | GPIO Output | Filter Relay | J5-1 | Main filter control |
 | **24** | D5 | GPIO Output | Light Relay | J5-4 | Lighting control |
 | **25** | D19 | GPIO Output | Heater Relay | J5-5 | Temperature control |
 | **26** | D21/SDA | I2C Data | RTC + OLED SDA | J3-2 | I2C communication |
@@ -107,11 +107,11 @@ GND ─────────────────────────�
 
 ```
 Relay Module Control Inputs:
-ESP32 Pin 21 (D16) ───── 330Ω ───── IN1 (Filter)
-ESP32 Pin 22 (D17) ───── 330Ω ───── IN2 (CO2)
-ESP32 Pin 24 (D18) ───── 330Ω ───── IN3 (Light)
+ESP32 Pin 23 (D18) ───── 330Ω ───── IN1 (Filter)
+ESP32 Pin 21 (D16) ───── 330Ω ───── IN2 (CO2)
+ESP32 Pin 24 (D5) ───── 330Ω ───── IN3 (Light)
 ESP32 Pin 25 (D19) ───── 330Ω ───── IN4 (Heater)
-ESP32 Pin 23 (D5)  ───── 330Ω ───── IN5 (HangOn Filter)
+ESP32 Pin 22 (D17) ───── 330Ω ───── IN5 (HangOn Filter)
                                     IN6 (Not Used)
                                     IN7 (Not Used)
                                     IN8 (Not Used)

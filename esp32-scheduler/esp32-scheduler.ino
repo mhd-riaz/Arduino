@@ -267,28 +267,28 @@
 // 1.6. PROGMEM String Literals (Memory Optimization)
 // ============================================================================
 // Store frequently used strings in flash memory to save RAM
-const char PROGMEM STR_OK[] = "OK";
-const char PROGMEM STR_ERROR[] = "Error";
-const char PROGMEM STR_SUCCESS[] = "Success";
-const char PROGMEM STR_INVALID[] = "Invalid";
-const char PROGMEM STR_JSON_PARSE_ERROR[] = "JSON parse error";
-const char PROGMEM STR_MISSING_PARAMS[] = "Missing required parameters";
-const char PROGMEM STR_INVALID_API_KEY[] = "Invalid API key";
-const char PROGMEM STR_APPLIANCE_NOT_FOUND[] = "Appliance not found";
+// const char PROGMEM STR_OK[] = "OK";
+// const char PROGMEM STR_ERROR[] = "Error";
+// const char PROGMEM STR_SUCCESS[] = "Success";
+// const char PROGMEM STR_INVALID[] = "Invalid";
+// const char PROGMEM STR_JSON_PARSE_ERROR[] = "JSON parse error";
+// const char PROGMEM STR_MISSING_PARAMS[] = "Missing required parameters";
+// const char PROGMEM STR_INVALID_API_KEY[] = "Invalid API key";
+// const char PROGMEM STR_APPLIANCE_NOT_FOUND[] = "Appliance not found";
 const char PROGMEM STR_CONTENT_TYPE_JSON[] = "application/json";
-const char PROGMEM STR_ACCESS_CONTROL[] = "Access-Control-Allow-Origin";
-const char PROGMEM STR_WILDCARD[] = "*";
+// const char PROGMEM STR_ACCESS_CONTROL[] = "Access-Control-Allow-Origin";
+// const char PROGMEM STR_WILDCARD[] = "*";
 
 
 // ============================================================================
 // 2. Pin Definitions
 // ============================================================================
 // Appliance Relay Pins (Final GPIO assignments for 5-device system)
-#define MOTOR_RELAY_PIN 16    // Main Filter (Primary filtration system)
-#define CO2_RELAY_PIN 17      // CO2 System (CO2 injection for plants)
+#define MOTOR_RELAY_PIN 18    // Main Filter (Primary filtration system)
+#define CO2_RELAY_PIN 16      // CO2 System (CO2 injection for plants)
 #define LIGHT_RELAY_PIN 5     // Aquarium Lights (LED lighting system)
 #define HEATER_RELAY_PIN 19   // Water Heater (Temperature control)
-#define HANGON_FILTER_PIN 18  // Hang-on Filter (Secondary filtration)
+#define HANGON_FILTER_PIN 17  // Hang-on Filter (Secondary filtration)
 
 // Relay Configuration
 // Set to true for Active LOW relays (LOW = ON, HIGH = OFF) - Most common
@@ -353,7 +353,7 @@ unsigned long heaterOnTimeMillis = 0;                         // Tracks when hea
 bool heaterForcedOn = false;                                  // Flag indicating temperature-controlled heater state
 bool lastHeaterState = false;                                 // Cache last heater state to avoid redundant operations
 int temperatureReadFailures = 0;                              // Track consecutive temperature read failures
-const int MAX_TEMP_FAILURES = 8;                              // Max consecutive failures before emergency (2+ minutes)
+const int MAX_TEMP_FAILURES = 5;                              // Reduced from 8 for memory optimization
 int temperatureRecoveryCount = 0;                             // Track successful readings after failures
 const int MIN_RECOVERY_READINGS = 3;                          // Require 3 good readings to clear emergency
 
@@ -382,11 +382,11 @@ struct Appliance {
 
 // Array of 5 appliance objects with custom configurations
 Appliance appliances[] = {
-  { "Filter", MOTOR_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },         // Primary filtration (GPIO 16)
-  { "CO2", CO2_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },              // CO2 injection system (GPIO 17)
-  { "Light", LIGHT_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },          // LED lighting system (GPIO 18)
+  { "Filter", MOTOR_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },         // Primary filtration (GPIO 18)
+  { "CO2", CO2_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },              // CO2 injection system (GPIO 16)
+  { "Light", LIGHT_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },          // LED lighting system (GPIO 5)
   { "Heater", HEATER_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },        // Water heater with temp control (GPIO 19)
-  { "HangOnFilter", HANGON_FILTER_PIN, OFF, OFF, OFF, 0, SCHEDULED }  // Secondary hang-on filter (GPIO 5)
+  { "HangOnFilter", HANGON_FILTER_PIN, OFF, OFF, OFF, 0, SCHEDULED }  // Secondary hang-on filter (GPIO 17)
 };
 const int NUM_APPLIANCES = sizeof(appliances) / sizeof(appliances[0]);
 
@@ -397,7 +397,7 @@ std::map<String, std::vector<ScheduleEntry>> applianceSchedules;
 String postBody = "";
 
 // Debug and logging configuration
-#define DEBUG_MODE true  // Set to true for development, false for production to save memory
+#define DEBUG_MODE false  // Set to true for development, false for production to save memory
 unsigned long lastDebugPrintMillis = 0;
 const unsigned long DEBUG_PRINT_INTERVAL_MS = 30000;  // Print debug info every 30 seconds (reduced frequency)
 
@@ -412,7 +412,7 @@ const unsigned long WIFI_CONNECT_TIMEOUT_MS = 30000;  // 30 seconds for connecti
 bool wifiConnected = false;
 bool apModeActive = false;
 int wifiReconnectAttempts = 0;              // Track reconnection attempts
-const int MAX_WIFI_RECONNECT_ATTEMPTS = 5;  // Max attempts before giving up
+const int MAX_WIFI_RECONNECT_ATTEMPTS = 3;  // Reduced from 5 for memory optimization
 unsigned long lastWifiReconnectMillis = 0;  // Separate timing for WiFi reconnection
 
 // Emergency Safety System
@@ -433,12 +433,12 @@ enum EmergencyReason {
 EmergencyReason currentEmergencyReason = NO_EMERGENCY;
 
 // System Health Monitoring & Alert System
-unsigned long lastSystemHeartbeat = 0;
-unsigned long lastLoopTime = 0;
-const unsigned long SYSTEM_WATCHDOG_TIMEOUT_MS = 90000;  // 90 seconds
-const unsigned long LOOP_HANG_TIMEOUT_MS = 45000;        // 45 seconds
-bool systemHealthOK = true;
-bool alertSounded = false;
+// unsigned long lastSystemHeartbeat = 0;
+// unsigned long lastLoopTime = 0;
+// const unsigned long SYSTEM_WATCHDOG_TIMEOUT_MS = 90000;  // 90 seconds
+// const unsigned long LOOP_HANG_TIMEOUT_MS = 45000;        // 45 seconds
+// bool systemHealthOK = true;
+// bool alertSounded = false;
 
 // Schedule caching for performance
 bool schedulesDirty = false;  // Flag to track if schedules need saving
@@ -451,14 +451,14 @@ const unsigned long SCHEDULE_SAVE_DELAY_MS = 5000;  // Save schedules 5 seconds 
 // Core System Functions
 void connectWiFi();
 void startAPMode();
-void buzz(int count, int delayMs);
-void buzzPattern(int pattern);
+// void buzz(int count, int delayMs);
+// void buzzPattern(int pattern);
 void syncTimeNTP();
 
 // System Health Monitoring
-void updateSystemHeartbeat();
-void checkSystemHealth();
-void alertSystemFailure(const char *reason);
+// void updateSystemHeartbeat();
+// void checkSystemHealth();
+// void alertSystemFailure(const char *reason);
 
 // Schedule Management
 void loadSchedules();
@@ -489,7 +489,7 @@ void handleWifiConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len,
 void handleNotFound(AsyncWebServerRequest *request);
 void handleEmergencyReset(AsyncWebServerRequest *request);
 void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
-void handleForceRefresh(AsyncWebServerRequest *request);
+// void handleForceRefresh(AsyncWebServerRequest *request);
 
 // ============================================================================
 // 4.5. Relay Control Helper Functions
@@ -518,14 +518,21 @@ int getRelayOnState() {
  */
 void setRelayState(int pin, ApplianceState state) {
   // Cache the current GPIO state to avoid redundant writes
-  static int lastPinStates[40] = { -1 };  // ESP32 has up to 40 GPIO pins, initialize to invalid state
-
+  static int lastPinStates[5] = { -1, -1, -1, -1, -1 };  // Only track our 5 relay pins
+  static const int relayPins[5] = {18, 16, 5, 19, 17};  // Our actual relay pins
+  
   int newState = (state == ON) ? getRelayOnState() : getRelayOffState();
 
-  // Only write if state has changed
-  if (pin < 40 && lastPinStates[pin] != newState) {
-    digitalWrite(pin, newState);
-    lastPinStates[pin] = newState;
+  // Find the pin index in our array
+  for (int i = 0; i < 5; i++) {
+    if (relayPins[i] == pin) {
+      // Only write if state has changed
+      if (lastPinStates[i] != newState) {
+        digitalWrite(pin, newState);
+        lastPinStates[i] = newState;
+      }
+      break;
+    }
   }
 }
 
@@ -714,7 +721,7 @@ void setup() {
       // Response will be sent by the body handler
     },
     NULL, handleResetToSchedule);
-  server.on("/refresh", HTTP_POST, handleForceRefresh);
+  // server.on("/refresh", HTTP_POST, handleForceRefresh);
   server.onNotFound(handleNotFound);
 
   // Start the server
@@ -1307,9 +1314,15 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
   // 3. Intelligent Heater Temperature Logic (highest priority - overrides everything)
   if (app.name == "Heater") {
     if (tempSensorError) {
-      // Sensor error: override to scheduled state, do not use temp logic
-      targetState = app.scheduledState;
-      app.currentMode = SCHEDULED;
+      // Sensor error: allow manual overrides to take precedence (user is always priority)
+      // Only fall back to scheduled state if no active override
+      if (app.overrideEndTime == 0) {
+        targetState = app.scheduledState;
+        app.currentMode = SCHEDULED;
+      } else {
+        // Keep override state as set above
+        app.currentMode = OVERRIDDEN;
+      }
       heaterForcedOn = false;
       heaterOnTimeMillis = 0;
     } else if (currentTemperatureC > 0) {
@@ -1964,24 +1977,6 @@ void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t
     delay(1000);  // Allow response to be sent
     ESP.restart();
   }
-}
-
-/**
- * @brief Handles the "/refresh" POST endpoint. Forces immediate re-evaluation of all appliances.
- */
-void handleForceRefresh(AsyncWebServerRequest *request) {
-  if (!authenticateRequest(request)) return;
-
-  DateTime now = rtc.now();
-  int currentMinutes = now.hour() * 60 + now.minute();
-
-  // Force re-evaluation of all appliances
-  for (int i = 0; i < NUM_APPLIANCES; i++) {
-    applyApplianceLogic(appliances[i], currentMinutes);
-  }
-
-  Serial.println("[API] Forced refresh of all appliances completed");
-  request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"All appliances refreshed with current schedules\"}\n");
 }
 
 /**

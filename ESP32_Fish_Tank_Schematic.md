@@ -103,10 +103,10 @@ The system is designed as a professional control PCB with external customer-prov
 | 4-16 | D34 | Not Connected | RXD | Not Connected |
 | 5-15 | D35 | Not Connected | D21 | I2C SDA (via R2) |
 | 6-14 | D32 | Not Connected | D19 | Heater Relay (via R7) |
-| 7-13 | D33 | Not Connected | D18 | Light Relay (via R6) |
-| 8-12 | D25 | Not Connected | D5 | HangOn Filter Relay (via R8) |
-| 9-11 | D26 | Not Connected | D17 | CO2 Relay (via R5) |
-| 10-10 | D27 | Not Connected | D16 | Filter Relay (via R4) |
+| 7-13 | D33 | Not Connected | D18 | Filter Relay (via R4) |
+| 8-12 | D25 | Not Connected | D5 | Light Relay (via R6) |
+| 9-11 | D26 | Not Connected | D17 | HangOn Filter Relay (via R8) |
+| 10-10 | D27 | Not Connected | D16 | CO2 Relay (via R5) |
 | 11-9 | D14 | DS18B20 Data (via R9) | D4 | Not Connected |
 | 12-8 | D12 | Not Connected | D0 | Not Connected |
 | 13-7 | D13 | Buzzer (via R10) | D2 | Status LED |
@@ -141,11 +141,11 @@ The system is designed as a professional control PCB with external customer-prov
 | VCC | ESP32 5V (VIN) |
 | GND | System GND |
 | JD-VCC | 12V External Supply |
-| IN1 | GPIO 16 (Filter) via R4 |
-| IN2 | GPIO 17 (CO2) via R5 |
+| IN1 | GPIO 18 (Filter) via R4 |
+| IN2 | GPIO 16 (CO2) via R5 |
 | IN3 | GPIO 5 (Light) via R6 |
 | IN4 | GPIO 19 (Heater) via R7 |
-| IN5 | GPIO 18 (HangOn Filter) via R8 |
+| IN5 | GPIO 17 (HangOn Filter) via R8 |
 | IN6-IN8 | Not Connected |
 
 #### DS18B20 Temperature Sensor (U5)
@@ -333,11 +333,11 @@ Connector: JST XH 2.54mm 3-pin
 
 ### J5: Relay Control Interface
 ```
-Pin 1: Filter (GPIO 16)
-Pin 2: CO2 (GPIO 17)
+Pin 1: Filter (GPIO 18)
+Pin 2: CO2 (GPIO 16)
 Pin 3: Light (GPIO 5)
 Pin 4: Heater (GPIO 19)
-Pin 5: HangOn Filter (GPIO 18)
+Pin 5: HangOn Filter (GPIO 17)
 Pin 6: Buzzer (GPIO 13)
 Pin 7: Status LED (GPIO 2)
 Pin 8: GND
