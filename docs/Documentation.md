@@ -560,7 +560,7 @@ curl -X GET http://192.168.1.100/restart \
 
 ### Commercial Safety Systems
 - **Temperature Protection**: Emergency shutdown if temp >32°C or <20°C to protect aquatic life
-- **Sensor Monitoring**: Automatic emergency response if DS18B20 sensor fails (8+ consecutive failures)
+- **Sensor Monitoring**: When DS18B20 sensor fails (reads -127.0°C), system allows manual heater overrides to take precedence while displaying warning on OLED. No automatic shutdown occurs.
 - **Auto-Recovery**: System automatically resumes normal operation when conditions are safe
 - **Manual Reset**: Emergency can be manually reset via API for professional servicing
 
@@ -721,11 +721,12 @@ async function factoryReset() {
    - Use `/emergency/reset` to manually reset
 
 ### Debug Information
-- Enable debug mode in firmware for detailed serial output
-- Monitor serial console at 115200 baud for system logs
-- OLED display shows real-time system status
+- Production firmware has DEBUG_MODE=false to optimize memory usage
+- For development/debugging, set DEBUG_MODE=true in firmware to enable detailed serial output
+- Monitor serial console at 115200 baud for system logs (when debug mode enabled)
+- OLED display shows real-time system status including temperature sensor warnings
 
 ---
 
-*Generated for ESP32 Fish Tank Automation System v2.0*  
-*Last Updated: August 24, 2025*
+*Generated for ESP32 Fish Tank Automation System v3.0*  
+*Last Updated: September 28, 2025*

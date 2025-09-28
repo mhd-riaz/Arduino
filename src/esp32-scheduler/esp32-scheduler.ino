@@ -1,167 +1,139 @@
 // ============================================================================
 // ESP32 Fish Tank Automation System (Arduino Sketch)
-// Version: 3.0 - Commercial Product Design (5-Device System)
+// Version: 3.0 - Smart Fish Tank Controller
 // Author: mhd-riaz
-// Date: September 27, 2025
+// Date: September 28, 2025
 //
-// Description:
-// Commercial fish tank automation system designed as an end-user product.
-// Controls five appliances (Filter, CO2, Light, Heater, HangOnFilter) with
-// intelligent scheduling, temperature control, and REST API management.
-// Designed for plug-and-play operation with external power supplies.
+// What this program does:
+// This is a smart system that automatically controls a fish tank!
+// It can turn lights on/off, run filters, add CO2 for plants, and control heater temperature.
+// It uses WiFi to let you control everything from your phone or computer.
 //
-// Commercial Product Features:
-// - Professional control PCB with modular external power supplies
-// - Customer provides: SMPS 12V/2A + ERD Charger 5V/2A + 6A MCB protection
-// - Control of 5 appliances via professional relay interface
-// - Custom optimized schedules with minute-based timing for efficiency
-// - DS3231 RTC for accurate timekeeping, synchronized with NTP
-// - DS18B20 temperature sensor for intelligent heater control (25-29°C range)
-// - 0.96" Blue OLED Display for real-time status monitoring
-// - 12V 8-channel optocoupler relay module for appliance control
-// - ESP32 WiFi with automatic fallback to AP mode for setup
-// - REST API server with JSON interface for remote management
-// - Non-Volatile Storage (NVS) for settings persistence
-// - Temperature-controlled heater with 30-minute minimum runtime
-// - Emergency safety system for extreme temperature conditions
-// - Memory optimized for production reliability
-// - Audio feedback system with buzzer alerts
-// - Professional installation with MCB protection
-// - Default REST API key: "Automate@123"
+// Main Features:
+// - Controls 5 things: Filter, CO2, Light, Heater, and extra Filter
+// - Uses a clock (RTC) to know what time it is
+// - Measures water temperature with a special sensor
+// - Connects to WiFi for remote control
+// - Shows status on a small screen (OLED)
+// - Has a REST API for phone/computer control
+// - Saves settings even when power is off
+// - Makes beeps to tell you what's happening
+// - Has safety features to protect your fish
 //
-// Power Supply Architecture (Customer Provides):
-// AC Mains (240V) → [6A MCB] → External Power Supplies → Control PCB
-// - ERD Charger 5V/2A → ESP32 System (via control PCB)
-// - SMPS 12V/2A → Relay Module (via control PCB)
-// - Direct AC → Appliances (via relay contacts)
+// How it works:
+// 1. Connects to your WiFi (or creates its own hotspot)
+// 2. Reads the current time from the clock module
+// 3. Checks water temperature
+// 4. Decides what to turn on/off based on time and temperature
+// 5. Shows status on the screen
+// 6. Lets you control it remotely via web requests
 //
-// Components Used:
-// - ESP32 Dev Module (38-pin) - Main controller
-// - DS3231 RTC - Accurate timekeeping
-// - DS18B20 temperature sensor - Water temperature monitoring
-// - 0.96" OLED Display (SSD1306) - Status display
-// - 8-channel 12V optocoupler relay module - Appliance control
-// - Buzzer - Audio feedback
-// - External SMPS 12V/2A - Relay power supply (customer provides)
-// - External ERD Charger 5V/2A - ESP32 power supply (customer provides)
-// - 6A MCB - AC mains protection (customer installs)
+// Hardware needed:
+// - ESP32 microcontroller (the brain)
+// - DS3231 clock module (to keep time)
+// - DS18B20 temperature sensor (to measure water temp)
+// - SSD1306 OLED screen (to show information)
+// - 8-channel relay module (to control power to devices)
+// - Buzzer (to make sounds)
+// - Power supplies (5V and 12V)
 //
-// Professional Pinout (Control PCB Design):
-// - DS3231 RTC: SDA (GPIO 21), SCL (GPIO 22)
-// - OLED Display: SDA (GPIO 21), SCL (GPIO 22)
-// - DS18B20 Temp Sensor: DQ (GPIO 14) with 4.7KΩ pull-up to 3.3V
-// - Professional Relay Interface:
-//   - IN1 (Filter): GPIO 16 - Main filtration system (20W pump)
-//   - IN2 (CO2): GPIO 17 - CO2 injection system (15W pump)
-//   - IN3 (Light): GPIO 5 - Aquarium lighting (40W LED)
-//   - IN4 (Heater): GPIO 19 - Water heater (200W)
-//   - IN5 (HangOnFilter): GPIO 18 - Secondary filter (20W)
-//   - Relay type: Active LOW (professional optocoupler modules)
-// - Buzzer: GPIO 13 (PWM capable) - Professional audio feedback
-//
-//
-// Libraries Required:
-// - WiFi (Built-in ESP32)
-// - ESPAsyncWebServer (https://github.com/me-no-dev/ESPAsyncWebServer)
-// - AsyncTCP (https://github.com/me-no-dev/AsyncTCP) - Dependency for ESPAsyncWebServer
-// - Preferences (Built-in ESP32)
-// - Wire (Built-in Arduino)
-// - RTClib (https://github.com/adafruit/RTClib)
-// - OneWire (https://github.com/PaulStoffregen/OneWire)
-// - DallasTemperature (https://github.com/milesburton/Arduino-Temperature-Control-Library)
-// - Adafruit GFX Library (https://github.com/adafruit/Adafruit-GFX-Library)
-// - Adafruit SSD1306 (https://github.com/adafruit/Adafruit_SSD1306)
-// - ArduinoJson (https://github.com/bblanchon/ArduinoJson) - Version 6+ recommended
-// - NTPClient (https://github.com/arduino-libraries/NTPClient)
-// - map (for std::map)
-// - driver/ledc.h (for ESP32 Core 2.x/3.0+ compatibility) - Cross-compatible buzzer API
-//
-// ESP32 Arduino Core Compatibility:
-// - ESP32 Arduino Core 2.x and 3.0+ supported via compatibility layer
-// - Automatic detection and cross-compatible buzzer functions (tone/LEDC)
-//
-// Important Notes:
-// - Ensure `Preferences.h` is used for NVS.
-// - All timing operations use `millis()` for non-blocking behavior.
-// - Schedules optimized to use minute-based timing (0-1439) for efficiency.
-// - Relays are configurable via RELAY_ACTIVE_LOW define (true = Active LOW, false = Active HIGH).
-// - Heater control prioritizes temperature over schedule/override with 30-min minimum runtime.
-// - `ArduinoJson` v6 using JsonDocument for dynamic memory management.
-// - Default custom schedules are loaded if NVS is empty.
-// - Emergency safety system activates on extreme temperatures (>32°C or <20°C).
-// - Memory optimized with reduced OLED update frequency (2-second intervals).
-// - The system attempts to connect to saved WiFi. If unsuccessful, it
-//   starts an Access Point (AP) "Fishtank_Setup" for configuration and provides audio alerts.
-// - I2C pins (SDA, SCL) are shared between RTC and OLED.
-// - A 4.7KΩ pull-up resistor is required for the DS18B20 data line to 3.3V.
-// - For the relay module, use a separate 12V power supply for JD-VCC and
-//   remove the VCC-JD-VCC jumper for opto-isolation.
+// Safety Note:
+// This system controls electricity! Always be careful with power connections.
+// Have an adult help you, and never work on live electrical circuits.
 //
 // ============================================================================
-// COMMERCIAL PRODUCT CIRCUIT PROTECTION & SAFETY (INDIA-SPECIFIC)
+// TABLE OF CONTENTS (What Each Part Does)
 // ============================================================================
 //
-// COMMERCIAL INSTALLATION: Customer provides external power supplies and protection.
-// This professional control PCB requires proper electrical installation by qualified electrician.
-// Indian electrical environment protection requirements:
-// - Voltage fluctuations (190V-250V AC mains)
-// - Power surges during monsoons and grid switching
-// - Frequent power outages and restoration spikes
+// 1. SAFETY INFO ..................... Lines 102-210
+//    - Explains electrical safety and protection
+//    - Lists all the parts you need
+//    - Tells you how to wire everything safely
 //
-// CUSTOMER-PROVIDED PROTECTION COMPONENTS:
+// 2. LIBRARIES ....................... Lines 212-248
+//    - Includes code from other smart people
+//    - These libraries do the hard work for us
 //
-// 1. MAINS POWER PROTECTION (240V AC Side - Customer Installation):
-//    - Main Circuit Breaker: 6A MCB (Miniature Circuit Breaker) - Customer provides
-//    - Surge Protection Device (SPD): Metal Oxide Varistor 275V - Customer provides
-//    - Earth Leakage Circuit Breaker (ELCB): 30mA for safety - Customer provides
+// 3. SETTINGS & RULES ................ Lines 250-318
+//    - Defines all the pins and connections
+//    - Sets up timing and temperature rules
+//    - Configures how everything works
 //
-// 2. EXTERNAL POWER SUPPLIES (Customer Provides):
-//    - SMPS 12V/2A: Relay power supply - Customer purchases and installs
-//    - ERD Charger 5V/2A: ESP32 power supply - Customer purchases and installs
-//    - Customer responsible for proper electrical installation and protection
+// 4. DATA STRUCTURES ................ Lines 320-448
+//    - Defines what information we store
+//    - Creates templates for our data
+//    - Sets up variables we use throughout
 //
-// 3. CONTROL PCB DC PROTECTION (Built into Product):
-//    - 12V Rail Fuse: 3A slow-blow fuse (T3AL250V) - Built into PCB
-//    - TVS Diode: 1N4744A (15V Zener, THT) - Built into PCB
-//    - Filter Capacitor: 470µF/25V electrolytic - Built into PCB
-//    - Ferrite Bead: BLM18PG221SN1D (220Ω@100MHz) on 12V input line for EMI - Built into PCB
+// 5. HELPER FUNCTIONS ................ Lines 450-548
+//    - Small functions that do specific jobs
+//    - Like turning relays on/off safely
 //
-// 4. ESP32 5V SUPPLY PROTECTION (Built into Product):
-//    - Primary Supply: ERD charger (5V/2A max) - Customer provides
-//    - Input Fuse: 2.5A slow-blow fuse (T2.5AL250V) - Built into PCB
-//    - Reverse Polarity Protection: Schottky diode 1N5819 (3A/40V) - Built into PCB
-//    - Input Filter: 470µF/25V electrolytic (C1, C5) - Built into PCB
-//    - ESP32 Power: Direct 5V to ESP32 Dev Module VIN pin - Built into PCB
-//    - TVS Surge Protection: 1N4744A (15V Zener) across 5V rail - Built into PCB
-//    - EMI Filter: Ferrite bead (BLM18PG221SN1D) on 5V input line - Built into PCB
+// 6. SETUP FUNCTION .................. Lines 549-748
+//    - Runs once when the system starts
+//    - Initializes all hardware and connections
+//    - Gets everything ready to work
 //
-// 5. GPIO & SIGNAL PROTECTION (Built into Product):
-//    - Current Limiting Resistors: 330Ω on GPIO outputs to relays (R4-R8) - Built into PCB
-//    - Pull-up Resistors: 4.7kΩ for I2C buses (R2, R3) and OneWire (R1) - Built into PCB
-//    - Ferrite beads for EMI suppression on power lines - Built into PCB
+// 7. MAIN LOOP ....................... Lines 750-848
+//    - Runs forever while system is on
+//    - Checks temperature, time, and controls devices
+//    - Updates the screen and handles web requests
 //
-// 6. RELAY ISOLATION & PROTECTION (Relay Module Features):
-//    - Optical Isolation: PC817 optocouplers (relay module feature)
-//    - Flyback Protection: 1N4007 diodes across relay coils (relay module feature)
-//    - Separate power domains: 12V relay power isolated from 5V logic power
+// 8. WIFI MANAGEMENT ................ Lines 850-1098
+//    - Connects to your home WiFi
+//    - Creates hotspot if WiFi fails
+//    - Handles network communication
 //
-// 7. SYSTEM SAFETY FEATURES (Built into Product):
-//    - Software temperature monitoring via DS18B20
-//    - Emergency shutdown on extreme temperatures (>32°C or <20°C)
-//    - Watchdog timer (ESP32 built-in software watchdog)
-//    - Safe relay defaults (all OFF on startup)
+// 9. WEB API ENDPOINTS .............. Lines 1100-1298
+//    - Responds to web requests from phones/computers
+//    - Lets you control the system remotely
 //
-// COMMERCIAL PRODUCT FUSE SPECIFICATIONS:
-// - Customer AC Protection: 6A MCB (C-curve, 6kA breaking capacity) - Customer provides
-// - 12V Rail Protection: 3A Slow-blow ceramic fuse (T3AL250V) - Built into PCB
-// - 5V Rail Protection: 2.5A Slow-blow ceramic fuse (T2.5AL250V) - Built into PCB
+// 10. DEVICE CONTROL ................ Lines 1300-1498
+//    - Decides when to turn devices on/off
+//    - Handles schedules and temperature control
 //
-// CUSTOMER INSTALLATION REQUIREMENTS:
-// - Proper earthing connection to water-safe earth rod - Customer responsibility
-// - Star grounding topology (single point ground) - Installation requirement
-// - Separate analog and digital ground planes - Built into PCB design
-// - Use GFCI/RCD protection for any water-contact equipment - Customer responsibility
-// - Professional electrical installation by qualified electrician - Customer responsibility
+// 11. TEMPERATURE SYSTEM ............ Lines 1500-1698
+//    - Reads temperature sensor
+//    - Controls the heater automatically
+//
+// 12. SCREEN DISPLAY ................ Lines 1700-1898
+//    - Shows information on the OLED screen
+//    - Updates time, temperature, and device status
+//
+// 13. SAFETY SYSTEMS ................ Lines 1900-1998
+//    - Protects fish if temperature is too high/low
+//    - Handles emergency situations
+//
+// 14. SCHEDULE MANAGEMENT ........... Lines 2000-end
+//    - Saves and loads device schedules
+//    - Lets you customize when things turn on/off
+//
+// ============================================================================
+// SAFETY FIRST! ⚠️ ELECTRICAL SAFETY INFORMATION
+// ============================================================================
+//
+// IMPORTANT: This project uses electricity! Always be careful and get help from an adult.
+//
+// Why safety matters:
+// - Fish tanks have water, and water + electricity = DANGER!
+// - We need to protect you, your fish, and your home
+// - Always follow these safety rules
+//
+// What you need (provided by customer/adult):
+// 1. Main Power Breaker: 6A MCB (like a safety switch for your home)
+// 2. Power Supplies: 5V charger (like phone charger) + 12V power supply
+// 3. Surge Protector: Protects against lightning and power spikes
+// 4. Ground Fault Circuit Interrupter (GFCI): Shuts off if there's a problem
+//
+// Our PCB (Printed Circuit Board) has built-in safety:
+// - Fuses: Like circuit breakers that burn out to protect circuits
+// - Diodes: One-way valves for electricity to prevent damage
+// - Resistors: Control how much electricity flows
+// - Filters: Clean up electrical noise
+//
+// How electricity flows safely:
+// House Power (240V) → Breaker → Power Supplies → Our PCB → Devices
+//                    ↓
+//              Surge Protection
 //
 // ============================================================================
 // HARDWARE PROTECTION COMPONENTS SHOPPING LIST:
@@ -212,61 +184,43 @@
 // ============================================================================
 
 // ============================================================================
-// 1. Include Libraries
+// 2. LIBRARIES - BORROWING SMART CODE FROM OTHERS
 // ============================================================================
-#include <WiFi.h>
-#include <ESPAsyncWebServer.h>
-#include <AsyncTCP.h>
-#include <Preferences.h>
-#include <Wire.h>
-#include <RTClib.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-#include <ArduinoJson.h>
-#include <NTPClient.h>
-#include <WiFiUdp.h>
-#include <map>            // Required for std::map
-#include <driver/ledc.h>  // Include for both ESP32 Core 2.x and 3.0+ compatibility
-
+//
+// Libraries are like toolboxes full of helpful code that other smart people wrote.
+// Instead of writing everything from scratch, we "borrow" their code to make ours work.
+// This is called "standing on the shoulders of giants" - using what others built.
+//
+// WiFi Library: Lets our ESP32 connect to the internet and WiFi networks
+// Web Server Library: Creates a website that runs on our ESP32 for remote control
+// Storage Library: Saves our settings even when power is turned off
+// Clock Library: Helps us talk to the real-time clock module
+// Temperature Library: Reads the water temperature sensor
+// Screen Library: Controls the tiny OLED display screen
+// JSON Library: Helps us send and receive data in a format computers understand
+// Time Library: Gets accurate time from the internet
+//
+// These libraries do the hard technical work so we can focus on the fish tank logic!
+//
 // ============================================================================
-// 1.4. ESP32 Arduino Core Compatibility Layer
-// ============================================================================
-// Cross-compatibility for ESP32 Arduino Core 2.x and 3.0+
-// Core 3.0+ deprecated ledcAttach/ledcWriteTone in favor of simpler APIs
-
-#if ESP_ARDUINO_VERSION_MAJOR >= 3
-// ESP32 Arduino Core 3.0+ - Use modern tone() API
-#define BUZZER_INIT(pin, freq, resolution)  // No initialization needed for tone()
-#define BUZZER_TONE(pin, frequency) tone(pin, frequency)
-#define BUZZER_OFF(pin) noTone(pin)
-#else
-// ESP32 Arduino Core 2.x - Use legacy LEDC API
-#define BUZZER_INIT(pin, freq, resolution) ledcAttach(pin, freq, resolution)
-#define BUZZER_TONE(pin, frequency) ledcWriteTone(pin, frequency)
-#define BUZZER_OFF(pin) ledcWriteTone(pin, 0)
-#endif
-
-// ============================================================================
-// 1.5. Constants and Limits (Optimized)
-// ============================================================================
-#define MAX_POST_BODY_SIZE 1536   // Reduced from 2048 for better memory usage
-#define MAX_JSON_DOC_SIZE 2048    // Reduced from 4096 for better memory usage
-#define RESPONSE_BUFFER_SIZE 512  // Buffer for HTTP responses
-
-// Override Constants
-#define PERMANENT_OVERRIDE_VALUE ULONG_MAX  // Value used to indicate permanent override
-
-// Temperature Sensor Constants
-// #define DEVICE_DISCONNECTED_C -127.0  // DallasTemperature library constant for sensor error (already defined by DallasTemperature)
 
 
 
 // ============================================================================
-// 1.6. PROGMEM String Literals (Memory Optimization)
+// MEMORY OPTIMIZATION - SAVING COMPUTER BRAIN SPACE
 // ============================================================================
-// Store frequently used strings in flash memory to save RAM
+//
+// The ESP32 has limited memory (like a tiny brain with limited space).
+// PROGMEM means "Program Memory" - we store text in flash memory instead of RAM.
+// This saves the precious RAM for important things like calculations and data.
+//
+// Why this matters:
+// - ESP32 has only about 320KB of RAM (working memory)
+// - Flash memory has 4MB+ (permanent storage)
+// - Text strings take up RAM space we need for other things
+// - By storing strings in flash, we free up RAM for the program to work
+//
+// ============================================================================
 // const char PROGMEM STR_OK[] = "OK";
 // const char PROGMEM STR_ERROR[] = "Error";
 // const char PROGMEM STR_SUCCESS[] = "Success";
@@ -281,104 +235,64 @@ const char PROGMEM STR_CONTENT_TYPE_JSON[] = "application/json";
 
 
 // ============================================================================
-// 2. Pin Definitions
+// 3. PIN DEFINITIONS - WHERE EVERYTHING CONNECTS
 // ============================================================================
-// Appliance Relay Pins (Final GPIO assignments for 5-device system)
-#define MOTOR_RELAY_PIN 18    // Main Filter (Primary filtration system)
-#define CO2_RELAY_PIN 16      // CO2 System (CO2 injection for plants)
-#define LIGHT_RELAY_PIN 5     // Aquarium Lights (LED lighting system)
-#define HEATER_RELAY_PIN 19   // Water Heater (Temperature control)
-#define HANGON_FILTER_PIN 17  // Hang-on Filter (Secondary filtration)
-
-// Relay Configuration
-// Set to true for Active LOW relays (LOW = ON, HIGH = OFF) - Most common
-// Set to false for Active HIGH relays (HIGH = ON, LOW = OFF)
-#define RELAY_ACTIVE_LOW true  // Professional optocoupler modules are Active LOW
-
-// DS18B20 Temperature Sensor Pin
-#define ONE_WIRE_BUS 14  // DS18B20 data pin (requires 4.7KΩ pull-up to 3.3V)
-
-// Buzzer Pin (PWM capable for audio feedback)
-#define BUZZER_PIN 13
-
-// OLED Display (I2C - Shared with RTC on same bus)
-#define OLED_SDA 21
-#define OLED_SCL 22
-#define SCREEN_WIDTH 128  // OLED display width, in pixels
-#define SCREEN_HEIGHT 64  // OLED display height, in pixels
-#define OLED_RESET -1     // Reset pin # (or -1 if sharing Arduino reset pin)
-#define I2C_ADDRESS 0x3C  // Standard address for 128x64 SSD1306 displays
+//
+// The ESP32 has 38 pins (like little doors) that connect to different things.
+// We tell the computer which pin connects to what device.
+// This is like labeling wires so the computer knows where to send signals.
+//
+// Relay Pins (Control Power to Devices):
+// - MOTOR_RELAY_PIN: Controls the main water filter pump
+// - CO2_RELAY_PIN: Controls CO2 system for plants
+// - LIGHT_RELAY_PIN: Controls aquarium lights
+// - HEATER_RELAY_PIN: Controls water heater
+// - HANGON_FILTER_PIN: Controls extra filter
+//
+// Sensor Pins:
+// - ONE_WIRE_BUS: Connects to temperature sensor
+//
+// Output Pins:
+// - BUZZER_PIN: Makes beeping sounds
+//
+// Display Pins (I2C):
+// - OLED_SDA, OLED_SCL: Connect to the tiny screen
+//
+// ============================================================================
+// 4. GLOBAL MEMORY BOXES - WHERE WE STORE INFORMATION
+// ============================================================================
+//
+// Global variables are like boxes in the computer's memory where we store information.
+// The computer needs to remember things like temperature, time, and device states.
+// These boxes hold that information while the program runs.
+//
+// API Server: Handles web requests from phones/computers
+// Storage System: Saves settings even when power is off
+// Time System: Keeps track of current time (clock + internet time)
+// Temperature System: Reads and remembers water temperature
+// Heater Control: Smart logic to keep water at perfect temperature
+// Device Control: Manages all the fish tank equipment
+//
+// ============================================================================
 
 // ============================================================================
-// 3. Global Constants and Variables
+// 5. DATA STRUCTURES - ORGANIZING OUR INFORMATION
 // ============================================================================
-
-// API Server
-const char *API_KEY = "Automate@123";
-AsyncWebServer server(80);  // Web server on port 80
-
-// NVS (Non-Volatile Storage)
-Preferences preferences;
-const char *NVS_NAMESPACE_WIFI = "wifi_creds";
-const char *NVS_NAMESPACE_SCHEDULES = "app_schedules";
-const char *NVS_KEY_SSID = "ssid";
-const char *NVS_KEY_PASS = "password";
-const char *NVS_KEY_SCHEDULES = "schedules_json";
-
-// Time Management (NTP + RTC System)
-RTC_DS3231 rtc;
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", 5.5 * 3600, 60000);  // IST offset (5.5 hours), update every 60s
-unsigned long lastNtpSyncMillis = 0;
-const unsigned long NTP_SYNC_INTERVAL_MS = 3 * 3600 * 1000;  // Sync every 3 hours when WiFi available
-
-// Temperature Sensor & Control System
-OneWire oneWire(ONE_WIRE_BUS);
-DallasTemperature sensors(&oneWire);
-float currentTemperatureC = -127.0;  // Initialize with sensor error value
-unsigned long lastTempReadMillis = 0;
-const unsigned long TEMP_READ_INTERVAL_MS = 15000;       // Normal: 15 seconds
-const unsigned long TEMP_READ_ERROR_INTERVAL_MS = 5000;  // Error: 5 seconds
-
-// DS18B20 Sensor Error Handling
-bool tempSensorError = false;
-unsigned long lastTempSensorErrorBuzzMillis = 0;
-const unsigned long TEMP_SENSOR_ERROR_BUZZ_INTERVAL_MS = 3600000UL;  // 1 hour
-
-// Intelligent Heater Control Logic
-const float TEMP_THRESHOLD_ON = 25.0;                         // Turn heater ON if temp drops below 25°C
-const float TEMP_THRESHOLD_OFF = 29.0;                        // Turn heater OFF if temp reaches/exceeds 29°C
-const unsigned long HEATER_MIN_RUN_TIME_MS = 30 * 60 * 1000;  // 30 minutes minimum continuous runtime
-unsigned long heaterOnTimeMillis = 0;                         // Tracks when heater was turned ON for minimum runtime
-bool heaterForcedOn = false;                                  // Flag indicating temperature-controlled heater state
-bool lastHeaterState = false;                                 // Cache last heater state to avoid redundant operations
-int temperatureReadFailures = 0;                              // Track consecutive temperature read failures
-const int MAX_TEMP_FAILURES = 5;                              // Reduced from 8 for memory optimization
-int temperatureRecoveryCount = 0;                             // Track successful readings after failures
-const int MIN_RECOVERY_READINGS = 3;                          // Require 3 good readings to clear emergency
-
-// Appliance Management System (Optimized)
-enum ApplianceState { OFF,
-                      ON };
-enum ApplianceMode { SCHEDULED,          // Following programmed schedule
-                     OVERRIDDEN,         // Manual override active
-                     TEMP_CONTROLLED };  // Temperature-controlled (heater only)
-
-struct ScheduleEntry {
-  String type;    // "on_interval" or "off_interval"
-  int start_min;  // Start time in minutes from midnight (0-1439) - Optimized format
-  int end_min;    // End time in minutes from midnight (0-1439) - Optimized format
-};
-
-struct Appliance {
-  String name;                    // Device name (Filter, CO2, Light, Heater, HangOnFilter)
-  int pin;                        // GPIO pin for relay control
-  ApplianceState currentState;    // Current physical state (ON/OFF)
-  ApplianceState scheduledState;  // State according to schedule
-  ApplianceState overrideState;   // State from manual override
-  unsigned long overrideEndTime;  // millis() when override expires (0 = no override)
-  ApplianceMode currentMode;      // Current control mode (SCHEDULED/OVERRIDDEN/TEMP_CONTROLLED)
-};
+//
+// Data structures are like organized boxes where we store related information together.
+// Instead of having lots of separate variables, we group them into neat packages.
+// This makes the code easier to understand and work with.
+//
+// ApplianceState: Simple ON/OFF choices for devices
+// ApplianceMode: How the device is being controlled (schedule, manual, temperature)
+// ScheduleEntry: Stores when a device should turn on/off
+// Appliance: Complete information about each device (name, pin, states, etc.)
+//
+// Think of it like organizing your school supplies:
+// - Pens in one box, pencils in another
+// - Each box has a label and knows what's inside
+//
+// ============================================================================
 
 // Array of 5 appliance objects with custom configurations
 Appliance appliances[] = {
@@ -446,9 +360,20 @@ unsigned long lastScheduleSaveMillis = 0;
 const unsigned long SCHEDULE_SAVE_DELAY_MS = 5000;  // Save schedules 5 seconds after last change
 
 // ============================================================================
-// 4. Function Prototypes
+// 6. FUNCTION BLUEPRINTS - WHAT EACH PART DOES
 // ============================================================================
-// Core System Functions
+//
+// Function prototypes are like a table of contents for the functions in our program.
+// They tell the computer "these functions exist and here's what they need/do".
+// This helps the computer understand the program before it reads all the details.
+//
+// Core Functions: Main jobs like connecting to WiFi and reading temperature
+// Control Functions: Turning devices on/off and managing schedules
+// Display Functions: Showing information on the screen
+// Safety Functions: Protecting fish if something goes wrong
+// Web Functions: Handling requests from phones/computers
+//
+// ============================================================================
 void connectWiFi();
 void startAPMode();
 // void buzz(int count, int delayMs);
@@ -537,14 +462,20 @@ void setRelayState(int pin, ApplianceState state) {
 }
 
 // ============================================================================
-// 5. Setup Function
+// 7. SETUP FUNCTION - GETTING EVERYTHING READY
 // ============================================================================
-void setup() {
-  // Add small delay for power stabilization
-  delay(800);
-
-  // Set CPU frequency for stability
-  setCpuFrequencyMhz(160);
+//
+// The setup function runs once when the ESP32 first turns on.
+// It's like getting ready for school in the morning:
+// - Wake up the different parts of the computer
+// - Connect to the screen, sensors, and clock
+// - Load saved settings from memory
+// - Make a happy beep to show it's working
+// - Get everything prepared for the main work
+//
+// This happens only once, then the loop function takes over forever.
+//
+// ============================================================================
 
   Serial.begin(115200);
   Serial.println(F("\n[SETUP] Starting ESP32 Fish Tank Automation System..."));
@@ -744,16 +675,22 @@ void handleRestart(AsyncWebServerRequest *request) {
 }
 
 // ============================================================================
-// 6. Loop Function
+// 8. MAIN LOOP - THE HEARTBEAT OF OUR SYSTEM
 // ============================================================================
-void loop() {
-  // Handle WiFi reconnection if disconnected
-  if (WiFi.status() != WL_CONNECTED && !apModeActive) {
-    if ((long)(millis() - lastWifiReconnectMillis) > 5000) {  // Check every 5 seconds
-      connectWiFi();
-      lastWifiReconnectMillis = millis();
-    }
-  }
+//
+// The loop function runs forever while the ESP32 is turned on.
+// It's like the main job that keeps happening over and over:
+// - Check if WiFi is still connected (reconnect if needed)
+// - Get the current time from the clock
+// - Read the water temperature
+// - Decide what devices should be on/off
+// - Update the screen with current information
+// - Handle any web requests from phones/computers
+// - Keep everything running smoothly
+//
+// This loop runs thousands of times per second, keeping your fish tank happy!
+//
+// ============================================================================
 
   // Periodically sync RTC with NTP (every 3 hours, if WiFi available)
   if (wifiConnected && ((long)(millis() - lastNtpSyncMillis) >= NTP_SYNC_INTERVAL_MS)) {
@@ -900,12 +837,23 @@ void loop() {
 }
 
 // ============================================================================
-// 7. Helper Functions (Optimized)
+// 9. WIFI MANAGEMENT - STAYING CONNECTED TO THE INTERNET
 // ============================================================================
-
-/**
- * @brief Connects to a saved WiFi network
- */
+//
+// WiFi is how our fish tank controller talks to the internet and your devices.
+// This section handles:
+// - Connecting to your home WiFi network
+// - Creating a backup hotspot if WiFi fails
+// - Remembering WiFi passwords securely
+// - Automatically reconnecting if connection drops
+//
+// Why WiFi matters:
+// - Lets you control the tank from your phone
+// - Gets accurate time from the internet
+// - Sends alerts if something needs attention
+// - Allows remote monitoring from anywhere
+//
+// ============================================================================
 void connectWiFi() {
   // Check if we've exceeded reconnection attempts
   if (wifiReconnectAttempts >= MAX_WIFI_RECONNECT_ATTEMPTS) {
@@ -1257,13 +1205,31 @@ void handleDelayedScheduleSave() {
   }
 }
 
-/**
- * @brief Applies the intelligent control logic for a single appliance, considering custom schedules,
- * manual overrides, and temperature-based control (for heater).
- * Priority order: Temperature Control > Manual Override > Scheduled Control
- * @param app Reference to the Appliance object.
- * @param currentMinutes Current time in minutes from midnight (0-1439).
- */
+// ============================================================================
+// 11. DEVICE CONTROL - DECIDING WHAT TURNS ON/OFF
+// ============================================================================
+//
+// This is the smart brain that decides when each device should be on or off.
+// It considers three things in order of importance:
+//
+// 1. EMERGENCY SAFETY (most important)
+//    - If temperature is too high/low, turn off everything to protect fish
+//
+// 2. MANUAL CONTROL (second priority)
+//    - If you manually turned something on/off from your phone, respect that
+//
+// 3. SCHEDULE CONTROL (normal operation)
+//    - Follow the programmed schedule (like "lights on at 8 AM")
+//    - Special temperature control for heater (keeps water perfect)
+//
+// For the heater, it also considers:
+// - Turn on if water drops below 25°C
+// - Turn off if water reaches 29°C
+// - Make sure it runs at least 30 minutes when it turns on
+//
+// This logic runs every few seconds to keep everything just right!
+//
+// ============================================================================
 void applyApplianceLogic(Appliance &app, int currentMinutes) {
   ApplianceState targetState = OFF;
   app.currentMode = SCHEDULED;
@@ -1373,15 +1339,29 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
   }
 }
 
-/**
- * @brief Updates the OLED display with current system status including time, 
- * temperature, appliance states, and connection status.
- * Display optimized for 128x64 SSD1306 with 2-second update intervals for memory efficiency.
- * @param now Current DateTime from RTC.
- */
-/**
- * @brief Updates OLED display with current status
- */
+// ============================================================================
+// 12. SCREEN DISPLAY - SHOWING INFORMATION ON THE OLED SCREEN
+// ============================================================================
+//
+// The OLED screen is like a tiny TV that shows what's happening with your fish tank.
+// It displays important information in real-time so you can see at a glance:
+//
+// Top line: Current time and date
+// Next lines: Status of each device (ON/OFF)
+// Bottom: Temperature and any alerts
+//
+// The screen updates every 2 seconds to show the latest information.
+// It uses short names to fit everything on the small screen:
+// - Filter → Filter
+// - HangOnFilter → HOF (Hang-On Filter)
+// - CO2 → CO2
+// - Light → Light
+// - Heater → Heater
+//
+// If there's an emergency, it shows warning messages.
+// If WiFi is disconnected, it shows connection status.
+//
+// ============================================================================
 void updateOLED(DateTime now) {
   display.clearDisplay();
   display.setTextSize(1);
@@ -1498,12 +1478,27 @@ bool authenticateRequest(AsyncWebServerRequest *request) {
 }
 
 // ============================================================================
-// 8. REST API Handlers
+// 10. WEB API ENDPOINTS - LETTING PHONES/COMPUTERS TALK TO US
 // ============================================================================
-
-/**
- * @brief Handles the root ("/") endpoint.
- */
+//
+// The web API is how your phone or computer communicates with the fish tank controller.
+// It's like a language that lets different devices understand each other.
+//
+// Available commands (endpoints):
+// - /status: Check temperature, time, and what devices are on/off
+// - /control: Turn devices on/off manually
+// - /schedules: Set when devices should automatically turn on/off
+// - /wifi: Configure WiFi settings
+//
+// How it works:
+// 1. Your device sends a web request (like visiting a website)
+// 2. Our ESP32 receives the request and understands what you want
+// 3. ESP32 sends back information in JSON format (computer-readable text)
+// 4. Your phone app shows the information in a nice interface
+//
+// Security: All requests need a special API key to prevent unauthorized access.
+//
+// ============================================================================
 void handleRoot(AsyncWebServerRequest *request) {
   request->send(200, "text/plain", "ESP32 Fish Tank Automation System API. Use /status, /control, /schedules, /wifi.");
 }
