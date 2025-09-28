@@ -284,11 +284,11 @@ const char PROGMEM STR_CONTENT_TYPE_JSON[] = "application/json";
 // 2. Pin Definitions
 // ============================================================================
 // Appliance Relay Pins (Final GPIO assignments for 5-device system)
-#define MOTOR_RELAY_PIN 18    // Main Filter (Primary filtration system)
-#define CO2_RELAY_PIN 16      // CO2 System (CO2 injection for plants)
+#define MOTOR_RELAY_PIN 17    // Main Filter (Primary filtration system)
+#define CO2_RELAY_PIN 19      // CO2 System (CO2 injection for plants)
 #define LIGHT_RELAY_PIN 5     // Aquarium Lights (LED lighting system)
-#define HEATER_RELAY_PIN 19   // Water Heater (Temperature control)
-#define HANGON_FILTER_PIN 17  // Hang-on Filter (Secondary filtration)
+#define HEATER_RELAY_PIN 16   // Water Heater (Temperature control)
+#define HANGON_FILTER_PIN 18  // Hang-on Filter (Secondary filtration)
 
 // Relay Configuration
 // Set to true for Active LOW relays (LOW = ON, HIGH = OFF) - Most common
@@ -518,9 +518,9 @@ int getRelayOnState() {
  */
 void setRelayState(int pin, ApplianceState state) {
   // Cache the current GPIO state to avoid redundant writes
-  static int lastPinStates[5] = { -1, -1, -1, -1, -1 };  // Only track our 5 relay pins
-  static const int relayPins[5] = {18, 16, 5, 19, 17};  // Our actual relay pins
-  
+  static int lastPinStates[5] = { -1, -1, -1, -1, -1 };   // Only track our 5 relay pins
+  static const int relayPins[5] = { 18, 16, 5, 19, 17 };  // Our actual relay pins
+
   int newState = (state == ON) ? getRelayOnState() : getRelayOffState();
 
   // Find the pin index in our array
