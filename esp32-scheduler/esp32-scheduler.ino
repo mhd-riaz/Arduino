@@ -2,7 +2,7 @@
 // ESP32 Fish Tank Automation System (Arduino Sketch)
 // Version: 3.0 - Commercial Product Design (5-Device System)
 // Author: mhd-riaz
-// Date: September 27, 2025
+// Date: October 02, 2025
 //
 // Description:
 // Commercial fish tank automation system designed as an end-user product.
@@ -237,15 +237,15 @@
 // Core 3.0+ deprecated ledcAttach/ledcWriteTone in favor of simpler APIs
 
 #if ESP_ARDUINO_VERSION_MAJOR >= 3
-// ESP32 Arduino Core 3.0+ - Use modern tone() API
-#define BUZZER_INIT(pin, freq, resolution)  // No initialization needed for tone()
-#define BUZZER_TONE(pin, frequency) tone(pin, frequency)
-#define BUZZER_OFF(pin) noTone(pin)
+  // ESP32 Arduino Core 3.0+ - Use modern tone() API
+  #define BUZZER_INIT(pin, freq, resolution)  // No initialization needed for tone()
+  #define BUZZER_TONE(pin, frequency) tone(pin, frequency)
+  #define BUZZER_OFF(pin) noTone(pin)
 #else
-// ESP32 Arduino Core 2.x - Use legacy LEDC API
-#define BUZZER_INIT(pin, freq, resolution) ledcAttach(pin, freq, resolution)
-#define BUZZER_TONE(pin, frequency) ledcWriteTone(pin, frequency)
-#define BUZZER_OFF(pin) ledcWriteTone(pin, 0)
+  // ESP32 Arduino Core 2.x - Use legacy LEDC API (channel 0)
+  #define BUZZER_INIT(pin, freq, resolution) ledcAttachPin(pin, 0); ledcSetup(0, freq, resolution)
+  #define BUZZER_TONE(pin, frequency) ledcWriteTone(0, frequency)
+  #define BUZZER_OFF(pin) ledcWriteTone(0, 0)
 #endif
 
 // ============================================================================
@@ -258,26 +258,21 @@
 // Override Constants
 #define PERMANENT_OVERRIDE_VALUE ULONG_MAX  // Value used to indicate permanent override
 
-// Temperature Sensor Constants
-// #define DEVICE_DISCONNECTED_C -127.0  // DallasTemperature library constant for sensor error (already defined by DallasTemperature)
-
-
-
 // ============================================================================
 // 1.6. PROGMEM String Literals (Memory Optimization)
 // ============================================================================
 // Store frequently used strings in flash memory to save RAM
-// const char PROGMEM STR_OK[] = "OK";
-// const char PROGMEM STR_ERROR[] = "Error";
-// const char PROGMEM STR_SUCCESS[] = "Success";
-// const char PROGMEM STR_INVALID[] = "Invalid";
-// const char PROGMEM STR_JSON_PARSE_ERROR[] = "JSON parse error";
-// const char PROGMEM STR_MISSING_PARAMS[] = "Missing required parameters";
-// const char PROGMEM STR_INVALID_API_KEY[] = "Invalid API key";
-// const char PROGMEM STR_APPLIANCE_NOT_FOUND[] = "Appliance not found";
+const char PROGMEM STR_OK[] = "OK";
+const char PROGMEM STR_ERROR[] = "Error";
+const char PROGMEM STR_SUCCESS[] = "Success";
+const char PROGMEM STR_INVALID[] = "Invalid";
+const char PROGMEM STR_JSON_PARSE_ERROR[] = "JSON parse error";
+const char PROGMEM STR_MISSING_PARAMS[] = "Missing required parameters";
+const char PROGMEM STR_INVALID_API_KEY[] = "Invalid API key";
+const char PROGMEM STR_APPLIANCE_NOT_FOUND[] = "Appliance not found";
 const char PROGMEM STR_CONTENT_TYPE_JSON[] = "application/json";
-// const char PROGMEM STR_ACCESS_CONTROL[] = "Access-Control-Allow-Origin";
-// const char PROGMEM STR_WILDCARD[] = "*";
+const char PROGMEM STR_ACCESS_CONTROL[] = "Access-Control-Allow-Origin";
+const char PROGMEM STR_WILDCARD[] = "*";
 
 
 // ============================================================================
@@ -357,6 +352,12 @@ const int MAX_TEMP_FAILURES = 5;                              // Reduced from 8 
 int temperatureRecoveryCount = 0;                             // Track successful readings after failures
 const int MIN_RECOVERY_READINGS = 3;                          // Require 3 good readings to clear emergency
 
+// RTC Status Tracking
+bool rtcInitialized = false;                                  // Track RTC initialization status
+
+// Critical Section Protection
+bool heaterControlLock = false;                               // Simple lock for heater control operations
+
 // Appliance Management System (Optimized)
 enum ApplianceState { OFF,
                       ON };
@@ -398,6 +399,16 @@ String postBody = "";
 
 // Debug and logging configuration
 #define DEBUG_MODE false  // Set to true for development, false for production to save memory
+
+// Move large constant strings to PROGMEM
+const char PROGMEM STR_ERR_NVS_WIFI[] = "[NVS] Failed to initialize WiFi preferences.";
+const char PROGMEM STR_ERR_RTC[] = "[ERROR] RTC not found!";
+const char PROGMEM STR_ERR_OLED[] = "[ERROR] OLED init failed";
+const char PROGMEM STR_RTC_NOT_RUNNING[] = "[RTC] RTC is NOT running, setting time from build time.";
+const char PROGMEM STR_RTC_INIT[] = "[RTC] RTC initialized.";
+const char PROGMEM STR_OLED_INIT[] = "[OLED] Display initialized.";
+const char PROGMEM STR_API_STARTED[] = "[API] REST API server started.";
+const char PROGMEM STR_SETUP_READY[] = "[SETUP] System ready!";
 unsigned long lastDebugPrintMillis = 0;
 const unsigned long DEBUG_PRINT_INTERVAL_MS = 30000;  // Print debug info every 30 seconds (reduced frequency)
 
@@ -432,14 +443,6 @@ enum EmergencyReason {
 };
 EmergencyReason currentEmergencyReason = NO_EMERGENCY;
 
-// System Health Monitoring & Alert System
-// unsigned long lastSystemHeartbeat = 0;
-// unsigned long lastLoopTime = 0;
-// const unsigned long SYSTEM_WATCHDOG_TIMEOUT_MS = 90000;  // 90 seconds
-// const unsigned long LOOP_HANG_TIMEOUT_MS = 45000;        // 45 seconds
-// bool systemHealthOK = true;
-// bool alertSounded = false;
-
 // Schedule caching for performance
 bool schedulesDirty = false;  // Flag to track if schedules need saving
 unsigned long lastScheduleSaveMillis = 0;
@@ -451,14 +454,8 @@ const unsigned long SCHEDULE_SAVE_DELAY_MS = 5000;  // Save schedules 5 seconds 
 // Core System Functions
 void connectWiFi();
 void startAPMode();
-// void buzz(int count, int delayMs);
-// void buzzPattern(int pattern);
+void buzz(int count, int delayMs);
 void syncTimeNTP();
-
-// System Health Monitoring
-// void updateSystemHeartbeat();
-// void checkSystemHealth();
-// void alertSystemFailure(const char *reason);
 
 // Schedule Management
 void loadSchedules();
@@ -489,7 +486,6 @@ void handleWifiConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len,
 void handleNotFound(AsyncWebServerRequest *request);
 void handleEmergencyReset(AsyncWebServerRequest *request);
 void handleResetToSchedule(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
-// void handleForceRefresh(AsyncWebServerRequest *request);
 
 // ============================================================================
 // 4.5. Relay Control Helper Functions
@@ -537,7 +533,7 @@ void setRelayState(int pin, ApplianceState state) {
 }
 
 // ============================================================================
-// 5. Setup Function
+// 6. Setup & Loop Functions
 // ============================================================================
 void setup() {
   // Add small delay for power stabilization
@@ -547,8 +543,10 @@ void setup() {
   setCpuFrequencyMhz(160);
 
   Serial.begin(115200);
-  Serial.println(F("\n[SETUP] Starting ESP32 Fish Tank Automation System..."));
-  Serial.printf(F("[SETUP] CPU Frequency: %dMHz\n"), getCpuFrequencyMhz());
+#if DEBUG_MODE
+  Serial.println("\n[SETUP] Starting ESP32 Fish Tank Automation System...");
+  Serial.printf("[SETUP] CPU Frequency: %dMHz\n", getCpuFrequencyMhz());
+#endif
 
   // Add 1-second startup delay with beep indicator
   delay(1000);
@@ -560,13 +558,15 @@ void setup() {
   BUZZER_TONE(BUZZER_PIN, 1500);  // 1.5kHz startup tone
   delay(300);                     // Beep duration
   BUZZER_OFF(BUZZER_PIN);         // Turn off
-#if DEBUG_MODE
-  Serial.println("[SETUP] System startup beep completed.");
-#endif
+  #if DEBUG_MODE
+    Serial.println("[SETUP] System startup beep completed.");
+  #endif
 
   // Initialize NVS (WiFi namespace will be used initially)
   if (!preferences.begin(NVS_NAMESPACE_WIFI, false)) {
-    Serial.println(F("[NVS] Failed to initialize WiFi preferences."));
+#if DEBUG_MODE
+    Serial.println(FPSTR(STR_ERR_NVS_WIFI));
+#endif
   }
 
   // Initialize I2C bus
@@ -580,7 +580,10 @@ void setup() {
   int i = 0;
   // Initialize RTC
   if (!rtc.begin()) {
-    Serial.println(F("[ERROR] RTC not found!"));
+    rtcInitialized = false;
+#if DEBUG_MODE
+    Serial.println(FPSTR(STR_ERR_RTC));
+#endif
     // Sound continuous error buzzer to alert user
     while (1) {
       i++;
@@ -599,22 +602,23 @@ void setup() {
   // Use rtc.lostPower() to check if RTC lost power and set time if needed
   if (rtc.lostPower()) {
 #if DEBUG_MODE
-    Serial.println(F("[RTC] RTC is NOT running, setting time from build time."));
+    Serial.println(FPSTR(STR_RTC_NOT_RUNNING));
 #endif
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  // Set to compile time as fallback
   }
+  rtcInitialized = true;  // Mark RTC as successfully initialized
 #if DEBUG_MODE
-  Serial.println(F("[RTC] RTC initialized."));
+  Serial.println(FPSTR(STR_RTC_INIT));
 #endif
 
   // Initialize OLED Display
   if (!display.begin(SSD1306_SWITCHCAPVCC, I2C_ADDRESS)) {
 #if DEBUG_MODE
-    Serial.println(F("[ERROR] OLED init failed"));
+    Serial.println(FPSTR(STR_ERR_OLED));
 #endif
   } else {
 #if DEBUG_MODE
-    Serial.println(F("[OLED] Display initialized."));
+    Serial.println(FPSTR(STR_OLED_INIT));
 #endif
     display.clearDisplay();
     display.setTextSize(2);  // Larger text
@@ -721,15 +725,70 @@ void setup() {
       // Response will be sent by the body handler
     },
     NULL, handleResetToSchedule);
-  // server.on("/refresh", HTTP_POST, handleForceRefresh);
   server.onNotFound(handleNotFound);
 
   // Start the server
   server.begin();
 #if DEBUG_MODE
-  Serial.println("[API] REST API server started.");
+  Serial.println(FPSTR(STR_API_STARTED));
 #endif
-  Serial.println("[SETUP] System ready!");
+#if DEBUG_MODE
+  Serial.println(FPSTR(STR_SETUP_READY));
+#endif
+}
+
+// =====================================
+// SAFE JSON RESPONSE BUILDER
+// =====================================
+// Overload for regular char* strings
+bool buildSafeJsonResponse(char* buffer, size_t bufferSize, const char* status, const char* message = nullptr) {
+  size_t statusLen = strlen(status);
+  size_t messageLen = message ? strlen(message) : 0;
+  
+  // Calculate minimum required size: {"status":"","message":""}
+  size_t minSize = 21 + statusLen + messageLen;  // 21 chars for JSON structure
+  
+  if (minSize >= bufferSize) {
+    // Buffer too small, use truncated message
+    snprintf(buffer, bufferSize, "{\"status\":\"%.*s\"}", 
+             (int)(bufferSize - 15), status);  // Leave room for JSON structure
+    return false;
+  }
+  
+  if (message) {
+    snprintf(buffer, bufferSize, "{\"status\":\"%s\",\"message\":\"%s\"}", status, message);
+  } else {
+    snprintf(buffer, bufferSize, "{\"status\":\"%s\"}", status);
+  }
+  return true;
+}
+
+// Overload for PROGMEM strings
+bool buildSafeJsonResponse(char* buffer, size_t bufferSize, const __FlashStringHelper* status, const __FlashStringHelper* message = nullptr) {
+  // Convert PROGMEM strings to regular strings for length calculation
+  String statusStr = String(status);
+  String messageStr = message ? String(message) : "";
+  
+  size_t statusLen = statusStr.length();
+  size_t messageLen = messageStr.length();
+  
+  // Calculate minimum required size: {"status":"","message":""}
+  size_t minSize = 21 + statusLen + messageLen;  // 21 chars for JSON structure
+  
+  if (minSize >= bufferSize) {
+    // Buffer too small, use truncated message
+    snprintf_P(buffer, bufferSize, PSTR("{\"status\":\"%.*s\"}"), 
+               (int)(bufferSize - 15), statusStr.c_str());  // Leave room for JSON structure
+    return false;
+  }
+  
+  if (message) {
+    snprintf_P(buffer, bufferSize, PSTR("{\"status\":\"%s\",\"message\":\"%s\"}"), 
+               statusStr.c_str(), messageStr.c_str());
+  } else {
+    snprintf_P(buffer, bufferSize, PSTR("{\"status\":\"%s\"}"), statusStr.c_str());
+  }
+  return true;
 }
 
 /**
@@ -738,13 +797,18 @@ void setup() {
  */
 void handleRestart(AsyncWebServerRequest *request) {
   if (!authenticateRequest(request)) return;
-  request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"System will reboot now\"}\n");
+  char jsonBuffer[96];
+  if (buildSafeJsonResponse(jsonBuffer, sizeof(jsonBuffer), FPSTR(STR_SUCCESS), F("System will reboot now"))) {
+    request->send(200, FPSTR(STR_CONTENT_TYPE_JSON), jsonBuffer);
+  } else {
+    request->send(200, FPSTR(STR_CONTENT_TYPE_JSON), "{\"status\":\"success\"}");
+  }
   delay(1000);  // Allow response to be sent
   ESP.restart();
 }
 
 // ============================================================================
-// 6. Loop Function
+// 7. Loop Function
 // ============================================================================
 void loop() {
   // Handle WiFi reconnection if disconnected
@@ -754,7 +818,7 @@ void loop() {
       lastWifiReconnectMillis = millis();
     }
   }
-
+  
   // Periodically sync RTC with NTP (every 3 hours, if WiFi available)
   if (wifiConnected && ((long)(millis() - lastNtpSyncMillis) >= NTP_SYNC_INTERVAL_MS)) {
     syncTimeNTP();
@@ -762,6 +826,10 @@ void loop() {
   }
 
   // Get current time from RTC
+  if (!rtcInitialized) {
+    // RTC not available, skip time-dependent operations
+    return;
+  }
   DateTime now = rtc.now();
   int currentMinutes = now.hour() * 60 + now.minute();  // Convert to minutes once
 
@@ -794,8 +862,9 @@ void loop() {
           Serial.println(F("[TEMP] Sensor recovery confirmed - failures reset"));
 #endif
         }
-      } else {
-        temperatureRecoveryCount = 0;  // Reset recovery counter when sensor is stable
+      } else if (temperatureReadFailures == 0) {
+        // Only reset recovery counter when sensor is stable AND no failures exist
+        temperatureRecoveryCount = 0;
       }
     } else {
       // Temperature sensor failure detected
@@ -815,7 +884,7 @@ void loop() {
 
   // DS18B20 Sensor Error: Spontaneous 3-buzz warning every hour
   if (tempSensorError) {
-    if (lastTempSensorErrorBuzzMillis == 0 || (millis() - lastTempSensorErrorBuzzMillis) >= TEMP_SENSOR_ERROR_BUZZ_INTERVAL_MS) {
+    if (lastTempSensorErrorBuzzMillis == 0 || (long)(millis() - lastTempSensorErrorBuzzMillis) >= TEMP_SENSOR_ERROR_BUZZ_INTERVAL_MS) {
       buzz(3, 300);  // 3 quick buzzes
       lastTempSensorErrorBuzzMillis = millis();
     }
@@ -900,7 +969,7 @@ void loop() {
 }
 
 // ============================================================================
-// 7. Helper Functions (Optimized)
+// 8. Core Logic Functions (WiFi, Scheduling, Relay Control)
 // ============================================================================
 
 /**
@@ -965,18 +1034,35 @@ void connectWiFi() {
       String ssidToShow;
       if (ssidLen > maxVisibleChars) {
         // Scroll the SSID horizontally
-        if (millis() - lastScrollMillis > scrollDelay) {
-          ssidScrollOffset = (ssidScrollOffset + 1) % (ssidLen + 2);  // +2 for smooth loop
+        if ((long)(millis() - lastScrollMillis) > scrollDelay) {
+          // Safe bounds checking for scroll offset
+          if (ssidLen > 0) {
+            ssidScrollOffset = (ssidScrollOffset + 1) % (ssidLen + 2);  // +2 for smooth loop
+          } else {
+            ssidScrollOffset = 0;
+          }
           lastScrollMillis = millis();
         }
-        if (ssidScrollOffset + maxVisibleChars <= ssidLen) {
+        // Bounds checking for substring operations
+        if (ssidScrollOffset >= 0 && ssidScrollOffset < ssidLen && ssidScrollOffset + maxVisibleChars <= ssidLen) {
           ssidToShow = ssid.substring(ssidScrollOffset, ssidScrollOffset + maxVisibleChars);
-        } else {
-          // Wrap around
+        } else if (ssidScrollOffset >= 0 && ssidScrollOffset < ssidLen) {
+          // Wrap around with bounds checking
           int firstPart = ssidLen - ssidScrollOffset;
-          ssidToShow = ssid.substring(ssidScrollOffset);
-          ssidToShow += "  ";
-          ssidToShow += ssid.substring(0, maxVisibleChars - firstPart);
+          if (firstPart > 0 && firstPart <= ssidLen) {
+            ssidToShow = ssid.substring(ssidScrollOffset);
+            ssidToShow += "  ";
+            int remainingChars = maxVisibleChars - firstPart - 2;  // -2 for spaces
+            if (remainingChars > 0 && remainingChars <= ssidLen) {
+              ssidToShow += ssid.substring(0, remainingChars);
+            }
+          } else {
+            ssidToShow = ssid.substring(0, min(maxVisibleChars, ssidLen));
+          }
+        } else {
+          // Fallback - reset scroll and show from beginning
+          ssidScrollOffset = 0;
+          ssidToShow = ssid.substring(0, min(maxVisibleChars, ssidLen));
         }
       } else {
         ssidToShow = ssid;
@@ -1326,6 +1412,12 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
       heaterForcedOn = false;
       heaterOnTimeMillis = 0;
     } else if (currentTemperatureC > 0) {
+      // Critical section for heater control - prevent race conditions
+      if (heaterControlLock) {
+        return;  // Skip this iteration if heater control is already in progress
+      }
+      heaterControlLock = true;
+      
       bool currentHeaterState = (targetState == ON);
       if (currentTemperatureC < TEMP_THRESHOLD_ON) {
         // Temperature too low - force heater ON
@@ -1352,6 +1444,8 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
         targetState = ON;
         app.currentMode = TEMP_CONTROLLED;
       }
+      
+      heaterControlLock = false;  // Release lock
     }
   }
 
@@ -1421,7 +1515,7 @@ void updateOLED(DateTime now) {
   display.setCursor(0, y + (NUM_APPLIANCES * 8));
   if (tempSensorError) {
     // Running text (marquee) for error message
-    if (millis() - lastScrollMillis > 200) {  // Scroll every 200ms
+    if ((long)(millis() - lastScrollMillis) > 200) {  // Scroll every 200ms
       scrollOffset = (scrollOffset + 1) % errorMsgLen;
       lastScrollMillis = millis();
     }
@@ -1484,6 +1578,10 @@ bool isTimeInInterval(int currentMinutes, int startMin, int endMin) {
   }
 }
 
+// ============================================================================
+// 9. REST API Handlers (All Grouped Together)
+// ============================================================================
+
 /**
  * @brief Authenticates incoming API requests using the API_KEY.
  * @param request Pointer to the AsyncWebServerRequest object.
@@ -1493,19 +1591,23 @@ bool authenticateRequest(AsyncWebServerRequest *request) {
   if (request->hasHeader("X-API-Key") && request->header("X-API-Key") == API_KEY) {
     return true;
   }
-  request->send(401, "application/json", "{\"error\": \"Unauthorized\", \"message\": \"Missing or invalid X-API-Key header.\"}\n");
+  String json;
+  json.reserve(96);
+  json = "{\"status\": \"";
+  json += FPSTR(STR_ERROR);
+  json += "\", \"message\": \"Missing or invalid X-API-Key header.\"}";
+  request->send(401, FPSTR(STR_CONTENT_TYPE_JSON), json);
   return false;
 }
-
-// ============================================================================
-// 8. REST API Handlers
-// ============================================================================
 
 /**
  * @brief Handles the root ("/") endpoint.
  */
 void handleRoot(AsyncWebServerRequest *request) {
-  request->send(200, "text/plain", "ESP32 Fish Tank Automation System API. Use /status, /control, /schedules, /wifi.");
+  String msg;
+  msg.reserve(96);
+  msg = "ESP32 Fish Tank Automation System API. Use /status, /control, /schedules, /wifi.";
+  request->send(200, "text/plain", msg);
 }
 
 /**
@@ -1542,6 +1644,19 @@ void handleStatus(AsyncWebServerRequest *request) {
     }
   }
 
+  // Add emergency and sensor status fields
+  doc["emergency"] = emergencyShutdown;
+  // Add emergency reason as string
+  const char* reasonStr = "NONE";
+  switch (currentEmergencyReason) {
+    case TEMP_TOO_HIGH: reasonStr = "TEMP_TOO_HIGH"; break;
+    case TEMP_TOO_LOW: reasonStr = "TEMP_TOO_LOW"; break;
+    case SENSOR_FAILURE: reasonStr = "SENSOR_FAILURE"; break;
+    default: reasonStr = "NONE"; break;
+  }
+  doc["emergency_reason"] = reasonStr;
+  doc["sensor_error"] = tempSensorError;
+
   // Update OLED to ensure it matches the API response
   updateOLED(now);
 
@@ -1573,7 +1688,12 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
 
   // Check total size limit
   if (total > MAX_POST_BODY_SIZE) {
-    request->send(413, "application/json", "{\"error\": \"Request body too large\"}\n");
+    String json;
+    json.reserve(64);
+    json = "{\"status\": \"";
+    json += FPSTR(STR_ERROR);
+    json += "\", \"message\": \"Request body too large\"}";
+    request->send(413, FPSTR(STR_CONTENT_TYPE_JSON), json);
     return;
   }
 
@@ -1594,14 +1714,24 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
     if (error) {
       Serial.print(F("[API] JSON parse failed: "));
       Serial.println(error.f_str());
-      request->send(400, "application/json", "{\"error\": \"Invalid JSON\"}\n");
+      String json;
+      json.reserve(64);
+      json = "{\"status\": \"";
+      json += FPSTR(STR_ERROR);
+      json += "\", \"message\": \"Invalid JSON\"}";
+      request->send(400, FPSTR(STR_CONTENT_TYPE_JSON), json);
       return;
     }
 
     JsonArray appliancesArray = doc["appliances"].as<JsonArray>();
 
     if (appliancesArray.isNull()) {
-      request->send(400, "application/json", "{\"error\": \"Missing 'appliances' array in JSON body\"}\n");
+      String json;
+      json.reserve(64);
+      json = "{\"status\": \"";
+      json += FPSTR(STR_ERROR);
+      json += "\", \"message\": \"Missing 'appliances' array in JSON body\"}";
+      request->send(400, FPSTR(STR_CONTENT_TYPE_JSON), json);
       return;
     }
 
@@ -1618,17 +1748,39 @@ void handleControl(AsyncWebServerRequest *request, uint8_t *data, size_t len, si
           appliances[i].overrideState = (action == "ON" ? ON : OFF);
           // Prevent overflow: limit timeout to ~35 days (50000 minutes)
           if (timeoutMinutes > 50000) timeoutMinutes = 50000;
-          // Use PERMANENT_OVERRIDE_VALUE for permanent override, calculated time for temporary override
-          appliances[i].overrideEndTime = (timeoutMinutes > 0) ? (millis() + (unsigned long)timeoutMinutes * 60UL * 1000UL) : PERMANENT_OVERRIDE_VALUE;
+          // Additional overflow protection: check if calculation would overflow
+          if (timeoutMinutes > 0) {
+            unsigned long timeoutMs = (unsigned long)timeoutMinutes * 60UL * 1000UL;
+            unsigned long currentMillis = millis();
+            // Check for potential overflow before addition
+            if (timeoutMs > (ULONG_MAX - currentMillis)) {
+              // Would overflow, set to maximum safe value
+              appliances[i].overrideEndTime = ULONG_MAX;
+            } else {
+              appliances[i].overrideEndTime = currentMillis + timeoutMs;
+            }
+          } else {
+            appliances[i].overrideEndTime = PERMANENT_OVERRIDE_VALUE;
+          }
           break;
         }
       }
       if (!found) {
-        request->send(404, FPSTR(STR_CONTENT_TYPE_JSON), F("{\"error\": \"Appliance not found\"}\n"));
+        char jsonBuffer[128];
+        if (buildSafeJsonResponse(jsonBuffer, sizeof(jsonBuffer), FPSTR(STR_ERROR), FPSTR(STR_APPLIANCE_NOT_FOUND))) {
+          request->send(404, FPSTR(STR_CONTENT_TYPE_JSON), jsonBuffer);
+        } else {
+          request->send(404, FPSTR(STR_CONTENT_TYPE_JSON), "{\"error\":\"Buffer overflow\"}");
+        }
         return;
       }
     }
-    request->send(200, FPSTR(STR_CONTENT_TYPE_JSON), F("{\"status\": \"success\", \"message\": \"Appliance control updated\"}\n"));
+    String json;
+    json.reserve(64);
+    json = "{\"status\": \"";
+    json += FPSTR(STR_SUCCESS);
+    json += "\", \"message\": \"Appliance control updated\"}";
+    request->send(200, FPSTR(STR_CONTENT_TYPE_JSON), json);
   }
 }
 
@@ -1679,7 +1831,12 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
 
   // Check total size limit
   if (total > MAX_POST_BODY_SIZE) {
-    request->send(413, "application/json", "{\"error\": \"Request body too large\"}\n");
+    String json;
+    json.reserve(64);
+    json = "{\"status\": \"";
+    json += FPSTR(STR_ERROR);
+    json += "\", \"message\": \"Request body too large\"}";
+    request->send(413, FPSTR(STR_CONTENT_TYPE_JSON), json);
     return;
   }
 
@@ -1702,13 +1859,23 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
       Serial.println(error.f_str());
       Serial.print(F("[API] Received body: "));
       Serial.println(postBody);
-      request->send(400, "application/json", "{\"error\": \"Invalid JSON\"}\n");
+      String json;
+      json.reserve(64);
+      json = "{\"status\": \"";
+      json += FPSTR(STR_ERROR);
+      json += "\", \"message\": \"Invalid JSON\"}";
+      request->send(400, FPSTR(STR_CONTENT_TYPE_JSON), json);
       return;
     }
 
     JsonObject incomingSchedules = doc["schedules"].as<JsonObject>();
     if (incomingSchedules.isNull()) {
-      request->send(400, "application/json", "{\"error\": \"Missing 'schedules' object in JSON body\"}\n");
+      String json;
+      json.reserve(64);
+      json = "{\"status\": \"";
+      json += FPSTR(STR_ERROR);
+      json += "\", \"message\": \"Missing 'schedules' object in JSON body\"}";
+      request->send(400, FPSTR(STR_CONTENT_TYPE_JSON), json);
       return;
     }
 
@@ -1753,7 +1920,12 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
       applyApplianceLogic(appliances[i], currentMinutes);
     }
 
-    request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"Schedules updated and applied immediately\"}\n");
+  String json;
+  json.reserve(96);
+  json = "{\"status\": \"";
+  json += FPSTR(STR_SUCCESS);
+  json += "\", \"message\": \"Schedules updated and applied immediately\"}";
+  request->send(200, FPSTR(STR_CONTENT_TYPE_JSON), json);
   }
 }
 
@@ -1771,7 +1943,12 @@ void handleWifiConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len,
 
   // Check total size limit
   if (total > MAX_POST_BODY_SIZE) {
-    request->send(413, "application/json", "{\"error\": \"Request body too large\"}\n");
+    String json;
+    json.reserve(64);
+    json = "{\"status\": \"";
+    json += FPSTR(STR_ERROR);
+    json += "\", \"message\": \"Request body too large\"}";
+    request->send(413, FPSTR(STR_CONTENT_TYPE_JSON), json);
     return;
   }
 
@@ -1794,7 +1971,12 @@ void handleWifiConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len,
       Serial.println(error.f_str());
       Serial.print(F("[API] Received body: "));
       Serial.println(postBody);
-      request->send(400, "application/json", "{\"error\": \"Invalid JSON\"}\n");
+      String json;
+      json.reserve(64);
+      json = "{\"status\": \"";
+      json += FPSTR(STR_ERROR);
+      json += "\", \"message\": \"Invalid JSON\"}";
+      request->send(400, FPSTR(STR_CONTENT_TYPE_JSON), json);
       return;
     }
 
@@ -1809,14 +1991,29 @@ void handleWifiConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len,
         preferences.putString(NVS_KEY_PASS, newPassword);
         preferences.end();  // Close namespace before reboot
         Serial.printf("[NVS] New WiFi credentials saved: SSID=%s\n", newSsid.c_str());
-        request->send(200, "application/json", "{\"status\": \"success\", \"message\": \"WiFi credentials saved. Rebooting to connect...\"}\n");
+        String json;
+        json.reserve(96);
+        json = "{\"status\": \"";
+        json += FPSTR(STR_SUCCESS);
+        json += "\", \"message\": \"WiFi credentials saved. Rebooting to connect...\"}";
+        request->send(200, FPSTR(STR_CONTENT_TYPE_JSON), json);
         delay(1000);    // Give time for response to send
         ESP.restart();  // Soft reboot to connect to new WiFi
       } else {
-        request->send(500, "application/json", "{\"error\": \"Failed to save WiFi credentials\"}\n");
+        String json;
+        json.reserve(64);
+        json = "{\"status\": \"";
+        json += FPSTR(STR_ERROR);
+        json += "\", \"message\": \"Failed to save WiFi credentials\"}";
+        request->send(500, FPSTR(STR_CONTENT_TYPE_JSON), json);
       }
     } else {
-      request->send(400, "application/json", "{\"error\": \"SSID cannot be empty\"}\n");
+      String json;
+      json.reserve(64);
+      json = "{\"status\": \"";
+      json += FPSTR(STR_ERROR);
+      json += "\", \"message\": \"SSID cannot be empty\"}";
+      request->send(400, FPSTR(STR_CONTENT_TYPE_JSON), json);
     }
   }
 }
@@ -1825,11 +2022,14 @@ void handleWifiConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len,
  * @brief Handles requests for unknown endpoints.
  */
 void handleNotFound(AsyncWebServerRequest *request) {
-  request->send(404, "text/plain", "Not Found");
+  String msg;
+  msg.reserve(32);
+  msg = "Not Found";
+  request->send(404, "text/plain", msg);
 }
 
 // ============================================================================
-// 9. System Health and Safety Functions
+// 10. Emergency & System Health Functions
 // ============================================================================
 
 /**
