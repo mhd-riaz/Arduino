@@ -355,6 +355,9 @@ const int MIN_RECOVERY_READINGS = 3;                          // Require 3 good 
 // RTC Status Tracking
 bool rtcInitialized = false;                                  // Track RTC initialization status
 
+// OLED Display Status Tracking
+bool oledInitialized = false;                                 // Track OLED initialization status
+
 // Critical Section Protection
 bool heaterControlLock = false;                               // Simple lock for heater control operations
 
@@ -573,6 +576,7 @@ void setup() {
   Wire.begin(OLED_SDA, OLED_SCL);
   Wire.setClock(100000);  // Standard mode (100kHz)
   Wire.setTimeout(5000);
+  delay(100);  // Give I2C bus time to stabilize before accessing devices
 #if DEBUG_MODE
   Serial.println(F("[I2C] I2C bus initialized."));
 #endif
@@ -613,10 +617,12 @@ void setup() {
 
   // Initialize OLED Display
   if (!display.begin(SSD1306_SWITCHCAPVCC, I2C_ADDRESS)) {
+    oledInitialized = false;
 #if DEBUG_MODE
     Serial.println(FPSTR(STR_ERR_OLED));
 #endif
   } else {
+    oledInitialized = true;
 #if DEBUG_MODE
     Serial.println(FPSTR(STR_OLED_INIT));
 #endif
@@ -1477,6 +1483,11 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
  * @brief Updates OLED display with current status
  */
 void updateOLED(DateTime now) {
+  // Skip OLED updates if display not initialized
+  if (!oledInitialized) {
+    return;
+  }
+  
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
@@ -1656,6 +1667,10 @@ void handleStatus(AsyncWebServerRequest *request) {
   }
   doc["emergency_reason"] = reasonStr;
   doc["sensor_error"] = tempSensorError;
+  
+  // Add hardware status
+  doc["rtc_initialized"] = rtcInitialized;
+  doc["oled_initialized"] = oledInitialized;
 
   // Update OLED to ensure it matches the API response
   updateOLED(now);
