@@ -2,7 +2,7 @@
 // ESP32 Fish Tank Automation System (Arduino Sketch)
 // Version: 3.0 - Commercial Product Design (5-Device System)
 // Author: mhd-riaz
-// Date: October 02, 2025
+// Date: October 20, 2025
 //
 // Description:
 // Commercial fish tank automation system designed as an end-user product.
@@ -237,15 +237,17 @@
 // Core 3.0+ deprecated ledcAttach/ledcWriteTone in favor of simpler APIs
 
 #if ESP_ARDUINO_VERSION_MAJOR >= 3
-  // ESP32 Arduino Core 3.0+ - Use modern tone() API
-  #define BUZZER_INIT(pin, freq, resolution)  // No initialization needed for tone()
-  #define BUZZER_TONE(pin, frequency) tone(pin, frequency)
-  #define BUZZER_OFF(pin) noTone(pin)
+// ESP32 Arduino Core 3.0+ - Use modern tone() API
+#define BUZZER_INIT(pin, freq, resolution)  // No initialization needed for tone()
+#define BUZZER_TONE(pin, frequency) tone(pin, frequency)
+#define BUZZER_OFF(pin) noTone(pin)
 #else
-  // ESP32 Arduino Core 2.x - Use legacy LEDC API (channel 0)
-  #define BUZZER_INIT(pin, freq, resolution) ledcAttachPin(pin, 0); ledcSetup(0, freq, resolution)
-  #define BUZZER_TONE(pin, frequency) ledcWriteTone(0, frequency)
-  #define BUZZER_OFF(pin) ledcWriteTone(0, 0)
+// ESP32 Arduino Core 2.x - Use legacy LEDC API (channel 0)
+#define BUZZER_INIT(pin, freq, resolution) \
+  ledcAttachPin(pin, 0); \
+  ledcSetup(0, freq, resolution)
+#define BUZZER_TONE(pin, frequency) ledcWriteTone(0, frequency)
+#define BUZZER_OFF(pin) ledcWriteTone(0, 0)
 #endif
 
 // ============================================================================
@@ -288,7 +290,7 @@ const char PROGMEM STR_WILDCARD[] = "*";
 // Relay Configuration
 // Set to true for Active LOW relays (LOW = ON, HIGH = OFF) - Most common
 // Set to false for Active HIGH relays (HIGH = ON, LOW = OFF)
-#define RELAY_ACTIVE_LOW true  // Professional optocoupler modules are Active LOW
+#define RELAY_ACTIVE_LOW false  // Professional optocoupler modules are Active LOW
 
 // DS18B20 Temperature Sensor Pin
 #define ONE_WIRE_BUS 14  // DS18B20 data pin (requires 4.7KΩ pull-up to 3.3V)
@@ -353,13 +355,13 @@ int temperatureRecoveryCount = 0;                             // Track successfu
 const int MIN_RECOVERY_READINGS = 3;                          // Require 3 good readings to clear emergency
 
 // RTC Status Tracking
-bool rtcInitialized = false;                                  // Track RTC initialization status
+bool rtcInitialized = false;  // Track RTC initialization status
 
 // OLED Display Status Tracking
-bool oledInitialized = false;                                 // Track OLED initialization status
+bool oledInitialized = false;  // Track OLED initialization status
 
 // Critical Section Protection
-bool heaterControlLock = false;                               // Simple lock for heater control operations
+bool heaterControlLock = false;  // Simple lock for heater control operations
 
 // Appliance Management System (Optimized)
 enum ApplianceState { OFF,
@@ -544,7 +546,7 @@ void setup() {
 
   // Set CPU frequency for stability
   setCpuFrequencyMhz(160);
-  
+
   // Disable brownout detector (only if power supply is insufficient)
   // WARNING: Only use this if you have a stable 3.3V supply
   // WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);  // Uncomment only if needed
@@ -565,9 +567,9 @@ void setup() {
   BUZZER_TONE(BUZZER_PIN, 1500);  // 1.5kHz startup tone
   delay(300);                     // Beep duration
   BUZZER_OFF(BUZZER_PIN);         // Turn off
-  #if DEBUG_MODE
-    Serial.println("[SETUP] System startup beep completed.");
-  #endif
+#if DEBUG_MODE
+  Serial.println("[SETUP] System startup beep completed.");
+#endif
 
   // Initialize NVS (WiFi namespace will be used initially)
   if (!preferences.begin(NVS_NAMESPACE_WIFI, false)) {
@@ -752,20 +754,20 @@ void setup() {
 // SAFE JSON RESPONSE BUILDER
 // =====================================
 // Overload for regular char* strings
-bool buildSafeJsonResponse(char* buffer, size_t bufferSize, const char* status, const char* message = nullptr) {
+bool buildSafeJsonResponse(char *buffer, size_t bufferSize, const char *status, const char *message = nullptr) {
   size_t statusLen = strlen(status);
   size_t messageLen = message ? strlen(message) : 0;
-  
+
   // Calculate minimum required size: {"status":"","message":""}
   size_t minSize = 21 + statusLen + messageLen;  // 21 chars for JSON structure
-  
+
   if (minSize >= bufferSize) {
     // Buffer too small, use truncated message
-    snprintf(buffer, bufferSize, "{\"status\":\"%.*s\"}", 
+    snprintf(buffer, bufferSize, "{\"status\":\"%.*s\"}",
              (int)(bufferSize - 15), status);  // Leave room for JSON structure
     return false;
   }
-  
+
   if (message) {
     snprintf(buffer, bufferSize, "{\"status\":\"%s\",\"message\":\"%s\"}", status, message);
   } else {
@@ -775,26 +777,26 @@ bool buildSafeJsonResponse(char* buffer, size_t bufferSize, const char* status, 
 }
 
 // Overload for PROGMEM strings
-bool buildSafeJsonResponse(char* buffer, size_t bufferSize, const __FlashStringHelper* status, const __FlashStringHelper* message = nullptr) {
+bool buildSafeJsonResponse(char *buffer, size_t bufferSize, const __FlashStringHelper *status, const __FlashStringHelper *message = nullptr) {
   // Convert PROGMEM strings to regular strings for length calculation
   String statusStr = String(status);
   String messageStr = message ? String(message) : "";
-  
+
   size_t statusLen = statusStr.length();
   size_t messageLen = messageStr.length();
-  
+
   // Calculate minimum required size: {"status":"","message":""}
   size_t minSize = 21 + statusLen + messageLen;  // 21 chars for JSON structure
-  
+
   if (minSize >= bufferSize) {
     // Buffer too small, use truncated message
-    snprintf_P(buffer, bufferSize, PSTR("{\"status\":\"%.*s\"}"), 
+    snprintf_P(buffer, bufferSize, PSTR("{\"status\":\"%.*s\"}"),
                (int)(bufferSize - 15), statusStr.c_str());  // Leave room for JSON structure
     return false;
   }
-  
+
   if (message) {
-    snprintf_P(buffer, bufferSize, PSTR("{\"status\":\"%s\",\"message\":\"%s\"}"), 
+    snprintf_P(buffer, bufferSize, PSTR("{\"status\":\"%s\",\"message\":\"%s\"}"),
                statusStr.c_str(), messageStr.c_str());
   } else {
     snprintf_P(buffer, bufferSize, PSTR("{\"status\":\"%s\"}"), statusStr.c_str());
@@ -829,7 +831,7 @@ void loop() {
       lastWifiReconnectMillis = millis();
     }
   }
-  
+
   // Periodically sync RTC with NTP (every 3 hours, if WiFi available)
   if (wifiConnected && ((long)(millis() - lastNtpSyncMillis) >= NTP_SYNC_INTERVAL_MS)) {
     syncTimeNTP();
@@ -1019,10 +1021,10 @@ void connectWiFi() {
 #endif
   WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
-  
+
   // Reduce WiFi power to prevent brownouts during transmission
   WiFi.setTxPower(WIFI_POWER_15dBm);  // Reduce from default 20dBm to 15dBm
-  
+
   WiFi.begin(ssid.c_str(), password.c_str());
 
   unsigned long startTime = millis();
@@ -1432,7 +1434,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
         return;  // Skip this iteration if heater control is already in progress
       }
       heaterControlLock = true;
-      
+
       bool currentHeaterState = (targetState == ON);
       if (currentTemperatureC < TEMP_THRESHOLD_ON) {
         // Temperature too low - force heater ON
@@ -1459,7 +1461,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
         targetState = ON;
         app.currentMode = TEMP_CONTROLLED;
       }
-      
+
       heaterControlLock = false;  // Release lock
     }
   }
@@ -1496,7 +1498,7 @@ void updateOLED(DateTime now) {
   if (!oledInitialized) {
     return;
   }
-  
+
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
@@ -1667,7 +1669,7 @@ void handleStatus(AsyncWebServerRequest *request) {
   // Add emergency and sensor status fields
   doc["emergency"] = emergencyShutdown;
   // Add emergency reason as string
-  const char* reasonStr = "NONE";
+  const char *reasonStr = "NONE";
   switch (currentEmergencyReason) {
     case TEMP_TOO_HIGH: reasonStr = "TEMP_TOO_HIGH"; break;
     case TEMP_TOO_LOW: reasonStr = "TEMP_TOO_LOW"; break;
@@ -1676,7 +1678,7 @@ void handleStatus(AsyncWebServerRequest *request) {
   }
   doc["emergency_reason"] = reasonStr;
   doc["sensor_error"] = tempSensorError;
-  
+
   // Add hardware status
   doc["rtc_initialized"] = rtcInitialized;
   doc["oled_initialized"] = oledInitialized;
@@ -1944,12 +1946,12 @@ void handlePostSchedules(AsyncWebServerRequest *request, uint8_t *data, size_t l
       applyApplianceLogic(appliances[i], currentMinutes);
     }
 
-  String json;
-  json.reserve(96);
-  json = "{\"status\": \"";
-  json += FPSTR(STR_SUCCESS);
-  json += "\", \"message\": \"Schedules updated and applied immediately\"}";
-  request->send(200, FPSTR(STR_CONTENT_TYPE_JSON), json);
+    String json;
+    json.reserve(96);
+    json = "{\"status\": \"";
+    json += FPSTR(STR_SUCCESS);
+    json += "\", \"message\": \"Schedules updated and applied immediately\"}";
+    request->send(200, FPSTR(STR_CONTENT_TYPE_JSON), json);
   }
 }
 
