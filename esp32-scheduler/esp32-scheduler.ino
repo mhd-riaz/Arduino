@@ -10,6 +10,11 @@
 // intelligent scheduling, temperature control, and REST API management.
 // Designed for plug-and-play operation with external power supplies.
 //
+// ============================================================================
+// COMPILE-TIME CONFIGURATION
+// ============================================================================
+#define ENABLE_OLED 0  // Set to 0 to disable OLED completely (saves ~30mA)
+
 // Commercial Product Features:
 // - Professional control PCB with modular external power supplies
 // - Customer provides: SMPS 12V/2A + ERD Charger 5V/2A + 6A MCB protection
@@ -622,6 +627,7 @@ void setup() {
 #endif
 
   // Initialize OLED Display
+#if ENABLE_OLED
   if (!display.begin(SSD1306_SWITCHCAPVCC, I2C_ADDRESS)) {
     oledInitialized = false;
 #if DEBUG_MODE
@@ -643,6 +649,12 @@ void setup() {
     display.clearDisplay();
     display.display();
   }
+#else
+  oledInitialized = false;
+#if DEBUG_MODE
+  Serial.println(F("[OLED] OLED disabled by compile flag"));
+#endif
+#endif
 
   // Initialize DS18B20 Temperature Sensor
   sensors.begin();
