@@ -984,10 +984,12 @@ void loop() {
 #endif
 
   // Update OLED display periodically (for time updates when no state changes)
+#if ENABLE_OLED
   if ((long)(millis() - lastOLEDUpdateMillis) >= OLED_UPDATE_INTERVAL_MS) {
     updateOLED(now);
     lastOLEDUpdateMillis = millis();
   }
+#endif
 
   // Handle delayed schedule saving
   handleDelayedScheduleSave();
@@ -1051,6 +1053,7 @@ void connectWiFi() {
     Serial.print(".");
 #endif
     // Update display every 3 seconds
+#if ENABLE_OLED
     if (++dotCount % 3 == 0) {
       display.clearDisplay();
       display.setTextSize(1);  // Smallest font for max info
@@ -1103,6 +1106,7 @@ void connectWiFi() {
       display.println(oledBuffer);
       display.display();
     }
+#endif
   }
 
   if (WiFi.status() == WL_CONNECTED) {
@@ -1147,6 +1151,7 @@ void startAPMode() {
 #endif
   apModeActive = true;
 
+#if ENABLE_OLED
   display.clearDisplay();
   display.setCursor(0, 0);
   display.println("AP Mode Active:");
@@ -1158,6 +1163,7 @@ void startAPMode() {
   display.print("IP: ");
   display.println(apIP);
   display.display();
+#endif
 }
 
 /**
@@ -1428,6 +1434,13 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
 
   // 3. Intelligent Heater Temperature Logic (highest priority - overrides everything)
   if (app.name == "Heater") {
+    // Critical section for heater control - prevent race conditions
+    // Only lock for THIS heater, not for other appliances
+    if (heaterControlLock) {
+      return;  // Skip this heater update if already in progress
+    }
+    heaterControlLock = true;
+    
     if (tempSensorError) {
       // Sensor error: allow manual overrides to take precedence (user is always priority)
       // Only fall back to scheduled state if no active override
@@ -1441,11 +1454,6 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
       heaterForcedOn = false;
       heaterOnTimeMillis = 0;
     } else if (currentTemperatureC > 0) {
-      // Critical section for heater control - prevent race conditions
-      if (heaterControlLock) {
-        return;  // Skip this iteration if heater control is already in progress
-      }
-      heaterControlLock = true;
 
       bool currentHeaterState = (targetState == ON);
       if (currentTemperatureC < TEMP_THRESHOLD_ON) {
@@ -1473,9 +1481,10 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
         targetState = ON;
         app.currentMode = TEMP_CONTROLLED;
       }
-
-      heaterControlLock = false;  // Release lock
     }
+    
+    // ALWAYS release lock at end of Heater control section
+    heaterControlLock = false;
   }
 
   // Update appliance state only if changed (optimized)
@@ -1483,8 +1492,10 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
     app.currentState = targetState;
     setRelayState(app.pin, app.currentState);  // Use configurable relay control
     // Immediately update OLED to reflect the change
+#if ENABLE_OLED
     DateTime now = rtc.now();
     updateOLED(now);
+#endif
 // Only log state changes for critical events (temperature control) or if debug mode
 #if DEBUG_MODE
     Serial.printf("[CONTROL] %s: %s\n", app.name.c_str(), (app.currentState == ON ? "ON" : "OFF"));
@@ -1696,7 +1707,9 @@ void handleStatus(AsyncWebServerRequest *request) {
   doc["oled_initialized"] = oledInitialized;
 
   // Update OLED to ensure it matches the API response
+#if ENABLE_OLED
   updateOLED(now);
+#endif
 
   String response;
   serializeJson(doc, response);
