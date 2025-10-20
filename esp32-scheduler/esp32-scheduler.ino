@@ -544,6 +544,10 @@ void setup() {
 
   // Set CPU frequency for stability
   setCpuFrequencyMhz(160);
+  
+  // Disable brownout detector (only if power supply is insufficient)
+  // WARNING: Only use this if you have a stable 3.3V supply
+  // WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);  // Uncomment only if needed
 
   Serial.begin(115200);
 #if DEBUG_MODE
@@ -626,6 +630,7 @@ void setup() {
 #if DEBUG_MODE
     Serial.println(FPSTR(STR_OLED_INIT));
 #endif
+    delay(100);  // Let OLED power stabilize after initialization
     display.clearDisplay();
     display.setTextSize(2);  // Larger text
     display.setTextColor(SSD1306_WHITE);
@@ -1014,6 +1019,10 @@ void connectWiFi() {
 #endif
   WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
+  
+  // Reduce WiFi power to prevent brownouts during transmission
+  WiFi.setTxPower(WIFI_POWER_15dBm);  // Reduce from default 20dBm to 15dBm
+  
   WiFi.begin(ssid.c_str(), password.c_str());
 
   unsigned long startTime = millis();
