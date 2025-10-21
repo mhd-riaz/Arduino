@@ -1,8 +1,8 @@
 // ============================================================================
 // ESP32 Fish Tank Automation System (Arduino Sketch)
-// Version: 3.0 - Commercial Product Design (5-Device System)
+// Version: 3.0 - Commercial Product Design (6-Device System)
 // Author: mhd-riaz
-// Date: October 20, 2025
+// Date: October 21, 2025
 //
 // Description:
 // Commercial fish tank automation system designed as an end-user product.
@@ -61,6 +61,7 @@
 //   - IN3 (Light): GPIO 5 - Aquarium lighting (40W LED)
 //   - IN4 (Heater): GPIO 19 - Water heater (200W)
 //   - IN5 (HangOnFilter): GPIO 18 - Secondary filter (20W)
+//   - IN6 (WaveMaker): GPIO 18 - Wave maker (10W)
 //   - Relay type: Active LOW (professional optocoupler modules)
 // - Buzzer: GPIO 13 (PWM capable) - Professional audio feedback
 //
@@ -291,11 +292,15 @@ const char PROGMEM STR_WILDCARD[] = "*";
 #define LIGHT_RELAY_PIN 5     // Aquarium Lights (LED lighting system)
 #define HEATER_RELAY_PIN 16   // Water Heater (Temperature control)
 #define HANGON_FILTER_PIN 18  // Hang-on Filter (Secondary filtration)
+#define WAVE_MAKER_PIN 32     // Wave Maker (Water movement)
 
 // Relay Configuration
 // Set to true for Active LOW relays (LOW = ON, HIGH = OFF) - Most common
 // Set to false for Active HIGH relays (HIGH = ON, LOW = OFF)
 #define RELAY_ACTIVE_LOW false  // Professional optocoupler modules are Active LOW
+
+// Debug and logging configuration
+#define DEBUG_MODE true  // Set to true for development, false for production to save memory
 
 // DS18B20 Temperature Sensor Pin
 #define ONE_WIRE_BUS 14  // DS18B20 data pin (requires 4.7KΩ pull-up to 3.3V)
@@ -397,7 +402,8 @@ Appliance appliances[] = {
   { "CO2", CO2_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },              // CO2 injection system (GPIO 16)
   { "Light", LIGHT_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },          // LED lighting system (GPIO 5)
   { "Heater", HEATER_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },        // Water heater with temp control (GPIO 19)
-  { "HangOnFilter", HANGON_FILTER_PIN, OFF, OFF, OFF, 0, SCHEDULED }  // Secondary hang-on filter (GPIO 17)
+  { "HangOnFilter", HANGON_FILTER_PIN, OFF, OFF, OFF, 0, SCHEDULED },  // Secondary hang-on filter (GPIO 17)
+  { "WaveMaker", WAVE_MAKER_PIN, OFF, OFF, OFF, 0, SCHEDULED }       // Wave maker (GPIO 32)
 };
 const int NUM_APPLIANCES = sizeof(appliances) / sizeof(appliances[0]);
 
@@ -406,9 +412,6 @@ std::map<String, std::vector<ScheduleEntry>> applianceSchedules;
 
 // Global POST body storage (single reusable buffer for memory optimization)
 String postBody = "";
-
-// Debug and logging configuration
-#define DEBUG_MODE false  // Set to true for development, false for production to save memory
 
 // Move large constant strings to PROGMEM
 const char PROGMEM STR_ERR_NVS_WIFI[] = "[NVS] Failed to initialize WiFi preferences.";
@@ -838,7 +841,7 @@ void handleRestart(AsyncWebServerRequest *request) {
 void loop() {
   // Handle WiFi reconnection if disconnected
   if (WiFi.status() != WL_CONNECTED && !apModeActive) {
-    if ((long)(millis() - lastWifiReconnectMillis) > 5000) {  // Check every 5 seconds
+    if ((long)(millis() - lastWifiReconnectMillis) > 10000) {  // Check every 10 seconds
       connectWiFi();
       lastWifiReconnectMillis = millis();
     }
@@ -919,7 +922,7 @@ void loop() {
   bool currentEmergencyState = false;
   EmergencyReason newEmergencyReason = NO_EMERGENCY;
 
-  if (currentTemperatureC > 0.0) {
+  if (currentTemperatureC != -127.0) {
     // Only check temperature limits if we have valid readings
     if (currentTemperatureC > EMERGENCY_TEMP_HIGH) {
       currentEmergencyState = true;
@@ -1037,9 +1040,10 @@ void connectWiFi() {
   WiFi.setAutoReconnect(true);
 
   // Reduce WiFi power to prevent brownouts during transmission
-  WiFi.setTxPower(WIFI_POWER_15dBm);  // Reduce from default 20dBm to 15dBm
-
+  // WiFi.setTxPower(WIFI_POWER_15dBm);  // Reduce from default 20dBm to 15dBm
+  delay(1000);
   WiFi.begin(ssid.c_str(), password.c_str());
+  delay(2000);
 
   unsigned long startTime = millis();
   int dotCount = 0;
@@ -1234,9 +1238,13 @@ void loadDefaultSchedules() {
   applianceSchedules["Heater"].push_back({ "on_interval", 0, 270 });
   applianceSchedules["Heater"].push_back({ "on_interval", 1230, 1439 });
 
-  // Hang-on Filter: 6:30 AM - 8:30 AM (390-510), 8:30 PM - 10:30 PM (1230-1350)
-  applianceSchedules["HangOnFilter"].push_back({ "on_interval", 390, 510 });
-  applianceSchedules["HangOnFilter"].push_back({ "on_interval", 1230, 1350 });
+  // Hang-on Filter: 9:00 AM - 10:30 AM (540-630), 7:30 PM - 8:30 PM (930-1230)
+  applianceSchedules["HangOnFilter"].push_back({ "on_interval", 540, 630 });
+  applianceSchedules["HangOnFilter"].push_back({ "on_interval", 930, 1230 });
+
+  // WaveMaker Filter: 10:30 AM - 12:30 PM (630-750), 3:30 PM - 7:30 PM (930-1170)
+  applianceSchedules["WaveMaker"].push_back({ "on_interval", 630, 750 });
+  applianceSchedules["WaveMaker"].push_back({ "on_interval", 930, 1170 });
 
   // Filter: 1:30 PM - 3:30 PM (810-930) - OFF during this time for maintenance
   applianceSchedules["Filter"].push_back({ "off_interval", 810, 930 });
@@ -1248,7 +1256,8 @@ void loadDefaultSchedules() {
   Serial.println(F("  CO2: 8:30-13:30 (510-810), 15:30-20:30 (930-1230)"));
   Serial.println(F("  Light: 9:30-13:30 (570-810), 16:30-20:30 (990-1230)"));
   Serial.println("  Heater: 0:00-4:30 (0-270), 20:30-23:59 (1230-1439)");
-  Serial.println("  HangOnFilter: 6:30-8:30 (390-510), 20:30-22:30 (1230-1350)");
+  Serial.println("  HangOnFilter: 9:00-10:30 (540-630), 19:30-20:30 (930-1230)");
+  Serial.println("  WaveMaker: 10:30-12:30 (630-750), 15:30-19:30 (930-1170)");
   Serial.println("  Filter: OFF 13:30-15:30 (810-930), otherwise ON");
 #endif
 }
@@ -1256,13 +1265,6 @@ void loadDefaultSchedules() {
 /**
  * @brief Loads appliance schedules from NVS. If no schedules are found,
  * custom default schedules optimized for fish tank automation are loaded and saved to NVS.
- * 
- * Default Schedule Summary:
- * - CO2: 8:30 AM - 1:30 PM (510-810), 3:30 PM - 8:30 PM (930-1230)
- * - Light: 9:30 AM - 1:30 PM (570-810), 4:30 PM - 8:30 PM (990-1230)  
- * - Heater: 12:00 AM - 4:30 AM (0-270), 8:30 PM - 11:59 PM (1230-1439)
- * - HangOnFilter: 6:30 AM - 8:30 AM (390-510), 8:30 PM - 10:30 PM (1230-1350)
- * - Filter: Continuous except 1:30 PM - 3:30 PM (810-930) for maintenance
  */
 void loadSchedules() {
   // Switch to schedules namespace
@@ -1414,20 +1416,22 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
         if (isTimeInInterval(currentMinutes, schedule.start_min, schedule.end_min)) {
           if (schedule.type == "on_interval") {
             isScheduledOn = true;
+            isScheduledOff = false;
           } else if (schedule.type == "off_interval") {
             isScheduledOff = true;
+            isScheduledOn = false;
           }
         }
       }
 
-      // Apply schedule logic based on appliance type
-      if (app.name == "Filter") {
-        // Filter: ON by default, turn OFF only during off_interval
-        targetState = isScheduledOff ? OFF : ON;
-      } else {
-        // Other appliances: OFF by default, turn ON only during on_interval
-        targetState = isScheduledOn ? ON : OFF;
-      }
+      // // Apply schedule logic based on appliance type
+      // if (app.name == "Filter") {
+      //   // Filter: ON by default, turn OFF only during off_interval
+      //   targetState = isScheduledOff ? OFF : ON;
+      // } else {
+      //   // Other appliances: OFF by default, turn ON only during on_interval
+      //   targetState = isScheduledOn ? ON : OFF;
+      // }
     }
     app.scheduledState = targetState;
   }
@@ -1542,6 +1546,7 @@ void updateOLED(DateTime now) {
     else if (appliances[i].name == "HangOnFilter") shortName = "HOF";
     else if (appliances[i].name == "CO2") shortName = "CO2";
     else if (appliances[i].name == "Light") shortName = "Light";
+    else if (appliances[i].name == "WaveMaker") shortName = "Wave";
     else if (appliances[i].name == "Heater") shortName = "Heater";
     else shortName = appliances[i].name.c_str();
 
