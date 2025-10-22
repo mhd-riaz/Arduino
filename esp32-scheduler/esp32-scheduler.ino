@@ -13,7 +13,7 @@
 // ============================================================================
 // COMPILE-TIME CONFIGURATION
 // ============================================================================
-#define ENABLE_OLED 0  // Set to 0 to disable OLED completely (saves ~30mA)
+#define ENABLE_OLED 1  // Set to 0 to disable OLED completely (saves ~30mA)
 
 // Commercial Product Features:
 // - Professional control PCB with modular external power supplies
@@ -398,12 +398,12 @@ struct Appliance {
 
 // Array of 5 appliance objects with custom configurations
 Appliance appliances[] = {
-  { "Filter", MOTOR_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },         // Primary filtration (GPIO 18)
-  { "CO2", CO2_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },              // CO2 injection system (GPIO 16)
-  { "Light", LIGHT_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },          // LED lighting system (GPIO 5)
-  { "Heater", HEATER_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },        // Water heater with temp control (GPIO 19)
+  { "Filter", MOTOR_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },          // Primary filtration (GPIO 18)
+  { "CO2", CO2_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },               // CO2 injection system (GPIO 16)
+  { "Light", LIGHT_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },           // LED lighting system (GPIO 5)
+  { "Heater", HEATER_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },         // Water heater with temp control (GPIO 19)
   { "HangOnFilter", HANGON_FILTER_PIN, OFF, OFF, OFF, 0, SCHEDULED },  // Secondary hang-on filter (GPIO 17)
-  { "WaveMaker", WAVE_MAKER_PIN, OFF, OFF, OFF, 0, SCHEDULED }       // Wave maker (GPIO 32)
+  { "WaveMaker", WAVE_MAKER_PIN, OFF, OFF, OFF, 0, SCHEDULED }         // Wave maker (GPIO 32)
 };
 const int NUM_APPLIANCES = sizeof(appliances) / sizeof(appliances[0]);
 
@@ -1444,7 +1444,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
       return;  // Skip this heater update if already in progress
     }
     heaterControlLock = true;
-    
+
     if (tempSensorError) {
       // Sensor error: allow manual overrides to take precedence (user is always priority)
       // Only fall back to scheduled state if no active override
@@ -1486,7 +1486,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
         app.currentMode = TEMP_CONTROLLED;
       }
     }
-    
+
     // ALWAYS release lock at end of Heater control section
     heaterControlLock = false;
   }
@@ -1495,7 +1495,7 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
   if (app.currentState != targetState) {
     app.currentState = targetState;
     setRelayState(app.pin, app.currentState);  // Use configurable relay control
-    // Immediately update OLED to reflect the change
+                                               // Immediately update OLED to reflect the change
 #if ENABLE_OLED
     DateTime now = rtc.now();
     updateOLED(now);
