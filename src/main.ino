@@ -1,42 +1,13 @@
 // ============================================================================
 // ESP32 Fish Tank Automation System (Arduino Sketch)
-// Version: 3.0.1 - Commercial Product Design (6-Device System)
+// Version: 3.1.0 - Commercial Product Design (6-Device System)
 // Author: mhd-riaz
 // Date: October 28, 2025
 //
-// Version History:
-// v3.0.1 (Oct 28, 2025) - Added OLED display rotation support (90° clockwise)
-// v3.0.0 (Oct 21, 2025) - Initial commercial product release
-//
-// Description:
-// Commercial fish tank automation system designed as an end-user product.
-// Controls five appliances (Filter, CO2, Light, Heater, HangOnFilter) with
-// intelligent scheduling, temperature control, and REST API management.
-// Designed for plug-and-play operation with external power supplies.
-//
+// See CHANGELOG.md for version history and updates.
 // ============================================================================
-// COMPILE-TIME CONFIGURATION
-// ============================================================================
-#define ENABLE_OLED 1  // Set to 0 to disable OLED completely (saves ~30mA)
 
-// Commercial Product Features:
-// - Professional control PCB with modular external power supplies
-// - Customer provides: SMPS 12V/2A + ERD Charger 5V/2A + 6A MCB protection
-// - Control of 5 appliances via professional relay interface
-// - Custom optimized schedules with minute-based timing for efficiency
-// - DS3231 RTC for accurate timekeeping, synchronized with NTP
-// - DS18B20 temperature sensor for intelligent heater control (25-29°C range)
-// - 0.96" Blue OLED Display for real-time status monitoring
-// - 12V 8-channel optocoupler relay module for appliance control
-// - ESP32 WiFi with automatic fallback to AP mode for setup
-// - REST API server with JSON interface for remote management
-// - Non-Volatile Storage (NVS) for settings persistence
-// - Temperature-controlled heater with 30-minute minimum runtime
-// - Emergency safety system for extreme temperature conditions
-// - Memory optimized for production reliability
-// - Audio feedback system with buzzer alerts
-// - Professional installation with MCB protection
-// - Default REST API key: "Automate@123"
+#define ENABLE_OLED 1  // Set to 0 to disable OLED completely (saves ~30mA)
 
 // ============================================================================
 // 1. Include Libraries

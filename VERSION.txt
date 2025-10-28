@@ -1,9 +1,0 @@
-VERSION=3.0.1
-RELEASE_DATE=October 28, 2025
-STATUS=Production Ready
-AUTHOR=mhd-riaz
-
-# Version Format: X.Y.Z
-# X = Major (breaking changes, major features)
-# Y = Minor (new features, non-breaking)
-# Z = Patch (fixes, improvements, tweaks)
