@@ -434,12 +434,12 @@ void setup() {
     Serial.println(FPSTR(STR_OLED_INIT));
 #endif
     delay(100);  // Let OLED power stabilize after initialization
-    display.setRotation(1);  // Rotate display 90 degrees clockwise
+    display.setRotation(1);  // Rotate display 90 degrees clockwise (64px wide × 128px tall)
     display.clearDisplay();
-    display.setTextSize(2);  // Larger text
+    display.setTextSize(1);  // Compact text for portrait mode
     display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 20);  // Center-ish vertically for 64px display
-    display.println("Bismillah");
+    display.setCursor(0, 30);  // Center vertically
+    display.println(F("Bismillah"));
     display.display();
     delay(2000);  // Show for 2 seconds
     display.clearDisplay();
@@ -853,20 +853,24 @@ void connectWiFi() {
 #if ENABLE_OLED
     if (++dotCount % 3 == 0) {
       display.clearDisplay();
-      display.setTextSize(1);  // Smallest font for max info
+      display.setTextSize(1);
       display.setTextColor(SSD1306_WHITE);
-      display.setCursor(0, 0);
-      display.println(F("Connecting to SSID:"));
+      
+      // Portrait mode: 64px wide (10 chars max)
+      int y = 0;
+      display.setCursor(0, y);
+      display.println(F("Connect:"));
+      y += 10;
+      
       // Scroll SSID if too long
-      int maxVisibleChars = 18;  // 18 chars at size 1 (128px/7px)
+      int maxVisibleChars = 10;  // 64px/6px = 10 chars
       int ssidLen = ssid.length();
       String ssidToShow;
       if (ssidLen > maxVisibleChars) {
         // Scroll the SSID horizontally
         if ((long)(millis() - lastScrollMillis) > scrollDelay) {
-          // Safe bounds checking for scroll offset
           if (ssidLen > 0) {
-            ssidScrollOffset = (ssidScrollOffset + 1) % (ssidLen + 2);  // +2 for smooth loop
+            ssidScrollOffset = (ssidScrollOffset + 1) % (ssidLen + 2);
           } else {
             ssidScrollOffset = 0;
           }
@@ -876,12 +880,11 @@ void connectWiFi() {
         if (ssidScrollOffset >= 0 && ssidScrollOffset < ssidLen && ssidScrollOffset + maxVisibleChars <= ssidLen) {
           ssidToShow = ssid.substring(ssidScrollOffset, ssidScrollOffset + maxVisibleChars);
         } else if (ssidScrollOffset >= 0 && ssidScrollOffset < ssidLen) {
-          // Wrap around with bounds checking
           int firstPart = ssidLen - ssidScrollOffset;
           if (firstPart > 0 && firstPart <= ssidLen) {
             ssidToShow = ssid.substring(ssidScrollOffset);
             ssidToShow += "  ";
-            int remainingChars = maxVisibleChars - firstPart - 2;  // -2 for spaces
+            int remainingChars = maxVisibleChars - firstPart - 2;
             if (remainingChars > 0 && remainingChars <= ssidLen) {
               ssidToShow += ssid.substring(0, remainingChars);
             }
@@ -889,17 +892,18 @@ void connectWiFi() {
             ssidToShow = ssid.substring(0, min(maxVisibleChars, ssidLen));
           }
         } else {
-          // Fallback - reset scroll and show from beginning
           ssidScrollOffset = 0;
           ssidToShow = ssid.substring(0, min(maxVisibleChars, ssidLen));
         }
       } else {
         ssidToShow = ssid;
       }
-      display.setCursor(0, 10);
+      display.setCursor(0, y);
       display.println(ssidToShow);
-      snprintf(oledBuffer, sizeof(oledBuffer), "Attempt %d/%d", wifiReconnectAttempts + 1, MAX_WIFI_RECONNECT_ATTEMPTS);
-      display.setCursor(0, 20);
+      y += 10;
+      
+      snprintf(oledBuffer, sizeof(oledBuffer), "Try %d/%d", wifiReconnectAttempts + 1, MAX_WIFI_RECONNECT_ATTEMPTS);
+      display.setCursor(0, y);
       display.println(oledBuffer);
       display.display();
     }
@@ -950,15 +954,27 @@ void startAPMode() {
 
 #if ENABLE_OLED
   display.clearDisplay();
-  display.setCursor(0, 0);
-  display.println("AP Mode Active:");
-  display.setCursor(0, 10);
-  display.println("SSID: MyTank");
-  display.setCursor(0, 20);
-  display.println("Pass: password@123");
-  display.setCursor(0, 30);
-  display.print("IP: ");
-  display.println(apIP);
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  
+  // Portrait mode: 64px wide (10 chars max)
+  int y = 0;
+  display.setCursor(0, y);
+  display.println(F("AP Mode"));
+  y += 10;
+  
+  display.setCursor(0, y);
+  display.println(F("MyTank"));
+  y += 10;
+  
+  display.setCursor(0, y);
+  display.println(F("pass@123"));
+  y += 10;
+  
+  display.setCursor(0, y);
+  snprintf(oledBuffer, sizeof(oledBuffer), "%d.%d.%d.%d", apIP[0], apIP[1], apIP[2], apIP[3]);
+  display.println(oledBuffer);
+  
   display.display();
 #endif
 }
@@ -1323,46 +1339,56 @@ void updateOLED(DateTime now) {
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
 
-  // Row 1: Current Time
-  display.setCursor(0, 0);
-  snprintf(oledBuffer, sizeof(oledBuffer), "%02d:%02d:%02d %02d/%02d",
-           now.hour(), now.minute(), now.second(), now.day(), now.month());
-  display.print(oledBuffer);
+  // After rotation(1): 64px wide × 128px tall (portrait mode)
+  // Font size 1: 6px wide × 8px tall per char
+  // Max chars per line: 10 chars (64px/6px = 10.6)
+  int y = 0;
 
-  // Row 2 onwards: Appliance States with compact formatting
-  int y = 10;
+  // Row 1: Time (HH:MM:SS)
+  display.setCursor(0, y);
+  snprintf(oledBuffer, sizeof(oledBuffer), "%02d:%02d:%02d", now.hour(), now.minute(), now.second());
+  display.print(oledBuffer);
+  y += 10;
+
+  // Row 2: Date (DD/MM)
+  display.setCursor(0, y);
+  snprintf(oledBuffer, sizeof(oledBuffer), "%02d/%02d", now.day(), now.month());
+  display.print(oledBuffer);
+  y += 10;
+
+  // Appliances (compact: 2-3 char names)
   for (int i = 0; i < NUM_APPLIANCES; i++) {
-    display.setCursor(0, y + (i * 8));
-    // Use custom short names for better readability
+    display.setCursor(0, y);
     const char *shortName;
-    if (appliances[i].name == "Filter") shortName = "Filter";
+    if (appliances[i].name == "Filter") shortName = "Fil";
     else if (appliances[i].name == "HangOnFilter") shortName = "HOF";
     else if (appliances[i].name == "CO2") shortName = "CO2";
-    else if (appliances[i].name == "Light") shortName = "Light";
-    else if (appliances[i].name == "WaveMaker") shortName = "Wave";
-    else if (appliances[i].name == "Heater") shortName = "Heater";
+    else if (appliances[i].name == "Light") shortName = "Lit";
+    else if (appliances[i].name == "WaveMaker") shortName = "Wav";
+    else if (appliances[i].name == "Heater") shortName = "Het";
     else shortName = appliances[i].name.c_str();
 
-    snprintf(oledBuffer, sizeof(oledBuffer), "%s: %s", shortName,
-             (appliances[i].currentState == ON ? "ON" : "OFF"));
+    snprintf(oledBuffer, sizeof(oledBuffer), "%s:%s", shortName,
+             (appliances[i].currentState == ON ? "ON" : "OF"));
     display.print(oledBuffer);
+    y += 9;
   }
 
-  // Temperature and System Status (bottom row)
-  static unsigned long lastScrollMillis = 0;
-  static int scrollOffset = 0;
-  const char *errorMsg = "TEMP SENSOR NOT DETECTED - CHECK CONNECTION!  ";
-  int maxVisibleChars = 21;  // 128px/6px per char (font size 1)
-  int errorMsgLen = strlen(errorMsg);
-
-  display.setCursor(0, y + (NUM_APPLIANCES * 8));
+  // Temperature & Status
+  display.setCursor(0, y);
   if (tempSensorError) {
-    // Running text (marquee) for error message
-    if ((long)(millis() - lastScrollMillis) > 200) {  // Scroll every 200ms
+    // Marquee for sensor error
+    static unsigned long lastScrollMillis = 0;
+    static int scrollOffset = 0;
+    const char *errorMsg = "SENSOR ERR!  ";
+    int maxVisibleChars = 10;
+    int errorMsgLen = strlen(errorMsg);
+    
+    if ((long)(millis() - lastScrollMillis) > 250) {
       scrollOffset = (scrollOffset + 1) % errorMsgLen;
       lastScrollMillis = millis();
     }
-    char scrollBuf[32];
+    char scrollBuf[12];
     for (int i = 0; i < maxVisibleChars; i++) {
       scrollBuf[i] = errorMsg[(scrollOffset + i) % errorMsgLen];
     }
@@ -1371,33 +1397,26 @@ void updateOLED(DateTime now) {
   } else {
     snprintf(oledBuffer, sizeof(oledBuffer), "%.1fC", currentTemperatureC);
     display.print(oledBuffer);
-    display.setCursor(40, y + (NUM_APPLIANCES * 8));
-    if (emergencyShutdown) {
-      // Display specific emergency reason
-      switch (currentEmergencyReason) {
-        case TEMP_TOO_HIGH:
-          display.print(F("TEMP HIGH"));
-          break;
-        case TEMP_TOO_LOW:
-          display.print(F("TEMP LOW"));
-          break;
-        case SENSOR_FAILURE:
-          display.print(F("SENSOR"));
-          break;
-        default:
-          display.print(F("EMRG!"));
-          break;
-      }
-    } else if (WiFi.status() == WL_CONNECTED) {
-      // Show more meaningful IP info - last two octets
-      IPAddress ip = WiFi.localIP();
-      snprintf(oledBuffer, sizeof(oledBuffer), "%d.%d", ip[2], ip[3]);
-      display.print(oledBuffer);
-    } else if (apModeActive) {
-      display.print(F("AP"));
-    } else {
-      display.print(F("NoWiFi"));
+  }
+  y += 10;
+
+  // System Status
+  display.setCursor(0, y);
+  if (emergencyShutdown) {
+    switch (currentEmergencyReason) {
+      case TEMP_TOO_HIGH: display.print(F("T-HIGH")); break;
+      case TEMP_TOO_LOW: display.print(F("T-LOW")); break;
+      case SENSOR_FAILURE: display.print(F("S-FAIL")); break;
+      default: display.print(F("EMRG!")); break;
     }
+  } else if (WiFi.status() == WL_CONNECTED) {
+    IPAddress ip = WiFi.localIP();
+    snprintf(oledBuffer, sizeof(oledBuffer), "%d.%d", ip[2], ip[3]);
+    display.print(oledBuffer);
+  } else if (apModeActive) {
+    display.print(F("AP"));
+  } else {
+    display.print(F("NoWiFi"));
   }
 
   display.display();
