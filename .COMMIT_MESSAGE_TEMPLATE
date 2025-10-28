@@ -1,0 +1,100 @@
+# Git Commit Message Template for ESP32 Fish Tank Automation
+
+# Use this template for commit messages to maintain consistency
+# Syntax: git commit -m "vX.Y.Z: [type] Description"
+
+# ============================================================================
+# VERSION BUMP COMMIT MESSAGE FORMAT
+# ============================================================================
+
+# v3.0.1: [patch] Add OLED display rotation support
+# 
+# - Added display.setRotation(1) for 90° clockwise rotation
+# - Updated version to 3.0.1
+# - Updated CHANGELOG.md and README.md
+# - No breaking changes
+
+# ============================================================================
+# EXAMPLES
+# ============================================================================
+
+# For Patch Updates (Z bump):
+# v3.0.1: [patch] Add OLED display rotation
+# v3.0.2: [patch] Fix temperature sensor recovery logic
+# v3.0.3: [patch] Optimize memory usage for OLED display
+
+# For Minor Updates (Y bump):
+# v3.1.0: [minor] Add web dashboard interface
+# v3.2.0: [minor] Add new WiFi auto-reconnect feature
+# v3.3.0: [minor] Add data logging capability
+
+# For Major Updates (X bump):
+# v4.0.0: [major] Support multi-tank networked control
+# v5.0.0: [major] Redesign REST API with v2 endpoints
+
+# ============================================================================
+# COMMIT MESSAGE STRUCTURE
+# ============================================================================
+
+# Line 1: vX.Y.Z: [type] Short description (50 chars max)
+# Line 2: (blank)
+# Line 3+: Detailed explanation (72 chars per line)
+#         - What changed
+#         - Why it changed
+#         - Impact or notes
+
+# ============================================================================
+# TYPES
+# ============================================================================
+
+# [patch]  - Z bump - Bug fixes, small improvements, tweaks
+# [minor]  - Y bump - New features, non-breaking additions
+# [major]  - X bump - Breaking changes, significant redesigns
+# [docs]   - Documentation only (no version bump usually)
+# [ci]     - CI/CD configuration (no version bump)
+
+# ============================================================================
+# FULL EXAMPLE
+# ============================================================================
+
+# v3.0.1: [patch] Add OLED display rotation support
+#
+# Added display.setRotation(1) to support rotated hardware configurations.
+# This allows the OLED display to work correctly when the hardware is
+# positioned upside-down or at different angles.
+#
+# - Added setRotation(1) after OLED initialization
+# - Supports 4 rotation levels: 0°, 90°, 180°, 270°
+# - Backward compatible with existing deployments
+# - Updated documentation with rotation options
+#
+# Files changed:
+# - esp32-scheduler.ino
+# - README.md
+# - CHANGELOG.md
+# - VERSION.md
+#
+# Testing:
+# - Compiled successfully
+# - Display rotation verified on hardware
+# - All other functions working normally
+
+# ============================================================================
+# AUTOMATION SCRIPT (Optional)
+# ============================================================================
+
+#!/bin/bash
+# save as: .git/hooks/commit-msg
+# make executable: chmod +x .git/hooks/commit-msg
+
+# This would validate commit message format
+# Uncomment to enable automatic checks
+
+# COMMIT_MSG=$(cat $1)
+# if ! [[ $COMMIT_MSG =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+#     echo "❌ Commit message must start with version tag (v3.0.1: ...)"
+#     exit 1
+# fi
+# exit 0
+
+# ============================================================================
