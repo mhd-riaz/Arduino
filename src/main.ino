@@ -463,7 +463,7 @@ void setup() {
 
   // Take an initial temperature reading
   sensors.requestTemperatures();
-  delay(200);  // Wait for conversion
+  delay(800);  // Wait 800ms for 12-bit conversion (750ms required + margin)
   float initialTemp = sensors.getTempCByIndex(0);
   if (initialTemp != DEVICE_DISCONNECTED_C && initialTemp > -50.0 && initialTemp < 100.0) {
     currentTemperatureC = initialTemp;
