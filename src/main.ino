@@ -658,7 +658,7 @@ void loop() {
   unsigned long tempReadInterval = tempSensorError ? TEMP_READ_ERROR_INTERVAL_MS : TEMP_READ_INTERVAL_MS;
   if ((long)(millis() - lastTempReadMillis) >= tempReadInterval) {
     sensors.requestTemperatures();
-    delay(50);  // Give sensor time to complete conversion
+    delay(800);  // Wait 800ms for 12-bit conversion (750ms required + margin)
     float tempReading = sensors.getTempCByIndex(0);
 
     if (tempReading != DEVICE_DISCONNECTED_C && tempReading > -50.0 && tempReading < 100.0) {
