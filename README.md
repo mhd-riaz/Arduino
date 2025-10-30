@@ -1,7 +1,7 @@
 # ESP32 Fish Tank Automation System
 
-## Version: 3.1.0
-## Date: October 28, 2025
+## Version: 3.1.1
+## Date: October 30, 2025
 
 ---
 

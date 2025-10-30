@@ -22,6 +22,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.1] - October 30, 2025
+
+### Fixed
+- **DS18B20 Temperature Sensor** - Fixed -127.0°C error by increasing conversion delay from 50ms to 800ms for 12-bit resolution (750ms required by datasheet)
+- **Initial Temperature Reading** - Fixed setup() temperature reading delay from 200ms to 800ms
+- **Heater Manual Override Priority** - Fixed temperature control logic to respect manual overrides with highest priority
+- Temperature-controlled heater now properly yields to manual `/control` API commands
+
+### Changed
+- Manual override now has absolute highest priority over temperature control for all appliances
+- Heater temperature control logic only applies when no manual override is active
+
+### Technical Details
+- **DS18B20 Conversion Times**: 9-bit (94ms), 10-bit (188ms), 11-bit (375ms), 12-bit (750ms)
+- **Override Priority Order**: Manual Override > Temperature Control > Scheduled Control
+- **Backwards Compatible**: No breaking changes to API or configuration
+
+---
+
 ## [3.0.1] - October 28, 2025
 
 ### Added

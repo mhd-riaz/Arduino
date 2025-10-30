@@ -1,8 +1,8 @@
 // ============================================================================
 // ESP32 Fish Tank Automation System (Arduino Sketch)
-// Version: 3.1.0 - Commercial Product Design (6-Device System)
+// Version: 3.1.1 - Manual Override Priority & Temperature Sensor Fix
 // Author: mhd-riaz
-// Date: October 28, 2025
+// Date: October 30, 2025
 //
 // See CHANGELOG.md for version history and updates.
 // ============================================================================
@@ -1245,28 +1245,28 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
     app.scheduledState = targetState;
   }
 
-  // 3. Intelligent Heater Temperature Logic (highest priority - overrides everything)
+  // 3. Intelligent Heater Temperature Logic (manual override has highest priority)
   if (app.name == "Heater") {
-    // Critical section for heater control - prevent race conditions
-    // Only lock for THIS heater, not for other appliances
-    if (heaterControlLock) {
-      return;  // Skip this heater update if already in progress
-    }
-    heaterControlLock = true;
+    // IMPORTANT: Skip temperature control entirely if manual override is active
+    if (app.overrideEndTime > 0) {
+      // Manual override is active - use override state, skip all temperature logic
+      // targetState already set from override section above
+      // No need to modify currentMode or other heater variables
+    } else {
+      // No override - apply temperature control logic
+      // Critical section for heater control - prevent race conditions
+      if (heaterControlLock) {
+        return;  // Skip this heater update if already in progress
+      }
+      heaterControlLock = true;
 
-    if (tempSensorError) {
-      // Sensor error: allow manual overrides to take precedence (user is always priority)
-      // Only fall back to scheduled state if no active override
-      if (app.overrideEndTime == 0) {
+      if (tempSensorError) {
+        // Sensor error: fall back to scheduled state
         targetState = app.scheduledState;
         app.currentMode = SCHEDULED;
-      } else {
-        // Keep override state as set above
-        app.currentMode = OVERRIDDEN;
-      }
-      heaterForcedOn = false;
-      heaterOnTimeMillis = 0;
-    } else if (currentTemperatureC > 0) {
+        heaterForcedOn = false;
+        heaterOnTimeMillis = 0;
+      } else if (currentTemperatureC > 0) {
 
       bool currentHeaterState = (targetState == ON);
       if (currentTemperatureC < TEMP_THRESHOLD_ON) {
@@ -1294,10 +1294,10 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
         targetState = ON;
         app.currentMode = TEMP_CONTROLLED;
       }
-    }
 
-    // ALWAYS release lock at end of Heater control section
-    heaterControlLock = false;
+      // ALWAYS release lock at end of Heater control section
+      heaterControlLock = false;
+    }
   }
 
   // Update appliance state only if changed (optimized)
