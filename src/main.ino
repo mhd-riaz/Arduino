@@ -1267,32 +1267,32 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
         heaterForcedOn = false;
         heaterOnTimeMillis = 0;
       } else if (currentTemperatureC > 0) {
-
-      bool currentHeaterState = (targetState == ON);
-      if (currentTemperatureC < TEMP_THRESHOLD_ON) {
-        // Temperature too low - force heater ON
-        if (!currentHeaterState && !heaterForcedOn) {
-          heaterOnTimeMillis = millis();
-          heaterForcedOn = true;
-        }
-        targetState = ON;
-        app.currentMode = TEMP_CONTROLLED;
-      } else if (currentTemperatureC >= TEMP_THRESHOLD_OFF) {
-        // Temperature reached target - check minimum runtime
-        if (heaterForcedOn && ((long)(millis() - heaterOnTimeMillis) < HEATER_MIN_RUN_TIME_MS)) {
-          targetState = ON;  // Keep ON for minimum 30-minute runtime
+        bool currentHeaterState = (targetState == ON);
+        if (currentTemperatureC < TEMP_THRESHOLD_ON) {
+          // Temperature too low - force heater ON
+          if (!currentHeaterState && !heaterForcedOn) {
+            heaterOnTimeMillis = millis();
+            heaterForcedOn = true;
+          }
+          targetState = ON;
           app.currentMode = TEMP_CONTROLLED;
-        } else {
-          heaterForcedOn = false;
-          heaterOnTimeMillis = 0;
-          targetState = OFF;
-          app.currentMode = (app.overrideEndTime > 0) ? OVERRIDDEN : SCHEDULED;
+        } else if (currentTemperatureC >= TEMP_THRESHOLD_OFF) {
+          // Temperature reached target - check minimum runtime
+          if (heaterForcedOn && ((long)(millis() - heaterOnTimeMillis) < HEATER_MIN_RUN_TIME_MS)) {
+            targetState = ON;  // Keep ON for minimum 30-minute runtime
+            app.currentMode = TEMP_CONTROLLED;
+          } else {
+            heaterForcedOn = false;
+            heaterOnTimeMillis = 0;
+            targetState = OFF;
+            app.currentMode = (app.overrideEndTime > 0) ? OVERRIDDEN : SCHEDULED;
+          }
         }
-      }
-      // Ensure minimum runtime is respected (optimized check)
-      if (heaterForcedOn && targetState == OFF) {
-        targetState = ON;
-        app.currentMode = TEMP_CONTROLLED;
+        // Ensure minimum runtime is respected (optimized check)
+        if (heaterForcedOn && targetState == OFF) {
+          targetState = ON;
+          app.currentMode = TEMP_CONTROLLED;
+        }
       }
 
       // ALWAYS release lock at end of Heater control section
