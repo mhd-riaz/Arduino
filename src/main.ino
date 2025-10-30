@@ -1251,12 +1251,13 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
     if (app.overrideEndTime > 0) {
       // Manual override is active - use override state, skip all temperature logic
       // targetState already set from override section above
-      // No need to modify currentMode or other heater variables
+      // Temperature control variables will reset naturally when override expires
     } else {
       // No override - apply temperature control logic
       // Critical section for heater control - prevent race conditions
       if (heaterControlLock) {
-        return;  // Skip this heater update if already in progress
+        // Skip this update if already in progress (will be processed next cycle)
+        return;
       }
       heaterControlLock = true;
 
