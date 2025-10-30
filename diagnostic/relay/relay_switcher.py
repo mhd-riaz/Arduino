@@ -221,12 +221,87 @@ def continuous_mode():
         turn_all_off()
         print(f"\n{Colors.GREEN}Cleanup complete. Total cycles: {cycle_count}{Colors.RESET}\n")
 
+def single_appliance_mode(appliance_name):
+    """Test a single appliance ON/OFF repeatedly"""
+    print(f"\n{Colors.BOLD}{Colors.YELLOW}Running SINGLE APPLIANCE mode: {appliance_name}{Colors.RESET}")
+    print(f"{Colors.YELLOW}Press Ctrl+C to stop{Colors.RESET}\n")
+    
+    cycle_count = 0
+    try:
+        while True:
+            cycle_count += 1
+            print(f"\n{Colors.BOLD}{Colors.CYAN}{'='*60}{Colors.RESET}")
+            print(f"{Colors.BOLD}{Colors.CYAN}  {appliance_name} - Cycle #{cycle_count}{Colors.RESET}")
+            print(f"{Colors.BOLD}{Colors.CYAN}{'='*60}{Colors.RESET}\n")
+            
+            # Turn ON the specified appliance, turn OFF all others
+            print(f"{Colors.BOLD}Turning {appliance_name} ON (all others OFF){Colors.RESET}")
+            payload = {
+                "appliances": [
+                    {"name": app, "action": "ON" if app == appliance_name else "OFF", "timeout_minutes": 5}
+                    for app in APPLIANCES
+                ]
+            }
+            if not send_control_command(payload, f"{appliance_name} ON"):
+                print(f"\n{Colors.RED}Failed to turn on {appliance_name}. Stopping.{Colors.RESET}\n")
+                break
+            
+            time.sleep(1)  # Wait 1 second before reading status
+            status = get_status()
+            if status:
+                display_status(status)
+            
+            print(f"\n{Colors.YELLOW}Waiting {SWITCH_INTERVAL} seconds...{Colors.RESET}")
+            time.sleep(SWITCH_INTERVAL)
+            
+            # Turn OFF the appliance (and keep all others OFF)
+            print(f"\n{Colors.BOLD}Turning {appliance_name} OFF{Colors.RESET}")
+            payload = {
+                "appliances": [
+                    {"name": app, "action": "OFF", "timeout_minutes": 5}
+                    for app in APPLIANCES
+                ]
+            }
+            if not send_control_command(payload, f"{appliance_name} OFF"):
+                print(f"\n{Colors.RED}Failed to turn off {appliance_name}. Stopping.{Colors.RESET}\n")
+                break
+            
+            time.sleep(1)  # Wait 1 second before reading status
+            status = get_status()
+            if status:
+                display_status(status)
+            
+            print(f"\n{Colors.GREEN}✓ Cycle #{cycle_count} complete{Colors.RESET}")
+            print(f"{Colors.YELLOW}Waiting 3 seconds before next cycle...{Colors.RESET}")
+            time.sleep(3)
+            
+    except KeyboardInterrupt:
+        print(f"\n\n{Colors.YELLOW}Interrupted by user{Colors.RESET}")
+        print(f"Turning all appliances OFF...")
+        turn_all_off()
+        print(f"\n{Colors.GREEN}Cleanup complete. Total cycles: {cycle_count}{Colors.RESET}\n")
+
 def main():
     """Main function"""
     print_header()
     
+    # Check for single appliance mode
+    if len(sys.argv) > 2 and sys.argv[1] in ["-a", "--appliance"]:
+        appliance_name = sys.argv[2]
+        # Case-insensitive matching
+        matched_appliance = None
+        for app in APPLIANCES:
+            if app.lower() == appliance_name.lower():
+                matched_appliance = app
+                break
+        
+        if matched_appliance is None:
+            print(f"{Colors.RED}Error: '{appliance_name}' is not a valid appliance.{Colors.RESET}")
+            print(f"{Colors.YELLOW}Valid appliances: {', '.join(APPLIANCES)}{Colors.RESET}\n")
+            sys.exit(1)
+        single_appliance_mode(matched_appliance)
     # Check if user wants continuous mode
-    if len(sys.argv) > 1 and sys.argv[1] in ["-c", "--continuous"]:
+    elif len(sys.argv) > 1 and sys.argv[1] in ["-c", "--continuous"]:
         continuous_mode()
     else:
         # Single cycle mode

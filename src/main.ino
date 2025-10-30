@@ -84,7 +84,7 @@ const char PROGMEM STR_WILDCARD[] = "*";
 #define LIGHT_RELAY_PIN 5     // Aquarium Lights (LED lighting system)
 #define HEATER_RELAY_PIN 16   // Water Heater (Temperature control)
 #define HANGON_FILTER_PIN 18  // Hang-on Filter (Secondary filtration)
-#define WAVE_MAKER_PIN 32     // Wave Maker (Water movement)
+#define WAVE_MAKER_PIN 33     // Wave Maker (Water movement) - Changed from 32 (ADC2 conflicts with WiFi)
 
 // Relay Configuration
 // Set to true for Active LOW relays (LOW = ON, HIGH = OFF) - Most common
