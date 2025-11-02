@@ -446,7 +446,7 @@ void setup() {
     Serial.println(FPSTR(STR_OLED_INIT));
 #endif
     delay(100);  // Let OLED power stabilize after initialization
-    display.setRotation(1);  // Rotate display 90 degrees clockwise (64px wide × 128px tall)
+    display.setRotation(3);  // Rotate display 90 degrees clockwise (64px wide × 128px tall)
     display.clearDisplay();
     display.setTextSize(1);  // Compact text for portrait mode
     display.setTextColor(SSD1306_WHITE);
@@ -1424,7 +1424,8 @@ void updateOLED(DateTime now) {
     }
   } else if (WiFi.status() == WL_CONNECTED) {
     IPAddress ip = WiFi.localIP();
-    snprintf(oledBuffer, sizeof(oledBuffer), "%d.%d", ip[2], ip[3]);
+    // Display full IP address (fits in 10 chars for typical IPs like 192.168.1.1)
+    snprintf(oledBuffer, sizeof(oledBuffer), "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
     display.print(oledBuffer);
   } else if (apModeActive) {
     display.print(F("AP"));
