@@ -68,9 +68,40 @@ API Key: `X-API-Key: Automate@123`
 
 ## Scheduling
 - Minute-based intervals (0-1439)
-- Default schedules for each appliance
+- Default schedules optimized for planted aquarium
 - Heater: 25-29°C, 30-min minimum runtime
 - Emergency shutdown: >32°C or <15°C
+
+### Default Schedules (IST - India Standard Time)
+
+**CO2 System:**
+- 8:00 AM - 2:00 PM (6 hours - starts 1 hour before first light)
+- 3:00 PM - 8:00 PM (5 hours - resumes with third light period)
+- Total: 11 hours with 1-hour break (2:00 PM - 3:00 PM) for fish to relax during light-off period
+
+**Aquarium Light:**
+- 9:00 AM - 11:00 AM (Morning - 2 hours)
+- 12:00 PM - 2:00 PM (Midday - 2 hours)
+- 3:00 PM - 5:00 PM (Afternoon - 2 hours)
+- 6:00 PM - 8:00 PM (Evening - 2 hours)
+- Total: 8 hours with triple siesta breaks (maximum algae disruption + red plant vitality)
+
+**Heater (Temperature Control):**
+- 12:00 AM - 4:30 AM (Night heating)
+- 8:30 PM - 11:59 PM (Evening heating)
+- Auto ON when temp < 25°C, OFF when temp ≥ 29°C
+
+**Hang-on Filter:**
+- 9:00 AM - 10:30 AM (Morning maintenance)
+- 7:30 PM - 8:30 PM (Evening maintenance)
+
+**Wave Maker:**
+- 10:30 AM - 12:30 PM (Midday circulation)
+- 3:30 PM - 7:30 PM (Afternoon circulation)
+
+**Main Filter:**
+- ON 24/7 (continuous filtration)
+- OFF 1:30 PM - 3:30 PM (maintenance window)
 
 ---
 
@@ -89,3 +120,5 @@ API Key: `X-API-Key: Automate@123`
 - Professional installation recommended
 
 ---
+
+

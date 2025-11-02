@@ -229,15 +229,15 @@ curl -X POST http://192.168.1.100/control \
     "CO2": [
       {
         "type": "on_interval",
-        "start_min": 510,
-        "end_min": 810
+        "start_min": 480,
+        "end_min": 840
       }
     ],
     "Light": [
       {
         "type": "on_interval", 
-        "start_min": 570,
-        "end_min": 810
+        "start_min": 540,
+        "end_min": 660
       }
     ],
     "Filter": [
@@ -253,7 +253,8 @@ curl -X POST http://192.168.1.100/control \
 
 **Time Format**: Minutes from midnight (0-1439)
 - `0` = 00:00 (midnight)
-- `510` = 08:30 (8:30 AM)
+- `480` = 08:00 (8:00 AM)
+- `840` = 14:00 (2:00 PM)
 - `1439` = 23:59 (11:59 PM)
 
 **Schedule Types**:
@@ -282,20 +283,20 @@ curl -X GET http://192.168.1.100/schedules \
     "CO2": [
       {
         "type": "on_interval",
-        "start_min": 510,
-        "end_min": 810
+        "start_min": 480,
+        "end_min": 840
       },
       {
         "type": "on_interval", 
-        "start_min": 930,
-        "end_min": 1230
+        "start_min": 900,
+        "end_min": 1200
       }
     ],
     "Light": [
       {
         "type": "on_interval",
-        "start_min": 570,
-        "end_min": 810
+        "start_min": 540,
+        "end_min": 660
       }
     ]
   },
@@ -319,15 +320,15 @@ curl -X POST http://192.168.1.100/schedules \
       "CO2": [
         {
           "type": "on_interval",
-          "start_min": 510,
-          "end_min": 810
+          "start_min": 480,
+          "end_min": 840
         }
       ],
       "Light": [
         {
           "type": "on_interval",
-          "start_min": 570,
-          "end_min": 810
+          "start_min": 540,
+          "end_min": 660
         }
       ]
     },
@@ -445,10 +446,11 @@ curl -X POST http://192.168.1.100/wifi \
 - **Automatic Reboot**: The system will automatically reboot after a successful reset for full recovery.
 
 **Factory Reset Defaults**:
-- **CO2**: 8:30-13:30 & 15:30-20:30
-- **Light**: 9:30-13:30 & 16:30-20:30  
+- **CO2**: 8:00-14:00 & 15:00-20:00 (11hrs with 1hr break for fish)
+- **Light**: 9:00-11:00, 12:00-14:00, 15:00-17:00, 18:00-20:00 (8hrs triple siesta)
 - **Heater**: 0:00-4:30 & 20:30-23:59
-- **HangOnFilter**: 6:30-8:30 & 20:30-22:30
+- **HangOnFilter**: 9:00-10:30 & 19:30-20:30
+- **WaveMaker**: 10:30-12:30 & 15:30-19:30
 - **Filter**: OFF 13:30-15:30 (maintenance), otherwise ON
 
 **Example - Selective Reset**:

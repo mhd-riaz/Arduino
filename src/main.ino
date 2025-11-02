@@ -1047,13 +1047,15 @@ void loadDefaultSchedules() {
   applianceSchedules.clear();
 
   // Define custom default schedules (all times converted to minutes for efficiency)
-  // CO2: 8:30 AM - 1:30 PM (510-810), 3:30 PM - 8:30 PM (930-1230)
-  applianceSchedules["CO2"].push_back({ "on_interval", 510, 810 });
-  applianceSchedules["CO2"].push_back({ "on_interval", 930, 1230 });
+  // CO2: 8:00-14:00 (480-840), 15:00-20:00 (900-1200) - 1hr break at 14:00-15:00 for fish to relax during light-off
+  applianceSchedules["CO2"].push_back({ "on_interval", 480, 840 });   // 8 AM - 2 PM (6 hours)
+  applianceSchedules["CO2"].push_back({ "on_interval", 900, 1200 });  // 3 PM - 8 PM (5 hours)
 
-  // Light: 9:30 AM - 1:30 PM (570-810), 4:30 PM - 8:30 PM (990-1230)
-  applianceSchedules["Light"].push_back({ "on_interval", 570, 810 });
-  applianceSchedules["Light"].push_back({ "on_interval", 990, 1230 });
+  // Light: 9:00-11:00 (540-660), 12:00-14:00 (720-840), 15:00-17:00 (900-1020), 18:00-20:00 (1080-1200) - 8hrs triple siesta (maximum algae control)
+  applianceSchedules["Light"].push_back({ "on_interval", 540, 660 });
+  applianceSchedules["Light"].push_back({ "on_interval", 720, 840 });
+  applianceSchedules["Light"].push_back({ "on_interval", 900, 1020 });
+  applianceSchedules["Light"].push_back({ "on_interval", 1080, 1200 });
 
   // Heater: 12:00 AM - 4:30 AM (0-270), 8:30 PM - 11:59 PM (1230-1439)
   applianceSchedules["Heater"].push_back({ "on_interval", 0, 270 });
@@ -1074,8 +1076,8 @@ void loadDefaultSchedules() {
 
 #if DEBUG_MODE
   Serial.println(F("[Factory Reset] Default schedules loaded:"));
-  Serial.println(F("  CO2: 8:30-13:30 (510-810), 15:30-20:30 (930-1230)"));
-  Serial.println(F("  Light: 9:30-13:30 (570-810), 16:30-20:30 (990-1230)"));
+  Serial.println(F("  CO2: 8:00-14:00, 15:00-20:00 - 11hrs with 1hr break for fish"));
+  Serial.println(F("  Light: 9:00-11:00, 12:00-14:00, 15:00-17:00, 18:00-20:00 - 8hrs triple siesta"));
   Serial.println("  Heater: 0:00-4:30 (0-270), 20:30-23:59 (1230-1439)");
   Serial.println("  HangOnFilter: 9:00-10:30 (540-630), 19:30-20:30 (930-1230)");
   Serial.println("  WaveMaker: 10:30-12:30 (630-750), 15:30-19:30 (930-1170)");
