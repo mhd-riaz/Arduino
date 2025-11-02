@@ -99,7 +99,7 @@ const char PROGMEM STR_WILDCARD[] = "*";
 #define ONE_WIRE_BUS 33  // DS18B20 data pin (requires 4.7KΩ pull-up to 3.3V) - GPIO 33 (ADC1, safe)
 
 // Buzzer Pin (PWM capable for audio feedback)
-#define BUZZER_PIN 25    // GPIO 25 - Safe for PWM output
+#define BUZZER_PIN 25  // GPIO 25 - Safe for PWM output
 
 // OLED Display (I2C - Shared with RTC on same bus)
 #define OLED_SDA 21
@@ -322,7 +322,7 @@ void setRelayState(int pin, ApplianceState state) {
   // Dynamically cache the current GPIO state to avoid redundant writes
   static int lastPinStates[NUM_APPLIANCES];
   static bool initialized = false;
-  
+
   // Initialize the cache on first call
   if (!initialized) {
     for (int i = 0; i < NUM_APPLIANCES; i++) {
@@ -344,7 +344,7 @@ void setRelayState(int pin, ApplianceState state) {
       return;  // Exit after handling the pin
     }
   }
-  
+
   // If pin not found in appliances array, still write it (safety fallback)
   digitalWrite(pin, newState);
 }
@@ -445,7 +445,7 @@ void setup() {
 #if DEBUG_MODE
     Serial.println(FPSTR(STR_OLED_INIT));
 #endif
-    delay(100);  // Let OLED power stabilize after initialization
+    delay(100);              // Let OLED power stabilize after initialization
     display.setRotation(3);  // Rotate display 90 degrees clockwise (64px wide × 128px tall)
     display.clearDisplay();
     display.setTextSize(1);  // Compact text for portrait mode
@@ -867,13 +867,13 @@ void connectWiFi() {
       display.clearDisplay();
       display.setTextSize(1);
       display.setTextColor(SSD1306_WHITE);
-      
+
       // Portrait mode: 64px wide (10 chars max)
       int y = 0;
       display.setCursor(0, y);
       display.println(F("Connect:"));
       y += 10;
-      
+
       // Scroll SSID if too long
       int maxVisibleChars = 10;  // 64px/6px = 10 chars
       int ssidLen = ssid.length();
@@ -913,7 +913,7 @@ void connectWiFi() {
       display.setCursor(0, y);
       display.println(ssidToShow);
       y += 10;
-      
+
       snprintf(oledBuffer, sizeof(oledBuffer), "Try %d/%d", wifiReconnectAttempts + 1, MAX_WIFI_RECONNECT_ATTEMPTS);
       display.setCursor(0, y);
       display.println(oledBuffer);
@@ -968,25 +968,25 @@ void startAPMode() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
-  
+
   // Portrait mode: 64px wide (10 chars max)
   int y = 0;
   display.setCursor(0, y);
   display.println(F("AP Mode"));
   y += 10;
-  
+
   display.setCursor(0, y);
   display.println(F("MyTank"));
   y += 10;
-  
+
   display.setCursor(0, y);
   display.println(F("pass@123"));
   y += 10;
-  
+
   display.setCursor(0, y);
   snprintf(oledBuffer, sizeof(oledBuffer), "%d.%d.%d.%d", apIP[0], apIP[1], apIP[2], apIP[3]);
   display.println(oledBuffer);
-  
+
   display.display();
 #endif
 }
@@ -1396,7 +1396,7 @@ void updateOLED(DateTime now) {
     const char *errorMsg = "SENSOR ERR!  ";
     int maxVisibleChars = 10;
     int errorMsgLen = strlen(errorMsg);
-    
+
     if ((long)(millis() - lastScrollMillis) > 250) {
       scrollOffset = (scrollOffset + 1) % errorMsgLen;
       lastScrollMillis = millis();
