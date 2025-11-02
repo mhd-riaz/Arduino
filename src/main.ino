@@ -189,13 +189,13 @@ struct Appliance {
   ApplianceMode currentMode;      // Current control mode (SCHEDULED/OVERRIDDEN/TEMP_CONTROLLED)
 };
 
-// Array of 5 appliance objects with custom configurations
+// Array of appliance objects with custom configurations (automatically sized)
 Appliance appliances[] = {
-  { "Filter", MOTOR_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },          // Primary filtration (GPIO 18)
-  { "CO2", CO2_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },               // CO2 injection system (GPIO 16)
-  { "Light", LIGHT_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },           // LED lighting system (GPIO 5)
+  { "Filter", MOTOR_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },          // Primary filtration (GPIO 16)
+  { "CO2", CO2_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },               // CO2 injection system (GPIO 17)
+  { "Light", LIGHT_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },           // LED lighting system (GPIO 18)
   { "Heater", HEATER_RELAY_PIN, OFF, OFF, OFF, 0, SCHEDULED },         // Water heater with temp control (GPIO 19)
-  { "HangOnFilter", HANGON_FILTER_PIN, OFF, OFF, OFF, 0, SCHEDULED },  // Secondary hang-on filter (GPIO 17)
+  { "HangOnFilter", HANGON_FILTER_PIN, OFF, OFF, OFF, 0, SCHEDULED },  // Secondary hang-on filter (GPIO 23)
   { "WaveMaker", WAVE_MAKER_PIN, OFF, OFF, OFF, 0, SCHEDULED }         // Wave maker (GPIO 32)
 };
 const int NUM_APPLIANCES = sizeof(appliances) / sizeof(appliances[0]);
@@ -319,23 +319,34 @@ int getRelayOnState() {
  * @param state ApplianceState (ON or OFF)
  */
 void setRelayState(int pin, ApplianceState state) {
-  // Cache the current GPIO state to avoid redundant writes
-  static int lastPinStates[5] = { -1, -1, -1, -1, -1 };   // Only track our 5 relay pins
-  static const int relayPins[5] = { 18, 16, 5, 19, 17 };  // Our actual relay pins
+  // Dynamically cache the current GPIO state to avoid redundant writes
+  static int lastPinStates[NUM_APPLIANCES];
+  static bool initialized = false;
+  
+  // Initialize the cache on first call
+  if (!initialized) {
+    for (int i = 0; i < NUM_APPLIANCES; i++) {
+      lastPinStates[i] = -1;  // -1 means uninitialized
+    }
+    initialized = true;
+  }
 
   int newState = (state == ON) ? getRelayOnState() : getRelayOffState();
 
-  // Find the pin index in our array
-  for (int i = 0; i < 5; i++) {
-    if (relayPins[i] == pin) {
+  // Find the pin index in the appliances array
+  for (int i = 0; i < NUM_APPLIANCES; i++) {
+    if (appliances[i].pin == pin) {
       // Only write if state has changed
       if (lastPinStates[i] != newState) {
         digitalWrite(pin, newState);
         lastPinStates[i] = newState;
       }
-      break;
+      return;  // Exit after handling the pin
     }
   }
+  
+  // If pin not found in appliances array, still write it (safety fallback)
+  digitalWrite(pin, newState);
 }
 
 // ============================================================================
