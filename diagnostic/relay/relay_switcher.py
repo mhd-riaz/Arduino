@@ -5,13 +5,14 @@ Cycles through each appliance one at a time to test relay functionality.
 Each appliance turns ON for 5 seconds while others remain OFF.
 """
 
-import requests
-import time
 import sys
+import time
 from datetime import datetime
 
+import requests
+
 # Configuration
-ESP32_IP = "192.168.29.82"  # ⚠️ CHANGE THIS to your ESP32's IP address (check /status endpoint or Serial Monitor)
+ESP32_IP = "192.168.29.75"  # ⚠️ CHANGE THIS to your ESP32's IP address (check /status endpoint or Serial Monitor)
 API_KEY = "Automate@123"
 BASE_URL = f"http://{ESP32_IP}"
 SWITCH_INTERVAL = 5  # seconds

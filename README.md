@@ -1,7 +1,7 @@
 # ESP32 Fish Tank Automation System
 
-## Version: 3.1.1
-## Date: October 30, 2025
+## Version: 3.2.0
+## Date: November 2, 2025
 
 ---
 
@@ -40,15 +40,15 @@ Commercial fish tank automation system for end-user product deployment. Controls
 ## Pinout
 | Device         | GPIO | Function           |
 |---------------|------|--------------------|
-| Filter        | 17   | Main filtration    |
-| CO2           | 19   | CO2 injection      |
-| Light         | 5    | LED lighting       |
-| Heater        | 16   | Water heater       |
-| HangOnFilter  | 18   | Secondary filter   |
+| Filter        | 16   | Main filtration    |
+| CO2           | 17   | CO2 injection      |
+| Light         | 18   | LED lighting       |
+| Heater        | 19   | Water heater       |
+| HangOnFilter  | 23   | Secondary filter   |
 | WaveMaker     | 32   | Water movement     |
-| Temp Sensor   | 14   | DS18B20 OneWire    |
+| Temp Sensor   | 33   | DS18B20 OneWire    |
 | OLED/RTC      | 21/22| I2C SDA/SCL        |
-| Buzzer        | 13   | PWM audio          |
+| Buzzer        | 25   | PWM audio          |
 
 ---
 

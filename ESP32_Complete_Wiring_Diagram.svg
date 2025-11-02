@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1800" width="1400" height="1800">
+  <defs>
+    <style>
+      .title { font: bold 24px sans-serif; fill: #1a1a1a; }
+      .subtitle { font: bold 16px sans-serif; fill: #333; }
+      .label { font: 12px sans-serif; fill: #000; }
+      .pin-label { font: bold 11px monospace; fill: #fff; }
+      .voltage-label { font: bold 10px sans-serif; fill: #d32f2f; }
+      .component { fill: #e3f2fd; stroke: #1976d2; stroke-width: 2; }
+      .esp32 { fill: #263238; stroke: #000; stroke-width: 2; }
+      .relay { fill: #fff3e0; stroke: #f57c00; stroke-width: 2; }
+      .sensor { fill: #e8f5e9; stroke: #388e3c; stroke-width: 2; }
+      .display { fill: #f3e5f5; stroke: #7b1fa2; stroke-width: 2; }
+      .power { fill: #ffebee; stroke: #c62828; stroke-width: 2; }
+      .resistor { fill: none; stroke: #795548; stroke-width: 2; }
+      .wire-5v { stroke: #f44336; stroke-width: 2; fill: none; }
+      .wire-3v3 { stroke: #ff9800; stroke-width: 2; fill: none; }
+      .wire-gnd { stroke: #000; stroke-width: 2; fill: none; }
+      .wire-signal { stroke: #2196f3; stroke-width: 1.5; fill: none; }
+      .wire-i2c { stroke: #9c27b0; stroke-width: 1.5; fill: none; }
+      .wire-relay { stroke: #4caf50; stroke-width: 1.5; fill: none; }
+      .note { font: italic 11px sans-serif; fill: #666; }
+      .pin { fill: #ffc107; stroke: #000; stroke-width: 1; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text x="700" y="30" text-anchor="middle" class="title">ESP32 Fish Tank Automation - Complete Wiring Diagram</text>
+  <text x="700" y="55" text-anchor="middle" class="subtitle">6-Channel Relay + DS18B20 + OLED + RTC + Buzzer</text>
+  <text x="700" y="75" text-anchor="middle" class="note">Version 3.2.0 - Safe GPIO Pin Assignment - November 2, 2025</text>
+
+  <!-- Legend -->
+  <g id="legend">
+    <rect x="20" y="90" width="200" height="140" fill="#fff" stroke="#ccc" stroke-width="1" rx="5"/>
+    <text x="30" y="110" class="subtitle">Wire Color Code:</text>
+    <line x1="30" y1="125" x2="70" y2="125" class="wire-5v"/>
+    <text x="75" y="130" class="label">5V Power</text>
+    <line x1="30" y1="145" x2="70" y2="145" class="wire-3v3"/>
+    <text x="75" y="150" class="label">3.3V Power</text>
+    <line x1="30" y1="165" x2="70" y2="165" class="wire-gnd"/>
+    <text x="75" y="170" class="label">Ground (GND)</text>
+    <line x1="30" y1="185" x2="70" y2="185" class="wire-signal"/>
+    <text x="75" y="190" class="label">Data/Signal</text>
+    <line x1="30" y1="205" x2="70" y2="205" class="wire-i2c"/>
+    <text x="75" y="210" class="label">I2C (SDA/SCL)</text>
+  </g>
+
+  <!-- Power Supply Section -->
+  <g id="power-supply">
+    <rect x="20" y="250" width="180" height="120" class="power" rx="5"/>
+    <text x="110" y="275" text-anchor="middle" class="subtitle">5V Power Supply</text>
+    <text x="110" y="295" text-anchor="middle" class="label">(2A minimum)</text>
+    
+    <!-- Power terminals -->
+    <circle cx="70" cy="320" r="5" class="pin"/>
+    <text x="80" y="325" class="voltage-label">+5V OUT</text>
+    <circle cx="70" cy="345" r="5" class="pin"/>
+    <text x="80" y="350" class="label">GND OUT</text>
+  </g>
+
+  <!-- ESP32 DevKit -->
+  <g id="esp32">
+    <rect x="250" y="250" width="160" height="600" class="esp32" rx="5"/>
+    <text x="330" y="275" text-anchor="middle" class="subtitle" fill="#fff">ESP32-WROOM</text>
+    <text x="330" y="290" text-anchor="middle" class="label" fill="#aaa">38-Pin DevKit</text>
+    
+    <!-- Left side pins (top to bottom) -->
+    <g id="left-pins">
+      <!-- 3V3 -->
+      <circle cx="260" cy="310" r="4" class="pin"/>
+      <text x="270" y="315" class="pin-label">3V3</text>
+      
+      <!-- GND -->
+      <circle cx="260" cy="330" r="4" class="pin"/>
+      <text x="270" y="335" class="pin-label">GND</text>
+      
+      <!-- GPIO 5 (Light Relay - current) -->
+      <circle cx="260" cy="350" r="4" class="pin"/>
+      <text x="270" y="355" class="pin-label">D5</text>
+      
+      <!-- GPIO 13 (Buzzer - current) -->
+      <circle cx="260" cy="390" r="4" class="pin"/>
+      <text x="270" y="395" class="pin-label">D13</text>
+      
+      <!-- GPIO 14 (DS18B20 - current) -->
+      <circle cx="260" cy="410" r="4" class="pin"/>
+      <text x="270" y="415" class="pin-label">D14</text>
+      
+      <!-- GPIO 16 (Heater moved, was Filter) -->
+      <circle cx="260" cy="450" r="4" class="pin"/>
+      <text x="270" y="455" class="pin-label">D16</text>
+      
+      <!-- GPIO 17 (Filter moved, was 18) -->
+      <circle cx="260" cy="470" r="4" class="pin"/>
+      <text x="270" y="475" class="pin-label">D17</text>
+      
+      <!-- GPIO 18 (Light moved from 5) -->
+      <circle cx="260" cy="490" r="4" class="pin"/>
+      <text x="270" y="495" class="pin-label">D18</text>
+      
+      <!-- GPIO 19 (Heater moved from 16) -->
+      <circle cx="260" cy="510" r="4" class="pin"/>
+      <text x="270" y="515" class="pin-label">D19</text>
+      
+      <!-- GPIO 21 (I2C SDA) -->
+      <circle cx="260" cy="550" r="4" class="pin"/>
+      <text x="270" y="555" class="pin-label">D21</text>
+      
+      <!-- GPIO 22 (I2C SCL) -->
+      <circle cx="260" cy="570" r="4" class="pin"/>
+      <text x="270" y="575" class="pin-label">D22</text>
+      
+            <!-- GPIO 33 (DS18B20 moved from 14) -->
+      <circle cx="260" cy="670" r="4" class="pin"/>
+      <text x="270" y="675" class="pin-label">D33</text>
+      
+      <!-- GND -->
+      <circle cx="260" cy="820" r="4" class="pin"/>
+      <text x="270" y="825" class="pin-label">GND</text>
+      
+      <!-- GPIO 33 (DS18B20 moved from 14) -->
+      <circle cx="260" cy="670" r="4" class="pin"/>
+      <text x="270" y="675" class="pin-label">D33</text>
+    </g>
+    
+    <!-- Right side pins (top to bottom) -->
+    <g id="right-pins">
+      <!-- VIN (5V input) -->
+      <circle cx="400" cy="310" r="4" class="pin"/>
+      <text x="360" y="315" class="pin-label">VIN</text>
+      
+      <!-- GND -->
+      <circle cx="400" cy="330" r="4" class="pin"/>
+      <text x="360" y="335" class="pin-label">GND</text>
+    </g>
+  </g>
+
+  <!-- DS18B20 Temperature Sensor -->
+  <g id="ds18b20">
+    <rect x="50" y="400" width="140" height="100" class="sensor" rx="5"/>
+    <text x="120" y="425" text-anchor="middle" class="subtitle">DS18B20</text>
+    <text x="120" y="442" text-anchor="middle" class="label">Temp Sensor</text>
+    
+    <!-- Pins -->
+    <circle cx="70" cy="470" r="4" class="pin"/>
+    <text x="80" y="475" class="label">GND</text>
+    
+    <circle cx="120" cy="470" r="4" class="pin"/>
+    <text x="105" y="465" class="label">VDD</text>
+    <text x="105" y="478" class="label">(3.3V)</text>
+    
+    <circle cx="170" cy="470" r="4" class="pin"/>
+    <text x="145" y="475" class="label">DATA</text>
+    
+    <!-- Pull-up resistor (4.7kΩ) -->
+    <path d="M 120 455 L 120 445 M 115 445 L 125 445 M 117 447 L 123 447 M 118 449 L 122 449 M 119 451 L 121 451 M 115 453 L 125 453 M 120 453 L 120 470" class="resistor"/>
+    <text x="130" y="450" class="note">4.7kΩ</text>
+    
+    <!-- Protection resistor (100Ω) -->
+    <path d="M 170 470 L 190 470 M 190 465 L 190 475 M 192 467 L 192 473 M 194 468 L 194 472 M 196 469 L 196 471 M 198 465 L 198 475 M 198 470 L 210 470" class="resistor"/>
+    <text x="190" y="485" class="note">100Ω</text>
+  </g>
+
+  <!-- 6-Channel Relay Module -->
+  <g id="relay-module">
+    <rect x="550" y="250" width="300" height="500" class="relay" rx="5"/>
+    <text x="700" y="275" text-anchor="middle" class="subtitle">6-Channel Relay Module</text>
+    <text x="700" y="292" text-anchor="middle" class="label">Active HIGH Configuration</text>
+    
+    <!-- Power input -->
+    <circle cx="570" cy="320" r="4" class="pin"/>
+    <text x="580" y="325" class="voltage-label">VCC (5V)</text>
+    
+    <circle cx="570" cy="340" r="4" class="pin"/>
+    <text x="580" y="345" class="label">GND</text>
+    
+    <!-- Relay control pins -->
+    <g id="relay-inputs">
+      <!-- IN1 - Filter -->
+      <circle cx="570" cy="380" r="4" class="pin"/>
+      <text x="580" y="385" class="label">IN1 (Filter) ← GPIO16</text>
+      
+      <!-- IN2 - CO2 -->
+      <circle cx="570" cy="410" r="4" class="pin"/>
+      <text x="580" y="415" class="label">IN2 (CO2) ← GPIO17</text>
+      
+      <!-- IN3 - Light -->
+      <circle cx="570" cy="440" r="4" class="pin"/>
+      <text x="580" y="445" class="label">IN3 (Light) ← GPIO18</text>
+      
+      <!-- IN4 - Heater -->
+      <circle cx="570" cy="470" r="4" class="pin"/>
+      <text x="580" y="475" class="label">IN4 (Heater) ← GPIO19</text>
+      
+      <!-- IN5 - HangOn Filter -->
+      <circle cx="570" cy="500" r="4" class="pin"/>
+      <text x="580" y="505" class="label">IN5 (HangOn) ← GPIO23</text>
+      
+      <!-- IN6 - Wave Maker -->
+      <circle cx="570" cy="530" r="4" class="pin"/>
+      <text x="580" y="535" class="label">IN6 (WaveMaker) ← GPIO32</text>
+    </g>
+    
+    <!-- AC output terminals -->
+    <text x="700" y="580" text-anchor="middle" class="subtitle">AC Output Terminals</text>
+    <text x="700" y="595" text-anchor="middle" class="note">(Connect to 220V AC appliances)</text>
+    
+    <g id="ac-outputs">
+      <rect x="570" y="610" width="250" height="25" fill="#fff" stroke="#000" stroke-width="1"/>
+      <text x="580" y="627" class="label">1-Filter | 2-CO2 | 3-Light</text>
+      
+      <rect x="570" y="640" width="250" height="25" fill="#fff" stroke="#000" stroke-width="1"/>
+      <text x="580" y="657" class="label">4-Heater | 5-HangOn | 6-WaveMaker</text>
+      
+      <rect x="570" y="675" width="250" height="25" fill="#fff" stroke="#000" stroke-width="1"/>
+      <text x="675" y="692" class="label" text-anchor="middle">COMMON (Neutral/Live)</text>
+    </g>
+  </g>
+
+  <!-- OLED Display (SSD1306) -->
+  <g id="oled">
+    <rect x="900" y="250" width="200" height="150" class="display" rx="5"/>
+    <text x="1000" y="275" text-anchor="middle" class="subtitle">OLED SSD1306</text>
+    <text x="1000" y="292" text-anchor="middle" class="label">128x64 I2C Display</text>
+    <text x="1000" y="309" text-anchor="middle" class="note">Address: 0x3C</text>
+    
+    <!-- Screen representation -->
+    <rect x="920" y="320" width="160" height="50" fill="#000" stroke="#444" stroke-width="2" rx="3"/>
+    
+    <!-- Pins -->
+    <circle cx="920" cy="385" r="4" class="pin"/>
+    <text x="930" y="390" class="label">GND</text>
+    
+    <circle cx="970" cy="385" r="4" class="pin"/>
+    <text x="980" y="390" class="label">VCC (3.3V)</text>
+    
+    <circle cx="1020" cy="385" r="4" class="pin"/>
+    <text x="1030" y="390" class="label">SCL (GPIO22)</text>
+    
+    <circle cx="1070" cy="385" r="4" class="pin"/>
+    <text x="1040" y="378" class="label">SDA</text>
+    <text x="1040" y="390" class="label">(GPIO21)</text>
+  </g>
+
+  <!-- RTC DS3231 -->
+  <g id="rtc">
+    <rect x="900" y="430" width="200" height="120" class="component" rx="5"/>
+    <text x="1000" y="455" text-anchor="middle" class="subtitle">RTC DS3231</text>
+    <text x="1000" y="472" text-anchor="middle" class="label">Real-Time Clock</text>
+    <text x="1000" y="489" text-anchor="middle" class="note">I2C Address: 0x68</text>
+    
+    <!-- Pins -->
+    <circle cx="920" cy="525" r="4" class="pin"/>
+    <text x="930" y="530" class="label">GND</text>
+    
+    <circle cx="970" cy="525" r="4" class="pin"/>
+    <text x="980" y="530" class="label">VCC (3.3V)</text>
+    
+    <circle cx="1020" cy="525" r="4" class="pin"/>
+    <text x="1030" y="530" class="label">SCL (GPIO22)</text>
+    
+    <circle cx="1070" cy="525" r="4" class="pin"/>
+    <text x="1040" y="518" class="label">SDA</text>
+    <text x="1040" y="530" class="label">(GPIO21)</text>
+  </g>
+
+  <!-- Buzzer -->
+  <g id="buzzer">
+    <rect x="900" y="580" width="200" height="100" class="component" rx="5"/>
+    <text x="1000" y="605" text-anchor="middle" class="subtitle">Passive Buzzer</text>
+    <text x="1000" y="622" text-anchor="middle" class="label">5V PWM Audio</text>
+    
+    <!-- Buzzer symbol -->
+    <circle cx="1000" cy="645" r="15" fill="none" stroke="#000" stroke-width="2"/>
+    <path d="M 985 645 L 975 635 L 975 655 Z" fill="#000"/>
+    
+    <!-- Pins -->
+    <circle cx="970" cy="665" r="4" class="pin"/>
+    <text x="980" y="670" class="label">+ (GPIO13)</text>
+    
+    <circle cx="1030" cy="665" r="4" class="pin"/>
+    <text x="1010" y="670" class="label">- (GND)</text>
+  </g>
+
+  <!-- Wiring Connections -->
+  <g id="wiring">
+    <!-- Power: 5V Supply to ESP32 VIN -->
+    <path d="M 70 320 L 70 300 L 400 300 L 400 310" class="wire-5v" marker-end="url(#arrowred)"/>
+    
+    <!-- Power: 5V Supply to Relay Module VCC -->
+    <path d="M 70 320 L 70 300 L 540 300 L 540 320 L 570 320" class="wire-5v"/>
+    
+    <!-- GND: Power Supply to ESP32 -->
+    <path d="M 70 345 L 70 360 L 240 360 L 240 330 L 260 330" class="wire-gnd"/>
+    
+    <!-- GND: Power Supply to Relay Module -->
+    <path d="M 70 345 L 70 360 L 540 360 L 540 340 L 570 340" class="wire-gnd"/>
+    
+    <!-- 3.3V: ESP32 to DS18B20 -->
+    <path d="M 260 310 L 230 310 L 230 460 L 120 460 L 120 470" class="wire-3v3"/>
+    
+    <!-- 3.3V: ESP32 to OLED -->
+    <path d="M 260 310 L 230 310 L 230 240 L 970 240 L 970 385" class="wire-3v3"/>
+    
+    <!-- 3.3V: ESP32 to RTC -->
+    <path d="M 260 310 L 230 310 L 230 240 L 970 240 L 970 525" class="wire-3v3"/>
+    
+    <!-- GND: ESP32 to DS18B20 -->
+    <path d="M 260 820 L 220 820 L 220 480 L 70 480 L 70 470" class="wire-gnd"/>
+    
+    <!-- GND: ESP32 to OLED -->
+    <path d="M 260 820 L 220 820 L 220 900 L 920 900 L 920 385" class="wire-gnd"/>
+    
+    <!-- GND: ESP32 to RTC -->
+    <path d="M 260 820 L 220 820 L 220 900 L 920 900 L 920 525" class="wire-gnd"/>
+    
+    <!-- GND: ESP32 to Buzzer -->
+    <path d="M 260 820 L 220 820 L 220 900 L 1030 900 L 1030 665" class="wire-gnd"/>
+    
+    <!-- DS18B20 Data with protection resistor -->
+    <path d="M 210 470 L 260 670" class="wire-signal"/>
+    
+    <!-- I2C SDA: ESP32 to OLED and RTC -->
+    <path d="M 260 550 L 200 550 L 200 920 L 1070 920 L 1070 525" class="wire-i2c"/>
+    <path d="M 1070 525 L 1070 385" class="wire-i2c"/>
+    
+    <!-- I2C SCL: ESP32 to OLED and RTC -->
+    <path d="M 260 570 L 180 570 L 180 940 L 1020 940 L 1020 525" class="wire-i2c"/>
+    <path d="M 1020 525 L 1020 385" class="wire-i2c"/>
+    
+    <!-- Buzzer Signal -->
+    <path d="M 260 610 L 160 610 L 160 950 L 970 950 L 970 665" class="wire-signal"/>
+    
+    <!-- Relay Control Signals -->
+    <path d="M 260 450 L 450 450 L 450 380 L 570 380" class="wire-relay"/>
+    <text x="455" y="445" class="note">GPIO16→Filter</text>
+    
+    <path d="M 260 470 L 470 470 L 470 410 L 570 410" class="wire-relay"/>
+    <text x="475" y="465" class="note">GPIO17→CO2</text>
+    
+    <path d="M 260 490 L 440 490 L 440 440 L 570 440" class="wire-relay"/>
+    <text x="445" y="485" class="note">GPIO18→Light</text>
+    
+    <path d="M 260 510 L 430 510 L 430 470 L 570 470" class="wire-relay"/>
+    <text x="435" y="505" class="note">GPIO19→Heater</text>
+    
+    <path d="M 260 590 L 240 590 L 240 220 L 490 220 L 490 500 L 570 500" class="wire-relay"/>
+    <text x="495" y="495" class="note">GPIO23→HangOn</text>
+    
+    <path d="M 260 650 L 240 650 L 240 210 L 510 210 L 510 530 L 570 530" class="wire-relay"/>
+    <text x="515" y="525" class="note">GPIO32→WaveMaker</text>
+  </g>
+
+  <!-- Notes Section -->
+  <g id="notes">
+    <rect x="20" y="950" width="850" height="250" fill="#fffef0" stroke="#666" stroke-width="1" rx="5"/>
+    <text x="440" y="975" text-anchor="middle" class="subtitle">⚠️ Important Notes for PCB Design</text>
+    
+    <text x="30" y="1000" class="label">1. POWER REQUIREMENTS:</text>
+    <text x="45" y="1018" class="note">• ESP32: 5V via VIN pin (internal regulator provides 3.3V)</text>
+    <text x="45" y="1033" class="note">• Relay Module: 5V VCC (handles optocoupler isolation)</text>
+    <text x="45" y="1048" class="note">• DS18B20, OLED, RTC: 3.3V from ESP32 (low current devices)</text>
+    <text x="45" y="1063" class="note">• Total current: ~500mA (ESP32) + ~200mA (relays) = 2A supply recommended</text>
+    
+    <text x="30" y="1085" class="label">2. RESISTOR SPECIFICATIONS:</text>
+    <text x="45" y="1103" class="note">• DS18B20 pull-up: 4.7kΩ between DATA and VDD (required for OneWire protocol)</text>
+    <text x="45" y="1118" class="note">• DS18B20 protection: 100Ω series resistor on DATA line (protects GPIO from voltage spikes)</text>
+    
+    <text x="30" y="1140" class="label">3. PCB LAYOUT TIPS:</text>
+    <text x="45" y="1158" class="note">• Keep I2C traces (SDA/SCL) short and away from relay switching lines (noise reduction)</text>
+    <text x="45" y="1173" class="note">• Use thick traces (≥20mil) for 5V and GND power lines</text>
+    <text x="45" y="1188" class="note">• Add 100nF ceramic capacitors near ESP32 3.3V and 5V pins for decoupling</text>
+    
+    <text x="450" y="1000" class="label">4. RELAY MODULE:</text>
+    <text x="465" y="1018" class="note">• Active HIGH: GPIO HIGH = Relay ON</text>
+    <text x="465" y="1033" class="note">• Each relay handles up to 10A @ 250VAC</text>
+    <text x="465" y="1048" class="note">• Optocoupler isolated (ESP32 side protected)</text>
+    
+    <text x="450" y="1070" class="label">5. GPIO PIN SAFETY (v3.2.0):</text>
+    <text x="465" y="1088" class="note">• ✓ All strapping pins avoided (no boot issues)</text>
+    <text x="465" y="1103" class="note">• ✓ All pins WiFi-safe (ADC1 or general GPIO)</text>
+    <text x="465" y="1118" class="note">• ✓ No unexpected relay triggers during boot</text>
+    
+    <text x="450" y="1140" class="label">6. PROGRAMMING:</text>
+    <text x="465" y="1158" class="note">• Micro-USB port for initial upload</text>
+    <text x="465" y="1173" class="note">• Add OTA support for wireless updates</text>
+    <text x="465" y="1188" class="note">• Expose RX0/TX0 for serial programmer backup</text>
+  </g>
+
+  <!-- Connection Summary Table -->
+  <g id="connection-table">
+    <rect x="900" y="950" width="480" height="250" fill="#f5f5f5" stroke="#666" stroke-width="1" rx="5"/>
+    <text x="1140" y="975" text-anchor="middle" class="subtitle">Pin Assignment Summary</text>
+    
+    <!-- Table headers -->
+    <text x="920" y="1000" class="label">GPIO</text>
+    <text x="975" y="1000" class="label">Function</text>
+    <text x="1150" y="1000" class="label">Component</text>
+    <text x="1300" y="1000" class="label">Notes</text>
+    
+    <line x1="910" y1="1005" x2="1370" y2="1005" stroke="#999" stroke-width="1"/>
+    
+    <!-- Table rows -->
+    <text x="920" y="1025" class="note">16</text>
+    <text x="975" y="1025" class="note">Relay IN1</text>
+    <text x="1150" y="1025" class="note">Filter Control</text>
+    <text x="1300" y="1025" class="note">Safe GPIO</text>
+    
+    <text x="920" y="1045" class="note">17</text>
+    <text x="975" y="1045" class="note">Relay IN2</text>
+    <text x="1150" y="1045" class="note">CO2 Control</text>
+    <text x="1300" y="1045" class="note">Safe GPIO</text>
+    
+    <text x="920" y="1065" class="note">18</text>
+    <text x="975" y="1065" class="note">Relay IN3</text>
+    <text x="1150" y="1065" class="note">Light Control</text>
+    <text x="1300" y="1065" class="note">Safe GPIO (was 5)</text>
+    
+    <text x="920" y="1085" class="note">19</text>
+    <text x="975" y="1085" class="note">Relay IN4</text>
+    <text x="1150" y="1085" class="note">Heater Control</text>
+    <text x="1300" y="1085" class="note">Safe GPIO</text>
+    
+    <text x="920" y="1105" class="note">21</text>
+    <text x="975" y="1105" class="note">I2C SDA</text>
+    <text x="1150" y="1105" class="note">OLED + RTC</text>
+    <text x="1300" y="1105" class="note">Standard I2C</text>
+    
+    <text x="920" y="1125" class="note">22</text>
+    <text x="975" y="1125" class="note">I2C SCL</text>
+    <text x="1150" y="1125" class="note">OLED + RTC</text>
+    <text x="1300" y="1125" class="note">Standard I2C</text>
+    
+    <text x="920" y="1145" class="note">23</text>
+    <text x="975" y="1145" class="note">Relay IN5</text>
+    <text x="1150" y="1145" class="note">HangOn Filter</text>
+    <text x="1300" y="1145" class="note">Safe GPIO (was 18)</text>
+    
+    <text x="920" y="1165" class="note">25</text>
+    <text x="975" y="1165" class="note">PWM Output</text>
+    <text x="1150" y="1165" class="note">Buzzer</text>
+    <text x="1300" y="1165" class="note">Safe GPIO (was 13)</text>
+    
+    <text x="920" y="1185" class="note">32</text>
+    <text x="975" y="1185" class="note">Relay IN6</text>
+    <text x="1150" y="1185" class="note">Wave Maker</text>
+    <text x="1300" y="1185" class="note">ADC1 (was 23)</text>
+    
+    <text x="920" y="1205" class="note">33</text>
+    <text x="975" y="1205" class="note">OneWire Data</text>
+    <text x="1150" y="1205" class="note">DS18B20 Sensor</text>
+    <text x="1300" y="1205" class="note">ADC1 + resistors</text>
+  </g>
+
+  <!-- Footer -->
+  <g id="footer">
+    <text x="700" y="1240" text-anchor="middle" class="note">PCB Design Checklist:</text>
+    <text x="700" y="1260" text-anchor="middle" class="note">✓ All ground connections must be common | ✓ Use thick power traces | ✓ Add decoupling capacitors</text>
+    <text x="700" y="1280" text-anchor="middle" class="note">✓ Separate relay switching area from ESP32 logic area | ✓ Test continuity before power-up</text>
+  </g>
+
+  <!-- Recommended Safe Pin Alternative (future reference) -->
+  <g id="alternative-pins">
+    <rect x="20" y="1230" width="400" height="150" fill="#e8f5e9" stroke="#4caf50" stroke-width="2" rx="5"/>
+    <text x="220" y="1255" text-anchor="middle" class="subtitle">✓ Current Safe Pin Mapping (v3.2.0)</text>
+    <text x="220" y="1272" text-anchor="middle" class="note">(Maximum WiFi/ADC compatibility - No strapping pins)</text>
+    
+    <text x="30" y="1295" class="label">Filter: GPIO16 | CO2: GPIO17 | Light: GPIO18</text>
+    <text x="30" y="1315" class="label">Heater: GPIO19 | HangOn: GPIO23 | WaveMaker: GPIO32</text>
+    <text x="30" y="1335" class="label">DS18B20: GPIO33 | Buzzer: GPIO25</text>
+    <text x="30" y="1355" class="label">I2C (OLED/RTC): GPIO21 (SDA) + GPIO22 (SCL)</text>
+    <text x="30" y="1372" class="note" font-style="italic">All pins are ADC1 or safe general-purpose GPIOs</text>
+  </g>
+
+  <!-- Version Info -->
+  <text x="700" y="1780" text-anchor="middle" class="note">Created: November 2, 2025 | ESP32 Fish Tank Automation v3.2.0</text>
+</svg>

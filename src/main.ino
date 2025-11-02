@@ -1,8 +1,8 @@
 // ============================================================================
 // ESP32 Fish Tank Automation System (Arduino Sketch)
-// Version: 3.1.1 - Manual Override Priority & Temperature Sensor Fix
+// Version: 3.2.0 - Safe GPIO Pin Reassignment
 // Author: mhd-riaz
-// Date: October 30, 2025
+// Date: November 2, 2025
 //
 // See CHANGELOG.md for version history and updates.
 // ============================================================================
@@ -78,13 +78,14 @@ const char PROGMEM STR_WILDCARD[] = "*";
 // ============================================================================
 // 2. Pin Definitions
 // ============================================================================
-// Appliance Relay Pins (Final GPIO assignments for 5-device system)
-#define MOTOR_RELAY_PIN 17    // Main Filter (Primary filtration system)
-#define CO2_RELAY_PIN 19      // CO2 System (CO2 injection for plants)
-#define LIGHT_RELAY_PIN 5     // Aquarium Lights (LED lighting system)
-#define HEATER_RELAY_PIN 16   // Water Heater (Temperature control)
-#define HANGON_FILTER_PIN 18  // Hang-on Filter (Secondary filtration)
-#define WAVE_MAKER_PIN 33     // Wave Maker (Water movement) - Changed from 32 (ADC2 conflicts with WiFi)
+// Appliance Relay Pins (Safe GPIO assignments - WiFi compatible, no strapping pins)
+// Avoids strapping pins (0,2,5,12,15) and ADC2 conflicts with WiFi
+#define MOTOR_RELAY_PIN 16    // Main Filter (Primary filtration system) - GPIO 16
+#define CO2_RELAY_PIN 17      // CO2 System (CO2 injection for plants) - GPIO 17
+#define LIGHT_RELAY_PIN 18    // Aquarium Lights (LED lighting system) - GPIO 18
+#define HEATER_RELAY_PIN 19   // Water Heater (Temperature control) - GPIO 19
+#define HANGON_FILTER_PIN 23  // Hang-on Filter (Secondary filtration) - GPIO 23
+#define WAVE_MAKER_PIN 32     // Wave Maker (Water movement) - GPIO 32 (ADC1, safe with WiFi)
 
 // Relay Configuration
 // Set to true for Active LOW relays (LOW = ON, HIGH = OFF) - Most common
@@ -95,10 +96,10 @@ const char PROGMEM STR_WILDCARD[] = "*";
 #define DEBUG_MODE true  // Set to true for development, false for production to save memory
 
 // DS18B20 Temperature Sensor Pin
-#define ONE_WIRE_BUS 14  // DS18B20 data pin (requires 4.7KΩ pull-up to 3.3V)
+#define ONE_WIRE_BUS 33  // DS18B20 data pin (requires 4.7KΩ pull-up to 3.3V) - GPIO 33 (ADC1, safe)
 
 // Buzzer Pin (PWM capable for audio feedback)
-#define BUZZER_PIN 13
+#define BUZZER_PIN 25    // GPIO 25 - Safe for PWM output
 
 // OLED Display (I2C - Shared with RTC on same bus)
 #define OLED_SDA 21

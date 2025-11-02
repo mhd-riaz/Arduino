@@ -22,6 +22,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.0] - November 2, 2025
+
+### Changed
+- **GPIO Pin Reassignment** - Moved all pins to safe, non-strapping GPIOs to avoid boot-time issues and WiFi/ADC2 conflicts
+- **Pin Mapping Updates**:
+  - Filter: GPIO 17 → GPIO 16
+  - CO2: GPIO 19 → GPIO 17
+  - Light: GPIO 5 → GPIO 18 (was strapping pin causing boot-time HIGH)
+  - Heater: GPIO 16 → GPIO 19
+  - HangOnFilter: GPIO 18 → GPIO 23
+  - WaveMaker: GPIO 23 → GPIO 32 (ADC1, safe with WiFi)
+  - DS18B20: GPIO 14 → GPIO 33 (was strapping pin)
+  - Buzzer: GPIO 13 → GPIO 25 (was strapping pin)
+- **Documentation Updates** - Updated README.md pinout table to reflect new GPIO assignments
+
+### Technical Details
+- **Avoided Strapping Pins**: GPIO 0, 2, 5, 12, 15 (used during boot sequence)
+- **WiFi Safe**: All pins now use ADC1 or general-purpose GPIOs (avoiding ADC2 conflicts)
+- **Boot Behavior**: No unexpected relay triggering during ESP32 boot/reset
+- **Backwards Incompatible**: Requires physical rewiring of all connections
+
+---
+
 ## [3.1.1] - October 30, 2025
 
 ### Fixed
