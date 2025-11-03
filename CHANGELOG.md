@@ -22,6 +22,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.0] - November 3, 2025
+
+### Fixed
+- **CRITICAL: Schedule Logic Bug** - Fixed commented-out schedule application logic that prevented all appliances from following their schedules
+  - Schedule intervals were being checked but not applied to control relays
+  - All appliances were stuck in default states (Filter always ON, others always OFF)
+  - Now correctly applies `on_interval` and `off_interval` schedules
+
+### Changed
+- **Schedule Logic Simplification** - Refactored schedule application to use interval type instead of appliance-specific logic
+  - `on_interval`: Forces appliance ON during the specified time
+  - `off_interval`: Forces appliance OFF during the specified time
+  - Default states apply when no interval matches (Filter=ON 24/7, others=OFF)
+- **CO2 Schedule Optimization** - Updated CO2 injection schedule for better plant health and fish comfort
+  - 8:00 AM - 2:00 PM (6 hours) - Starts 1 hour before first light period
+  - 3:00 PM - 8:00 PM (5 hours) - Continues through remaining light periods
+  - 1-hour break at 2:00 PM - 3:00 PM for fish to relax during light-off period
+  - Total: 11 hours of CO2 injection (down from continuous 12 hours)
+
+### Impact
+- **High Priority** - This fix restores all schedule-based automation functionality
+- All users must update immediately to restore proper appliance scheduling
+
+---
+
 ## [3.2.0] - November 2, 2025
 
 ### Changed

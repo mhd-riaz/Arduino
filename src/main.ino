@@ -1,8 +1,8 @@
 // ============================================================================
 // ESP32 Fish Tank Automation System (Arduino Sketch)
-// Version: 3.2.0 - Safe GPIO Pin Reassignment
+// Version: 3.3.0 - Critical Schedule Logic Fix + CO2 Optimization
 // Author: mhd-riaz
-// Date: November 2, 2025
+// Date: November 3, 2025
 //
 // See CHANGELOG.md for version history and updates.
 // ============================================================================
@@ -1247,14 +1247,13 @@ void applyApplianceLogic(Appliance &app, int currentMinutes) {
         }
       }
 
-      // // Apply schedule logic based on appliance type
-      // if (app.name == "Filter") {
-      //   // Filter: ON by default, turn OFF only during off_interval
-      //   targetState = isScheduledOff ? OFF : ON;
-      // } else {
-      //   // Other appliances: OFF by default, turn ON only during on_interval
-      //   targetState = isScheduledOn ? ON : OFF;
-      // }
+      // Apply schedule logic based on interval type
+      if (isScheduledOn) {
+        targetState = ON;
+      } else if (isScheduledOff) {
+        targetState = OFF;
+      }
+      // else: keep default state (Filter=ON, others=OFF)
     }
     app.scheduledState = targetState;
   }
